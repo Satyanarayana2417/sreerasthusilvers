@@ -26,8 +26,8 @@
       "id": "p-001",
       "title": "14k Gold Bespoke Signet Ring",
       "category": "Rings",
-      "price": 922.56,
-      "oldPrice": 509.22,
+      "price": 76572,
+      "oldPrice": 42265,
       "rating": 4.9,
       "reviews": 5,
       "image": "/products/ring-1.jpg",
@@ -37,7 +37,7 @@
       "id": "p-002",
       "title": "Faded Grandeur Stud Earrings",
       "category": "Accessories, Pearls",
-      "price": 93.30,
+      "price": 7744,
       "oldPrice": null,
       "rating": 4.8,
       "reviews": 5,
@@ -48,7 +48,7 @@
       "id": "p-003",
       "title": "Awesome Wooden Watch",
       "category": "Earrings",
-      "price": 729.94,
+      "price": 60585,
       "oldPrice": null,
       "rating": 4.7,
       "reviews": 5,
@@ -57,9 +57,9 @@
     },
     {
       "id": "p-004",
-      "title": "Gorgeous Aluminum Shirt",
+      "title": "Gorgeous Aluminum Necklace",
       "category": "Earrings",
-      "price": 556.96,
+      "price": 46228,
       "oldPrice": null,
       "rating": 4.9,
       "reviews": 5,
@@ -70,7 +70,7 @@
       "id": "p-005",
       "title": "Diamond Lou Helium Ring",
       "category": "Pearls",
-      "price": 223.99,
+      "price": 18591,
       "oldPrice": null,
       "rating": 4.8,
       "reviews": 5,
@@ -83,18 +83,18 @@
       "id": "t-001",
       "title": "Gorgeous Golden Blossom Sets",
       "category": "Rings, Wedding",
-      "price": 487.35,
+      "price": 40450,
       "oldPrice": null,
       "rating": 4.9,
       "reviews": 5,
-      "badge": "Free Shipping Over $240 For Members",
+      "badge": "Free Shipping Over ₹20,000 For Members",
       "image": "/products/set-1.jpg"
     },
     {
       "id": "t-002",
       "title": "10K Gold Eternity Ring",
       "category": "Diamonds, Rings",
-      "price": 963.54,
+      "price": 79974,
       "oldPrice": null,
       "rating": 4.8,
       "reviews": 5,
@@ -105,7 +105,7 @@
       "id": "t-003",
       "title": "Everyday Forever Band",
       "category": "Necklaces & Pendants",
-      "price": 442.35,
+      "price": 36715,
       "oldPrice": null,
       "rating": 4.7,
       "reviews": 5,
@@ -115,7 +115,7 @@
       "id": "t-004",
       "title": "14k Gold Crew Helium Ring",
       "category": "Gifts Set",
-      "price": 100.97,
+      "price": 8380,
       "oldPrice": null,
       "rating": 4.9,
       "reviews": 5,
@@ -125,8 +125,8 @@
       "id": "t-005",
       "title": "Gold Heart Locket Necklace",
       "category": "Necklaces & Pendants",
-      "price": 291.93,
-      "oldPrice": 796.70,
+      "price": 24230,
+      "oldPrice": 66126,
       "rating": 4.8,
       "reviews": 5,
       "image": "/products/necklace-2.jpg"
@@ -142,12 +142,12 @@
     {
       "id": 1,
       "title": "Complimentary Shipping",
-      "description": "We offer complimentary shipping and returns on all orders over $130.",
+      "description": "We offer complimentary shipping and returns on all orders over ₹10,000.",
       "icon": "shipping"
     },
     {
       "id": 2,
-      "title": "Olight At Your Service",
+      "title": "Sreerasthu Silvers At Your Service",
       "description": "Our client care experts are always here to help.",
       "icon": "service"
     },
@@ -159,8 +159,8 @@
     },
     {
       "id": 4,
-      "title": "The Iconic Blue Box",
-      "description": "Your Olight purchase comes wrapped in our Blue Box packaging.",
+      "title": "The Iconic Box",
+      "description": "Your Sreerasthu Silvers purchase comes wrapped in our Box packaging.",
       "icon": "gift"
     }
   ],
@@ -228,14 +228,14 @@
     }
   ],
   "footer": {
-    "about": "Olight — timeless jewelry, ethically sourced. We believe in the power of jewelry — to tell a story, celebrate a moment, create or continue a tradition.",
+    "about": "Sreerasthu Silvers — timeless jewelry, ethically sourced. We believe in the power of jewelry — to tell a story, celebrate a moment, create or continue a tradition.",
     "shopOnline": ["Rings", "Earrings", "Necklaces", "Bracelets", "Accessories"],
     "categories": ["Jewellery Materials", "Sizing Children's Jewellery", "Delivery & Returns", "Gold Buckle", "Pearls"],
     "information": ["Order Tracking", "Terms & Conditions", "Privacy Policy", "FAQ"],
     "contact": {
-      "address": "785 15h Street, Office 478 Berlin, De 81566",
-      "phone": "0123456778",
-      "email": "hello@olight-jewelry.com"
+      "address": "Ramasomayajulu street,Ramaraopeta, Kakinada, Andhra Pradesh, India, 533001",
+      "phone": "+91 6304960489",
+      "email": "hello@sreerasthusilvers.com"
     },
     "social": ["facebook", "instagram", "twitter", "pinterest"]
   }

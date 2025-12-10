@@ -7,36 +7,37 @@ const CollectionBanner = () => {
   const isInView = useInView(ref, { once: true, amount: 0.3 });
 
   return (
-    <section ref={ref} className="section-padding">
-      <div className="container-custom">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.98 }}
-          animate={isInView ? { opacity: 1, scale: 1 } : {}}
-          transition={{ duration: 0.8 }}
-          className="relative overflow-hidden rounded-3xl"
-        >
-          <img
-            src={collectionBanner}
-            alt="Olight Collection"
-            className="w-full h-[400px] md:h-[500px] object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 to-transparent" />
-          <div className="absolute inset-0 flex items-center">
-            <div className="container-custom">
-              <div className="max-w-lg text-primary-foreground">
-                <span className="eyebrow text-primary-light block mb-2">OLIGHT COLLECTION</span>
-                <h2 className="heading-lg mb-4">Shop The Latest Trends</h2>
-                <p className="body-lg text-primary-foreground/80 mb-6">
-                  Exceptional Handcrafted Design to Enhance the Magnificent Glow
-                </p>
-                <a href="#" className="btn-primary bg-primary-foreground text-foreground hover:bg-primary-foreground/90">
-                  Shop Now
-                </a>
-              </div>
+    <section ref={ref} className="w-full">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={isInView ? { opacity: 1 } : {}}
+        transition={{ duration: 0.8 }}
+        className="relative overflow-hidden"
+      >
+        <img
+          src={collectionBanner}
+          alt="Sreerasthu Silvers Collection"
+          className="w-full h-[350px] md:h-[450px] object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-foreground/60 to-transparent" />
+        <div className="absolute inset-0 flex items-center">
+          <div className="container-custom">
+            <div className="max-w-lg text-primary-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <span className="text-xs uppercase tracking-[0.2em] text-white/80 block mb-3 font-medium">SREERASTHU SILVERS COLLECTION</span>
+              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-white whitespace-nowrap" style={{ fontFamily: "'Montserrat', sans-serif" }}>Shop The Latest Trends</h2>
+              <p className="text-sm md:text-base text-white/80 mb-6">
+                Exceptional Handcrafted Design to Enhance the Magnificent Glow
+              </p>
+              <a 
+                href="#" 
+                className="inline-flex items-center px-8 py-3.5 bg-white text-foreground text-xs font-semibold tracking-wide rounded-full hover:bg-foreground hover:text-white transition-colors"
+              >
+                Shop Now
+              </a>
             </div>
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     </section>
   );
 };

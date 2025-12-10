@@ -21,7 +21,7 @@ const NewsletterForm = () => {
   };
 
   return (
-    <section ref={ref} className="section-padding bg-secondary/50">
+    <section ref={ref} className="py-12 md:py-16 pb-4 bg-secondary/50">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -29,7 +29,7 @@ const NewsletterForm = () => {
           transition={{ duration: 0.6 }}
           className="max-w-2xl mx-auto text-center"
         >
-          <h2 className="heading-lg mb-4">Subscribe to Our Newsletter</h2>
+          <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-foreground" style={{ fontFamily: "'Montserrat', sans-serif" }}>Subscribe to Our Newsletter</h2>
           <p className="body-lg mb-8">
             Sign up to our newsletter for information on sales, delightful content and new additions.
           </p>

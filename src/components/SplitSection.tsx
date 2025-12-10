@@ -14,7 +14,7 @@ const SplitSection = () => {
   const imageY = useTransform(scrollYProgress, [0, 1], [50, -50]);
 
   return (
-    <section ref={ref} className="section-padding overflow-hidden">
+    <section ref={ref} className="py-16 md:py-24 overflow-hidden bg-white">
       <div className="container-custom">
         <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Image */}
@@ -26,7 +26,7 @@ const SplitSection = () => {
               initial={{ opacity: 0, x: -50 }}
               animate={isInView ? { opacity: 1, x: 0 } : {}}
               transition={{ duration: 0.8 }}
-              className="relative rounded-2xl overflow-hidden shadow-luxury-xl"
+              className="relative overflow-hidden"
             >
               <img
                 src={handmadeCrafting}
@@ -34,8 +34,6 @@ const SplitSection = () => {
                 className="w-full h-auto object-cover aspect-[4/5]"
                 loading="lazy"
               />
-              {/* Decorative Element */}
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-primary/10 rounded-full blur-2xl" />
             </motion.div>
           </motion.div>
 
@@ -45,16 +43,20 @@ const SplitSection = () => {
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.2 }}
             className="lg:pl-8"
+            style={{ fontFamily: "'Poppins', sans-serif" }}
           >
-            <h2 className="heading-lg mb-6">
+            <span className="text-xs uppercase tracking-[0.2em] text-muted-foreground block mb-4">
+              OUR CHALLENGE TO DO BETTER
+            </span>
+            <h2 className="text-3xl md:text-4xl font-semibold mb-6 text-foreground">
               All Of Our Jewellery Is Handmade.
             </h2>
-            <p className="body-lg mb-8">
-              A gift they'll treasure forever, Olight created diamonds jewelry combines precious metals with laboratory grown diamonds to form captivating collections. Each piece is crafted with ethically sourced precious metals to reflect our commitment to human rights and environmental sustainability.
+            <p className="text-base text-muted-foreground mb-8 leading-relaxed">
+              A gift they'll treasure forever. Olight created diamonds jewelry combines precious metals with laboratory grown diamonds to form captivating collections.
             </p>
             <motion.a
               href="#explore"
-              className="btn-primary"
+              className="inline-flex items-center gap-2 px-8 py-4 bg-foreground text-background text-sm font-medium uppercase tracking-wider rounded-full hover:bg-foreground/90 transition-colors"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >

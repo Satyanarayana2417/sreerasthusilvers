@@ -28,45 +28,48 @@ const PromoSection = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section ref={ref} className="section-padding bg-secondary/30">
-      <div className="container-custom">
-        <div className="grid md:grid-cols-2 gap-6">
-          {promos.map((promo, index) => (
-            <motion.div
-              key={promo.id}
-              initial={{ opacity: 0, y: 40 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, delay: index * 0.15 }}
-              className="group relative overflow-hidden rounded-2xl bg-card shadow-luxury-md"
+    <section ref={ref} className="w-full">
+      <div className="grid md:grid-cols-2">
+        {promos.map((promo, index) => (
+          <motion.div
+            key={promo.id}
+            initial={{ opacity: 0, y: 40 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: index * 0.15 }}
+            className="group relative overflow-hidden"
+          >
+            {/* Background Image */}
+            <div className="absolute inset-0">
+              <img
+                src={promo.image}
+                alt={promo.title}
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                loading="lazy"
+              />
+            </div>
+            
+            {/* Content Overlay */}
+            <div 
+              className="relative z-10 p-8 md:p-12 lg:p-16 min-h-[400px] md:min-h-[450px] flex flex-col justify-center"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
             >
-              <div className="grid md:grid-cols-2 items-center">
-                {/* Content */}
-                <div className="p-6 md:p-8 order-2 md:order-1">
-                  <span className="eyebrow block mb-2">{promo.eyebrow}</span>
-                  <h3 className="heading-md mb-2">{promo.title}</h3>
-                  <p className="body-md mb-6">{promo.subtitle}</p>
-                  <a
-                    href="#"
-                    className="inline-flex items-center gap-2 text-foreground font-medium text-sm tracking-wider uppercase group/link"
-                  >
-                    {promo.cta}
-                    <ArrowRight className="w-4 h-4 transition-transform group-hover/link:translate-x-1" />
-                  </a>
-                </div>
-
-                {/* Image */}
-                <div className="aspect-square overflow-hidden order-1 md:order-2">
-                  <img
-                    src={promo.image}
-                    alt={promo.title}
-                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    loading="lazy"
-                  />
-                </div>
+              <span className="text-[10px] uppercase tracking-[0.2em] text-foreground/80 block mb-3 font-semibold">
+                {promo.eyebrow}
+              </span>
+              <p className="text-sm text-foreground/70 mb-5 max-w-[180px] leading-relaxed font-medium">
+                {promo.subtitle}
+              </p>
+              <div>
+                <a
+                  href="#"
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-white text-foreground text-xs font-semibold tracking-wide rounded-full hover:bg-foreground hover:text-background transition-colors shadow-sm"
+                >
+                  {promo.cta}
+                </a>
               </div>
-            </motion.div>
-          ))}
-        </div>
+            </div>
+          </motion.div>
+        ))}
       </div>
     </section>
   );

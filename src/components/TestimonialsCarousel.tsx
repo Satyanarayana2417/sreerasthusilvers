@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import avatar1 from "@/assets/avatars/avatar-1.jpg";
 import avatar2 from "@/assets/avatars/avatar-2.jpg";
 import avatar3 from "@/assets/avatars/avatar-3.jpg";
@@ -8,28 +8,28 @@ import avatar3 from "@/assets/avatars/avatar-3.jpg";
 const testimonials = [
   {
     id: 1,
-    title: "Golden Bracelets",
-    quote: "Montluc claim to offer the finest diamond jewellery. I did my research, compared specifications with some of the big brands and now I will never walk into a store again.",
-    author: "Rose Ether",
-    role: "Fashion Designer",
+    title: "Charming Golden Jewellery",
+    quote: "Consectetur adipiscing elit. Integer nunc viverra laoreet est the is porta pretium metus aliquam eget maecenas porta is nunc viverra Aenean pulvinar maximus",
+    author: "Saanvi Iyer",
+    role: "Fresh Design",
     avatar: avatar1,
     rating: 5,
   },
   {
     id: 2,
-    title: "Charming Golden Jewellery",
-    quote: "I did my research, compared with some of the big brands and now Aenean pulvinar maximus. Montluc claim to offer the finest diamond jewellery you can buy direct from the maker.",
-    author: "Fresh Design",
-    role: "Interior Designer",
+    title: "Golden Bracelets",
+    quote: "Montluc claim to offer the finest diamond jewellery. I did my research, compared specifications with some of the big brands and now I will never walk into a store again.",
+    author: "Ananya Bansal",
+    role: "Fresh Design",
     avatar: avatar2,
     rating: 5,
   },
   {
     id: 3,
     title: "Charming Golden Jewellery",
-    quote: "Integer nunc viverra laoreet est the is porta pretium metus aliquam eget maecenas porta is nunc viverra Aenean pulvinar maximus. Consectetur adipiscing elit.",
-    author: "Clara Weton",
-    role: "Seraton Suth",
+    quote: "I did my research, compared with some of the big brands and now Aenean pulvinar maximus. Montluc claim to offer the finest diamond jewellery you can buy direct from the maker.",
+    author: "Diya Nair",
+    role: "Fresh Design",
     avatar: avatar3,
     rating: 5,
   },
@@ -44,7 +44,7 @@ const TestimonialsCarousel = () => {
   const prev = () => setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
 
   return (
-    <section ref={ref} className="section-padding">
+    <section ref={ref} className="py-16 md:py-20 bg-white">
       <div className="container-custom">
         {/* Header */}
         <motion.div
@@ -52,11 +52,14 @@ const TestimonialsCarousel = () => {
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
+          style={{ fontFamily: "'Poppins', sans-serif" }}
         >
-          <span className="eyebrow block mb-2">What Our Clients Say</span>
-          <h2 className="heading-lg">
-            Adorn Yourself in Glamour: Find Your Perfect Piece Today
+          <h2 className="text-3xl md:text-4xl font-semibold text-foreground mb-3" style={{ fontFamily: "'Montserrat', sans-serif" }}>
+            What Our Clients Say
           </h2>
+          <p className="text-base text-muted-foreground">
+            Adorn Yourself in Glamour: Find Your Perfect Piece Today
+          </p>
         </motion.div>
 
         {/* Testimonials Grid - Desktop */}
@@ -67,16 +70,9 @@ const TestimonialsCarousel = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="bg-card rounded-2xl p-8 shadow-luxury-md hover:shadow-luxury-lg transition-shadow"
+              className="bg-white rounded-2xl p-8 shadow-md border border-border/30"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
             >
-              {/* Quote Icon */}
-              <Quote className="w-10 h-10 text-primary/20 mb-4" />
-
-              {/* Title */}
-              <h4 className="font-heading text-lg font-medium mb-4">
-                " {testimonial.title} "
-              </h4>
-
               {/* Rating */}
               <div className="flex items-center gap-1 mb-4">
                 {[...Array(5)].map((_, i) => (
@@ -84,28 +80,33 @@ const TestimonialsCarousel = () => {
                     key={i}
                     className={`w-4 h-4 ${
                       i < testimonial.rating
-                        ? "fill-primary text-primary"
+                        ? "fill-orange-400 text-orange-400"
                         : "fill-muted text-muted"
                     }`}
                   />
                 ))}
               </div>
 
+              {/* Title */}
+              <h4 className="text-lg font-semibold mb-4 text-foreground">
+                " {testimonial.title} "
+              </h4>
+
               {/* Quote */}
-              <p className="text-muted-foreground mb-6 leading-relaxed">
+              <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
                 {testimonial.quote}
               </p>
 
               {/* Author */}
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-3">
                 <img
                   src={testimonial.avatar}
                   alt={testimonial.author}
                   className="w-12 h-12 rounded-full object-cover"
                 />
                 <div>
-                  <p className="font-medium">{testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
+                  <p className="font-semibold text-sm text-foreground">{testimonial.author}</p>
+                  <p className="text-xs text-muted-foreground">{testimonial.role}</p>
                 </div>
               </div>
             </motion.div>
@@ -121,18 +122,19 @@ const TestimonialsCarousel = () => {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.3 }}
-              className="bg-card rounded-2xl p-6 shadow-luxury-md"
+              className="bg-white rounded-2xl p-6 shadow-md border border-border/30"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
             >
-              <Quote className="w-8 h-8 text-primary/20 mb-3" />
-              <h4 className="font-heading text-lg font-medium mb-3">
-                " {testimonials[currentIndex].title} "
-              </h4>
+              {/* Rating */}
               <div className="flex items-center gap-1 mb-3">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-primary text-primary" />
+                  <Star key={i} className="w-4 h-4 fill-orange-400 text-orange-400" />
                 ))}
               </div>
-              <p className="text-muted-foreground mb-5 leading-relaxed">
+              <h4 className="text-lg font-semibold mb-3 text-foreground">
+                " {testimonials[currentIndex].title} "
+              </h4>
+              <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
                 {testimonials[currentIndex].quote}
               </p>
               <div className="flex items-center gap-3">
@@ -142,7 +144,7 @@ const TestimonialsCarousel = () => {
                   className="w-10 h-10 rounded-full object-cover"
                 />
                 <div>
-                  <p className="font-medium text-sm">{testimonials[currentIndex].author}</p>
+                  <p className="font-semibold text-sm text-foreground">{testimonials[currentIndex].author}</p>
                   <p className="text-xs text-muted-foreground">{testimonials[currentIndex].role}</p>
                 </div>
               </div>
@@ -153,7 +155,7 @@ const TestimonialsCarousel = () => {
           <div className="flex items-center justify-center gap-4 mt-6">
             <button
               onClick={prev}
-              className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors focus-gold"
+              className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
               aria-label="Previous testimonial"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -172,7 +174,7 @@ const TestimonialsCarousel = () => {
             </div>
             <button
               onClick={next}
-              className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors focus-gold"
+              className="p-2 rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-colors"
               aria-label="Next testimonial"
             >
               <ChevronRight className="w-5 h-5" />

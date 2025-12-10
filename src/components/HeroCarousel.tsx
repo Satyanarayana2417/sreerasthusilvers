@@ -2,31 +2,33 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import heroMain from "@/assets/hero-main.jpg";
+import heroShineBright from "@/assets/hero-shine-bright.jpg";
+import collectionBanner from "@/assets/collection-banner.jpg";
 
 const slides = [
   {
     id: 1,
     eyebrow: "OUR EARRINGS",
     title: "Find the Perfect Ring",
-    subtitle: "Get lifted with the 21 Day Facial Gua Sha Challenge!",
+    subtitle: "Discover our exquisite collection of handcrafted silver jewelry",
     cta: "Shop Now",
     image: heroMain,
   },
   {
     id: 2,
-    eyebrow: "NEW COLLECTION",
-    title: "The Iconic Collection",
-    subtitle: "Color In Your Look Elegant And Everlasting",
-    cta: "Discover More",
-    image: heroMain,
+    eyebrow: "STUNNING EARRINGS",
+    title: "Shine Bright",
+    subtitle: "Statement earrings for every occasion",
+    cta: "Shop Earrings",
+    image: heroShineBright,
   },
   {
     id: 3,
-    eyebrow: "BLACK FRIDAY",
+    eyebrow: "EXCLUSIVE OFFER",
     title: "Up to 30% Off",
     subtitle: "Grab the deal right now! Extra 15% off this season.",
     cta: "Shop Sale",
-    image: heroMain,
+    image: collectionBanner,
   },
 ];
 
@@ -44,17 +46,13 @@ const HeroCarousel = () => {
 
   useEffect(() => {
     if (isPaused) return;
-    const interval = setInterval(nextSlide, 5000);
+    const interval = setInterval(nextSlide, 3000);
     return () => clearInterval(interval);
   }, [isPaused, nextSlide]);
 
   return (
     <section
-      className="relative min-h-[90vh] lg:min-h-screen overflow-hidden"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
-      onFocus={() => setIsPaused(true)}
-      onBlur={() => setIsPaused(false)}
+      className="relative min-h-[80vh] lg:min-h-screen w-full overflow-hidden"
     >
       <AnimatePresence mode="wait">
         <motion.div
@@ -63,11 +61,11 @@ const HeroCarousel = () => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.6 }}
-          className="absolute inset-0"
+          className="absolute inset-0 w-full h-full"
         >
-          {/* Background Image with Parallax */}
+          {/* Background Image with Parallax - Full width no gaps */}
           <motion.div
-            className="absolute inset-0 parallax-slow"
+            className="absolute inset-0 w-full h-full parallax-slow"
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
             transition={{ duration: 1.2 }}
@@ -83,8 +81,8 @@ const HeroCarousel = () => {
       </AnimatePresence>
 
       {/* Content */}
-      <div className="relative z-10 container-custom h-full min-h-[90vh] lg:min-h-screen flex items-center">
-        <div className="max-w-2xl py-20 lg:py-0">
+      <div className="relative z-10 px-4 md:px-8 lg:px-16 h-full min-h-[80vh] lg:min-h-screen flex items-center">
+        <div className="max-w-2xl py-16 lg:py-0">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentSlide}
@@ -99,6 +97,7 @@ const HeroCarousel = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
                 className="eyebrow block mb-4"
+                style={{ fontFamily: "'Poppins', sans-serif" }}
               >
                 {slides[currentSlide].eyebrow}
               </motion.span>
@@ -109,6 +108,7 @@ const HeroCarousel = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
                 className="heading-xl mb-6"
+                style={{ fontFamily: "'Poppins', sans-serif" }}
               >
                 {slides[currentSlide].title.split(" ").map((word, i) => (
                   <span key={i} className="inline-block mr-4">
@@ -123,6 +123,7 @@ const HeroCarousel = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
                 className="body-lg mb-8 max-w-md"
+                style={{ fontFamily: "'Poppins', sans-serif" }}
               >
                 {slides[currentSlide].subtitle}
               </motion.p>

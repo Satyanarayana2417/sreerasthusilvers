@@ -103,10 +103,10 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
 
         {/* Price */}
         <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold">${product.price.toFixed(2)}</span>
+          <span className="text-lg font-semibold">₹{product.price.toLocaleString('en-IN')}</span>
           {product.oldPrice && (
             <span className="text-sm text-muted-foreground line-through">
-              ${product.oldPrice.toFixed(2)}
+              ₹{product.oldPrice.toLocaleString('en-IN')}
             </span>
           )}
         </div>

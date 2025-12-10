@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Search, Heart, ShoppingBag, User, ChevronDown } from "lucide-react";
+import logo from "../assets/logo-new.png";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -24,8 +25,8 @@ const Header = () => {
 
   return (
     <>
-      {/* Announcement Bar */}
-      <div className="bg-foreground overflow-hidden">
+      {/* Announcement Bar - Hidden on mobile */}
+      <div className="hidden md:block bg-foreground overflow-hidden w-full max-w-[100vw]">
         <div className="marquee flex whitespace-nowrap py-2">
           <span className="inline-flex items-center gap-8 text-xs tracking-wider text-primary-foreground px-4">
             <span>UP TO 30% OFF EVERYTHING</span>
@@ -59,9 +60,7 @@ const Header = () => {
           <div className="flex items-center justify-between h-20">
             {/* Logo */}
             <a href="/" className="flex items-center">
-              <span className="text-2xl font-heading font-semibold tracking-tight">
-                OLIGHT
-              </span>
+              <img src={logo} alt="Sreerasthu Silvers" className="h-10 md:h-14 w-auto" />
             </a>
 
             {/* Desktop Navigation */}

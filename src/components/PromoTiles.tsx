@@ -30,16 +30,16 @@ const PromoTiles = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section ref={ref} className="section-padding">
-      <div className="container-custom">
-        <div className="grid md:grid-cols-2 gap-6">
+    <section ref={ref} className="pb-8 md:pb-12 w-[100vw] ml-[calc(-50vw+50%)] overflow-hidden">
+      <div className="w-full">
+        <div className="grid md:grid-cols-2">
           {tiles.map((tile, index) => (
             <motion.div
               key={tile.id}
               initial={{ opacity: 0, y: 40 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, delay: index * 0.15 }}
-              className="group relative overflow-hidden rounded-2xl aspect-[4/3] md:aspect-[16/10] cursor-pointer"
+              className="group relative overflow-hidden aspect-[4/3] md:aspect-[16/9] lg:aspect-[16/8] cursor-pointer min-h-[280px] md:min-h-[380px] lg:min-h-[420px]"
             >
               {/* Background Image */}
               <div className="absolute inset-0">

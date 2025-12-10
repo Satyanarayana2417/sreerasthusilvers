@@ -1,17 +1,17 @@
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Truck, Headphones, CalendarCheck, Gift } from "lucide-react";
+import { Package, Headphones, CalendarCheck, Gift } from "lucide-react";
 
 const features = [
   {
     id: 1,
     title: "Complimentary Shipping",
-    description: "We offer complimentary shipping and returns on all orders over $130.",
-    icon: Truck,
+    description: "We offer complimentary shipping and returns on all orders over ₹10,000.",
+    icon: Package,
   },
   {
     id: 2,
-    title: "Olight At Your Service",
+    title: "Sreerasthu At Your Service",
     description: "Our client care experts are always here to help.",
     icon: Headphones,
   },
@@ -23,8 +23,8 @@ const features = [
   },
   {
     id: 4,
-    title: "The Iconic Blue Box",
-    description: "Your Olight purchase comes wrapped in our Blue Box packaging.",
+    title: "The Iconic Box",
+    description: "Your Sreerasthu purchase comes wrapped in our Box packaging.",
     icon: Gift,
   },
 ];
@@ -34,29 +34,32 @@ const FeatureIcons = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section ref={ref} className="section-padding bg-secondary/30">
+    <section ref={ref} className="py-8 md:py-10 bg-white border-y border-border/20">
       <div className="container-custom">
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {features.map((feature, index) => (
             <motion.div
               key={feature.id}
               initial={{ opacity: 0, y: 20 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="text-center group"
+              className="flex flex-col items-center text-center lg:flex-row lg:items-start lg:text-left gap-3 lg:gap-4"
+              style={{ fontFamily: "'Poppins', sans-serif" }}
             >
               {/* Icon */}
-              <div className="inline-flex items-center justify-center w-16 h-16 mb-4 rounded-full bg-background shadow-luxury-md transition-all group-hover:shadow-gold group-hover:scale-110">
-                <feature.icon className="w-7 h-7 text-primary" strokeWidth={1.5} />
+              <div className="flex-shrink-0">
+                <feature.icon className="w-10 h-10 text-foreground" strokeWidth={1} />
               </div>
 
               {/* Content */}
-              <h4 className="font-heading text-lg font-medium mb-2">
-                {feature.title}
-              </h4>
-              <p className="text-sm text-muted-foreground leading-relaxed">
-                {feature.description}
-              </p>
+              <div>
+                <h4 className="text-sm font-semibold text-foreground mb-1">
+                  {feature.title}
+                </h4>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {feature.description}
+                </p>
+              </div>
             </motion.div>
           ))}
         </div>

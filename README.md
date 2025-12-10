@@ -1,4 +1,4 @@
-# Olight Jewelry - Luxury Jewelry Store
+# Sreerasthu Silvers - Luxury Jewelry Store
 
 Created by **Shiva** from **Dream Team Services**
 
