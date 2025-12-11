@@ -1,30 +1,43 @@
 import { motion } from "framer-motion";
 import { Star, Heart, Eye, ShoppingBag } from "lucide-react";
 
-interface ProductCardProps {
-  product: {
-    id: string;
-    title: string;
-    category: string;
-    price: number;
-    oldPrice?: number | null;
-    rating: number;
-    reviews: number;
-    image: string;
-    alt?: string;
-    badge?: string;
-    discount?: number;
-  };
-  index?: number;
+interface Product {
+  id: string;
+  title: string;
+  category: string;
+  price: number;
+  oldPrice?: number | null;
+  rating: number;
+  reviews: number;
+  image: string;
+  alt?: string;
+  badge?: string;
+  discount?: number;
 }
 
-const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
+interface ProductCardProps {
+  product: Product;
+  index?: number;
+  onQuickView?: (product: Product) => void;
+}
+
+const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
+  const handleCardClick = () => {
+    onQuickView?.(product);
+  };
+
+  const handleQuickViewClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onQuickView?.(product);
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="product-card group"
+      className="product-card group cursor-pointer"
+      onClick={handleCardClick}
     >
       {/* Image Container */}
       <div className="product-card-image relative bg-muted rounded-xl overflow-hidden aspect-square mb-4">
@@ -50,18 +63,21 @@ const ProductCard = ({ product, index = 0 }: ProductCardProps) => {
         {/* Quick Actions */}
         <div className="product-card-actions">
           <button
+            onClick={(e) => e.stopPropagation()}
             className="p-3 bg-background rounded-full shadow-luxury-md hover:bg-primary hover:text-primary-foreground transition-all transform hover:scale-110 focus-gold"
             aria-label="Add to wishlist"
           >
             <Heart className="w-4 h-4" />
           </button>
           <button
+            onClick={handleQuickViewClick}
             className="p-3 bg-background rounded-full shadow-luxury-md hover:bg-primary hover:text-primary-foreground transition-all transform hover:scale-110 focus-gold"
             aria-label="Quick view"
           >
             <Eye className="w-4 h-4" />
           </button>
           <button
+            onClick={(e) => e.stopPropagation()}
             className="p-3 bg-background rounded-full shadow-luxury-md hover:bg-primary hover:text-primary-foreground transition-all transform hover:scale-110 focus-gold"
             aria-label="Add to cart"
           >

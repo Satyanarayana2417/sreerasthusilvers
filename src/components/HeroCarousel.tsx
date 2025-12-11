@@ -52,36 +52,36 @@ const HeroCarousel = () => {
 
   return (
     <section
-      className="relative min-h-[80vh] lg:min-h-screen w-full overflow-hidden"
+      className="relative min-h-screen w-full overflow-hidden bg-foreground/10"
     >
-      <AnimatePresence mode="wait">
+      {/* Background Images - All slides rendered, only current one visible */}
+      {slides.map((slide, index) => (
         <motion.div
-          key={currentSlide}
+          key={slide.id}
           initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.6 }}
+          animate={{ opacity: index === currentSlide ? 1 : 0 }}
+          transition={{ duration: 0.8, ease: "easeInOut" }}
           className="absolute inset-0 w-full h-full"
         >
           {/* Background Image with Parallax - Full width no gaps */}
           <motion.div
             className="absolute inset-0 w-full h-full parallax-slow"
-            initial={{ scale: 1.1 }}
-            animate={{ scale: 1 }}
+            initial={{ scale: 1.05 }}
+            animate={{ scale: index === currentSlide ? 1 : 1.05 }}
             transition={{ duration: 1.2 }}
           >
             <img
-              src={slides[currentSlide].image}
+              src={slide.image}
               alt="Luxury jewelry collection"
               className="w-full h-full object-cover object-center"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-background/80 via-background/40 to-transparent" />
           </motion.div>
         </motion.div>
-      </AnimatePresence>
+      ))}
 
       {/* Content */}
-      <div className="relative z-10 px-4 md:px-8 lg:px-16 h-full min-h-[80vh] lg:min-h-screen flex items-center">
+      <div className="relative z-10 px-4 md:px-8 lg:px-16 h-full min-h-screen flex items-center">
         <div className="max-w-2xl py-16 lg:py-0">
           <AnimatePresence mode="wait">
             <motion.div
