@@ -119,6 +119,12 @@
   html {
     scroll-behavior: smooth;
     overflow-x: clip;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  html::-webkit-scrollbar {
+    display: none;
   }
 
   body {
@@ -320,6 +326,15 @@
 }
 
 @layer utilities {
+  /* Hide Scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
   /* Parallax Helper */
   .parallax-slow {
     will-change: transform;

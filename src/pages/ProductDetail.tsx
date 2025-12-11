@@ -339,18 +339,18 @@ const ProductDetail = () => {
                 </button>
 
                 {/* Features */}
-                <div className="flex flex-row gap-2 md:gap-4 mb-6 md:mb-8 overflow-x-auto pb-2">
-                  <div className="flex items-center gap-1.5 md:gap-3 p-2 md:p-3 bg-secondary/50 rounded-lg md:rounded-xl whitespace-nowrap flex-shrink-0">
-                    <Truck className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                    <span className="text-xs md:text-sm">Free Shipping</span>
+                <div className="grid grid-cols-3 gap-2 md:gap-4 mb-6 md:mb-8">
+                  <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 bg-secondary/50 rounded-lg md:rounded-xl text-center md:text-left">
+                    <Truck className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+                    <span className="text-[10px] md:text-sm leading-tight">Free Shipping</span>
                   </div>
-                  <div className="flex items-center gap-1.5 md:gap-3 p-2 md:p-3 bg-secondary/50 rounded-lg md:rounded-xl whitespace-nowrap flex-shrink-0">
-                    <Shield className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                    <span className="text-xs md:text-sm">2 Year Warranty</span>
+                  <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 bg-secondary/50 rounded-lg md:rounded-xl text-center md:text-left">
+                    <Shield className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+                    <span className="text-[10px] md:text-sm leading-tight">2 Year Warranty</span>
                   </div>
-                  <div className="flex items-center gap-1.5 md:gap-3 p-2 md:p-3 bg-secondary/50 rounded-lg md:rounded-xl whitespace-nowrap flex-shrink-0">
-                    <RotateCcw className="w-4 h-4 md:w-5 md:h-5 text-primary" />
-                    <span className="text-xs md:text-sm">Easy Returns</span>
+                  <div className="flex flex-col md:flex-row items-center gap-1 md:gap-3 p-2 md:p-3 bg-secondary/50 rounded-lg md:rounded-xl text-center md:text-left">
+                    <RotateCcw className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+                    <span className="text-[10px] md:text-sm leading-tight">Easy Returns</span>
                   </div>
                 </div>
 
