@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Search, Heart, ShoppingBag, User, ChevronDown, ChevronRight } from "lucide-react";
 import logo from "../assets/logo-new.png";
 import ring4 from "@/assets/products/ring-4.jpg";
+import { useCart } from "@/contexts/CartContext";
 
 // Shop mega menu data
 const shopMenuData = {
@@ -20,33 +21,33 @@ const shopMenuData = {
   filterStyle: {
     title: "Furniture",
     items: [
-      { name: "Silver Sofa Collection", href: "/shop/sofa" },
-      { name: "Royal Silver Chairs", href: "/shop/chairs" },
-      { name: "Royal Silver Tables", href: "/shop/tables" },
-      { name: "Antique Silver Décor", href: "/shop/decor" },
-      { name: "Silver Swing (Jhoola)", href: "/shop/swing" },
+      { name: "Silver Sofa Collection", href: "/furniture/silver-sofa-collection" },
+      { name: "Royal Silver Chairs", href: "/furniture/royal-silver-chairs" },
+      { name: "Royal Silver Tables", href: "/furniture/royal-silver-tables" },
+      { name: "Antique Silver Décor", href: "/furniture/antique-silver-decor" },
+      { name: "Silver Swing (Jhoola)", href: "/furniture/silver-swing-jhoola" },
     ],
   },
   productLayouts: {
     title: "Articles",
     items: [
-      { name: "Silver Pooja Kalash Set", href: "/shop/pooja-kalash" },
-      { name: "Silver Coconut", href: "/shop/coconut" },
-      { name: "Silver Footwear", href: "/shop/footwear" },
-      { name: "Silver Gopuram Idol Stand", href: "/shop/idol-stand" },
-      { name: "Silver Camel Cart", href: "/shop/camel-cart" },
-      { name: "Silver Jhula", href: "/shop/jhula" },
+      { name: "Silver Pooja Kalash Set", href: "/articles/silver-pooja-kalash-set" },
+      { name: "Silver Coconut", href: "/articles/silver-coconut" },
+      { name: "Silver Footwear", href: "/articles/silver-footwear" },
+      { name: "Silver Gopuram Idol Stand", href: "/articles/silver-gopuram-idol-stand" },
+      { name: "Silver Camel Cart", href: "/articles/silver-camel-cart" },
+      { name: "Silver Jhula", href: "/articles/silver-jhula" },
     ],
   },
   productType: {
     title: "Other Products",
     items: [
-      { name: "Silver Idols", href: "/shop/idols" },
-      { name: "Silver Pooja Items", href: "/shop/pooja-items" },
-      { name: "Silver Gift Articles", href: "/shop/gift-articles" },
-      { name: "Custom Engraved Items", href: "/shop/custom-engraved" },
-      { name: "Silver Coins", href: "/shop/coins" },
-      { name: "Limited Edition Pieces", href: "/shop/limited-edition" },
+      { name: "Silver Idols", href: "/products/silver-idols" },
+      { name: "Silver Pooja Items", href: "/products/silver-pooja-items" },
+      { name: "Silver Gift Articles", href: "/products/silver-gift-articles" },
+      { name: "Custom Engraved Items", href: "/products/custom-engraved-items" },
+      { name: "Silver Coins", href: "/products/silver-coins" },
+      { name: "Limited Edition Pieces", href: "/products/limited-edition-pieces" },
     ],
   },
   featured: {
@@ -57,7 +58,70 @@ const shopMenuData = {
   },
 };
 
+// Categories mega menu data
+const categoriesMenuData = {
+  bracelets: {
+    title: "Bracelets",
+    items: [
+      { name: "Diamond Bracelets", href: "/categories/bracelets/diamond" },
+      { name: "Gemstone Bracelets", href: "/categories/bracelets/gemstone" },
+      { name: "Pearl Bracelets", href: "/categories/bracelets/pearl" },
+      { name: "Gold Bracelets", href: "/categories/bracelets/gold" },
+      { name: "Silver Bracelets", href: "/categories/bracelets/silver" },
+      { name: "Bangle Bracelets", href: "/categories/bracelets/bangle" },
+    ],
+  },
+  necklaces: {
+    title: "Necklaces",
+    items: [
+      { name: "Diamond Necklaces", href: "/categories/necklaces/diamond" },
+      { name: "Gemstone Necklaces", href: "/categories/necklaces/gemstone" },
+      { name: "Pearl Necklaces", href: "/categories/necklaces/pearl" },
+      { name: "Gold Necklaces", href: "/categories/necklaces/gold" },
+      { name: "Silver Necklaces", href: "/categories/necklaces/silver" },
+      { name: "Cross Necklaces", href: "/categories/necklaces/cross" },
+    ],
+  },
+  rings: {
+    title: "Rings",
+    items: [
+      { name: "Diamond Rings", href: "/categories/rings/diamond" },
+      { name: "Gemstone Rings", href: "/categories/rings/gemstone" },
+      { name: "Wedding Rings", href: "/categories/rings/wedding" },
+      { name: "Engagement Rings", href: "/categories/rings/engagement" },
+      { name: "Gold Rings", href: "/categories/rings/gold" },
+      { name: "Fashion Rings", href: "/categories/rings/fashion" },
+    ],
+  },
+  jewelry: {
+    title: "Jewelry",
+    items: [
+      { name: "Men's Jewelry", href: "/categories/jewelry/mens" },
+      { name: "Birthstone Jewelry", href: "/categories/jewelry/birthstone" },
+      { name: "Pearl Jewelry", href: "/categories/jewelry/pearl" },
+      { name: "Rose Gold Jewelry", href: "/categories/jewelry/rose-gold" },
+      { name: "New Arrivals", href: "/categories/jewelry/new-arrivals" },
+      { name: "Jewelry Sale", href: "/categories/jewelry/sale" },
+    ],
+  },
+  featured: {
+    eyebrow: "LUXURY NECKLACE",
+    title: "Best Friend Jewelry",
+    cta: "Shop Now",
+    image: ring4,
+  },
+};
+
+// Pages menu data
+const pagesMenuData = [
+  { name: "About Us", href: "/about", highlight: false },
+  { name: "FAQ", href: "/faq", highlight: true },
+  { name: "My account", href: "/profile", highlight: false },
+  { name: "Cart", href: "/cart", highlight: false },
+];
+
 const Header = () => {
+  const { toggleCart, totalItems } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -78,7 +142,7 @@ const Header = () => {
     { name: "Categories", href: "#", hasDropdown: true },
     { name: "Pages", href: "#", hasDropdown: true },
     { name: "Blog", href: "#", hasDropdown: true },
-    { name: "Contact", href: "#" },
+    { name: "Contact", href: "/contact" },
   ];
 
   const handleMouseEnter = (itemName: string) => {
@@ -276,22 +340,180 @@ const Header = () => {
               )}
             </AnimatePresence>
 
+            {/* Categories Mega Menu Dropdown */}
+            <AnimatePresence>
+              {activeDropdown === "Categories" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute left-0 right-0 top-full bg-background border-t border-border shadow-luxury-lg z-50"
+                  onMouseEnter={() => handleMouseEnter("Categories")}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <div className="container-custom py-8">
+                    <div className="grid grid-cols-5 gap-8">
+                      {/* Bracelets */}
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          {categoriesMenuData.bracelets.title}
+                        </h3>
+                        <ul className="space-y-2">
+                          {categoriesMenuData.bracelets.items.map((subItem) => (
+                            <li key={subItem.name}>
+                              <a
+                                href={subItem.href}
+                                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                {subItem.name}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Necklaces */}
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          {categoriesMenuData.necklaces.title}
+                        </h3>
+                        <ul className="space-y-2">
+                          {categoriesMenuData.necklaces.items.map((subItem) => (
+                            <li key={subItem.name}>
+                              <a
+                                href={subItem.href}
+                                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                {subItem.name}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Rings */}
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          {categoriesMenuData.rings.title}
+                        </h3>
+                        <ul className="space-y-2">
+                          {categoriesMenuData.rings.items.map((subItem) => (
+                            <li key={subItem.name}>
+                              <a
+                                href={subItem.href}
+                                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                {subItem.name}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Jewelry */}
+                      <div>
+                        <h3 className="text-base font-semibold text-foreground mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          {categoriesMenuData.jewelry.title}
+                        </h3>
+                        <ul className="space-y-2">
+                          {categoriesMenuData.jewelry.items.map((subItem) => (
+                            <li key={subItem.name}>
+                              <a
+                                href={subItem.href}
+                                className="text-sm text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                {subItem.name}
+                              </a>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      {/* Featured Banner */}
+                      <div className="relative rounded-xl overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50">
+                        <img
+                          src={categoriesMenuData.featured.image}
+                          alt={categoriesMenuData.featured.title}
+                          className="absolute right-0 bottom-0 w-3/4 h-auto object-contain"
+                        />
+                        <div className="relative z-10 p-6">
+                          <span className="text-xs uppercase tracking-wider text-primary font-medium">
+                            {categoriesMenuData.featured.eyebrow}
+                          </span>
+                          <h3 className="text-2xl font-semibold text-foreground mt-2 mb-4 leading-tight" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            {categoriesMenuData.featured.title}
+                          </h3>
+                          <a
+                            href="#"
+                            className="inline-block px-5 py-2.5 bg-foreground text-background text-sm font-medium rounded-full hover:bg-foreground/90 transition-colors"
+                          >
+                            {categoriesMenuData.featured.cta}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Pages Dropdown Menu */}
+            <AnimatePresence>
+              {activeDropdown === "Pages" && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  transition={{ duration: 0.2 }}
+                  className="absolute left-1/2 -translate-x-1/2 top-full mt-2 bg-background border border-border rounded-2xl shadow-luxury-lg z-50 min-w-[200px] overflow-hidden"
+                  onMouseEnter={() => handleMouseEnter("Pages")}
+                  onMouseLeave={handleMouseLeave}
+                >
+                  <div className="py-3">
+                    <ul>
+                      {pagesMenuData.map((item) => (
+                        <li key={item.name}>
+                          <a
+                            href={item.href}
+                            className={`block px-6 py-2.5 text-base transition-colors ${
+                              item.highlight
+                                ? "text-primary font-medium hover:bg-primary/5"
+                                : "text-foreground hover:bg-muted"
+                            }`}
+                          >
+                            {item.name}
+                          </a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
             {/* Right Actions */}
             <div className="flex items-center gap-4">
               <button className="p-2 hover:bg-muted rounded-full transition-colors focus-gold" aria-label="Search">
                 <Search className="w-5 h-5" />
               </button>
-              <button className="p-2 hover:bg-muted rounded-full transition-colors focus-gold hidden sm:flex" aria-label="Account">
+              <a href="/profile" className="p-2 hover:bg-muted rounded-full transition-colors focus-gold hidden sm:flex" aria-label="Account">
                 <User className="w-5 h-5" />
-              </button>
-              <button className="p-2 hover:bg-muted rounded-full transition-colors focus-gold hidden sm:flex" aria-label="Wishlist">
+              </a>
+              <a href="/wishlist" className="p-2 hover:bg-muted rounded-full transition-colors focus-gold hidden sm:flex" aria-label="Wishlist">
                 <Heart className="w-5 h-5" />
-              </button>
-              <button className="p-2 hover:bg-muted rounded-full transition-colors focus-gold relative" aria-label="Cart">
+              </a>
+              <button 
+                onClick={toggleCart}
+                className="p-2 hover:bg-muted rounded-full transition-colors focus-gold relative" 
+                aria-label="Cart"
+              >
                 <ShoppingBag className="w-5 h-5" />
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium">
-                  0
-                </span>
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground text-xs rounded-full flex items-center justify-center font-medium">
+                    {totalItems}
+                  </span>
+                )}
               </button>
 
               {/* Mobile Menu Button */}

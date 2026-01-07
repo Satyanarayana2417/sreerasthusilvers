@@ -1,100 +1,11 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Heart, Minus, Plus, ChevronRight, ShoppingBag, Truck, Shield, RotateCcw, Check } from "lucide-react";
+import { Star, Heart, Minus, Plus, ChevronRight, ShoppingBag, Truck, Shield, RotateCcw, Check, Loader2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import necklace1 from "@/assets/products/necklace-1.jpg";
-import necklace2 from "@/assets/products/necklace-2.jpg";
-
-interface Product {
-  id: string;
-  title: string;
-  category: string;
-  price: number;
-  oldPrice?: number | null;
-  rating: number;
-  reviews: number;
-  image: string;
-  alt: string;
-  description?: string;
-}
-
-// All products data (in a real app, this would come from an API)
-const allProducts: Product[] = [
-  {
-    id: "n-001",
-    title: "Crystal Accent Gold Hoops",
-    category: "Earrings, Gifts Set",
-    price: 952.26,
-    oldPrice: null,
-    rating: 5,
-    reviews: 5,
-    image: necklace1,
-    alt: "Crystal Accent Gold Hoops",
-    description: "Elevate your style with these exquisite Crystal Accent Gold Hoops. Crafted with precision and adorned with sparkling crystals, these hoops are perfect for both everyday elegance and special occasions. The lustrous gold finish complements any outfit, making them a versatile addition to your jewelry collection.",
-  },
-  {
-    id: "n-002",
-    title: "14k Gold Crew Helium Ring",
-    category: "Gifts Set",
-    price: 100.97,
-    oldPrice: null,
-    rating: 5,
-    reviews: 5,
-    image: necklace2,
-    alt: "14k Gold Crew Helium Ring",
-    description: "A timeless piece crafted from premium 14k gold, this Crew Helium Ring features a sleek, modern design that transitions effortlessly from day to night. Its comfortable fit and durable construction make it perfect for daily wear.",
-  },
-  {
-    id: "n-003",
-    title: "Classic Eternity Ring Sets",
-    category: "Gifts Set",
-    price: 487.35,
-    oldPrice: null,
-    rating: 4,
-    reviews: 5,
-    image: necklace1,
-    alt: "Classic Eternity Ring Sets",
-    description: "Symbolize eternal love with our Classic Eternity Ring Set. This stunning collection features intricately designed rings that represent infinite commitment and timeless beauty. Perfect for engagements, anniversaries, or as a meaningful gift.",
-  },
-  {
-    id: "n-004",
-    title: "Elegant Pearl Necklace",
-    category: "Necklaces",
-    price: 1299.99,
-    oldPrice: 1599.99,
-    rating: 5,
-    reviews: 12,
-    image: necklace2,
-    alt: "Elegant Pearl Necklace",
-    description: "Embrace sophistication with our Elegant Pearl Necklace. Each pearl is hand-selected for its lustrous quality and perfectly matched to create a seamless strand. This classic piece adds refined elegance to any ensemble.",
-  },
-  {
-    id: "n-005",
-    title: "Diamond Studded Bracelet",
-    category: "Bracelets",
-    price: 2499.99,
-    oldPrice: 2999.99,
-    rating: 5,
-    reviews: 8,
-    image: necklace1,
-    alt: "Diamond Studded Bracelet",
-    description: "Make a statement with our Diamond Studded Bracelet. Featuring genuine diamonds set in premium metal, this bracelet catches the light beautifully and adds instant glamour to your wrist.",
-  },
-  {
-    id: "n-006",
-    title: "Silver Anklet with Charms",
-    category: "Anklets",
-    price: 399.99,
-    oldPrice: null,
-    rating: 4,
-    reviews: 15,
-    image: necklace2,
-    alt: "Silver Anklet with Charms",
-    description: "Add a touch of whimsy to your look with our Silver Anklet featuring delicate charms. Perfect for summer days or adding a playful element to your jewelry collection.",
-  },
-];
+import { getProduct, getActiveProducts } from "@/services/productService";
+import { UIProductDetail, adaptFirebaseToUIDetail, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -103,22 +14,86 @@ const ProductDetail = () => {
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [product, setProduct] = useState<UIProductDetail | null>(null);
+  const [relatedProducts, setRelatedProducts] = useState<UIProductDetail[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [notFound, setNotFound] = useState(false);
 
-  // Find the product
-  const product = allProducts.find((p) => p.id === productId);
+  // Fetch product and related products
+  useEffect(() => {
+    const fetchProductData = async () => {
+      if (!productId) {
+        setNotFound(true);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // Fetch the main product
+        const fbProduct = await getProduct(productId);
+        
+        if (!fbProduct) {
+          setNotFound(true);
+          setLoading(false);
+          return;
+        }
+
+        const uiProduct = adaptFirebaseToUIDetail(fbProduct);
+        setProduct(uiProduct);
+
+        // Fetch all active products for related products
+        const allActiveProducts = await getActiveProducts();
+        const related = allActiveProducts
+          .filter(p => p.id !== productId)
+          .slice(0, 4)
+          .map(adaptFirebaseToUIDetail);
+        setRelatedProducts(related);
+      } catch (error) {
+        console.error("Error fetching product:", error);
+        setNotFound(true);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductData();
+  }, [productId]);
 
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [productId]);
 
-  if (!product) {
+  const incrementQuantity = () => setQuantity((prev) => prev + 1);
+  const decrementQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
+
+  const handleAddToCart = () => {
+    setAddedToCart(true);
+    setTimeout(() => setAddedToCart(false), 2000);
+  };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full">
+        <Header />
+        <main className="container-custom py-20 flex items-center justify-center">
+          <Loader2 className="w-12 h-12 animate-spin text-primary" />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Product not found
+  if (notFound || !product) {
     return (
       <div className="min-h-screen w-full">
         <Header />
         <main className="container-custom py-20 text-center">
           <h1 className="text-2xl font-semibold mb-4">Product Not Found</h1>
-          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist.</p>
+          <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
           <button
             onClick={() => navigate("/shop/necklaces")}
             className="px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-all"
@@ -131,22 +106,11 @@ const ProductDetail = () => {
     );
   }
 
-  const incrementQuantity = () => setQuantity((prev) => prev + 1);
-  const decrementQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
-
-  const handleAddToCart = () => {
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
-  };
-
   // Generate SKU
   const sku = `sreerasthu-${product.category.toLowerCase().replace(/[^a-z]/g, "-")}-${product.id}`;
 
-  // Mock images for gallery
+  // Product images for gallery
   const productImages = [product.image, product.image, product.image, product.image];
-
-  // Related products
-  const relatedProducts = allProducts.filter((p) => p.id !== product.id).slice(0, 4);
 
   return (
     <div className="min-h-screen w-full overflow-x-clip">

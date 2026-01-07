@@ -1,0 +1,175 @@
+import React from 'react';
+import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import logo from '@/assets/logo-new.png';
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Image,
+  Settings,
+  LogOut,
+  Menu,
+  X,
+  ChevronDown,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+
+const AdminLayout = () => {
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const { userProfile, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/admin');
+  };
+
+  const navItems = [
+    { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+    { path: '/admin/products', icon: Package, label: 'Products' },
+    { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
+    { path: '/admin/media', icon: Image, label: 'Media' },
+    { path: '/admin/settings', icon: Settings, label: 'Settings' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#FBF8F3] font-['Poppins']" style={{ fontFamily: 'Poppins, sans-serif' }}>
+      <style>{`
+        .admin-panel h1, .admin-panel h2, .admin-panel h3, 
+        .admin-panel h4, .admin-panel h5, .admin-panel h6 {
+          font-family: 'Poppins', sans-serif !important;
+        }
+      `}</style>
+      {/* Mobile Sidebar Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-[#FFFBF5] border-r border-[#F5EFE6] transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        {/* Logo */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-[#F5EFE6]">
+          <div className="flex items-center gap-3">
+            <img src={logo} alt="Sree Rasthu Silvers" className="h-8 w-auto" />
+          </div>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="lg:hidden text-gray-400 hover:text-white"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="p-4 space-y-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.path}
+              to={item.path}
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
+                  isActive
+                    ? 'bg-[#FFF9E6] text-amber-700 font-medium'
+                    : 'text-gray-700 hover:bg-[#FFF9E6]/50 hover:text-gray-900'
+                }`
+              }
+            >
+              <item.icon className="h-5 w-5" />
+              <span>{item.label}</span>
+            </NavLink>
+          ))}
+        </nav>
+
+        {/* Logout Button */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#F5EFE6]">
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-[#FFF9E6]/50 hover:text-gray-900 rounded-lg transition-colors"
+          >
+            <LogOut className="h-5 w-5" />
+            <span>Logout</span>
+          </button>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="lg:ml-64">
+        {/* Top Header */}
+        <header className="h-16 bg-[#FFFBF5] border-b border-[#F5EFE6] flex items-center justify-between px-4 lg:px-6">
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="lg:hidden text-gray-600 hover:text-gray-900"
+          >
+            <Menu className="h-6 w-6" />
+          </button>
+
+          {/* Search (placeholder) */}
+          <div className="hidden md:block flex-1 max-w-md">
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full bg-white border border-[#F5EFE6] rounded-lg px-4 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-amber-600"
+            />
+          </div>
+
+          {/* User Menu */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="flex items-center gap-2 text-gray-700 hover:text-gray-900 hover:bg-gray-100"
+              >
+                <div className="w-8 h-8 bg-amber-600 rounded-full flex items-center justify-center">
+                  <span className="text-white text-sm font-medium">
+                    {userProfile?.username?.charAt(0).toUpperCase() || 'A'}
+                  </span>
+                </div>
+                <span className="hidden md:block">{userProfile?.username || 'Admin'}</span>
+                <ChevronDown className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-white border-[#F5EFE6]">
+              <DropdownMenuItem
+                className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 cursor-pointer"
+                onClick={() => navigate('/admin/settings')}
+              >
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
+                onClick={handleLogout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </header>
+
+        {/* Page Content */}
+        <main className="p-4 lg:p-6 admin-panel">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLayout;

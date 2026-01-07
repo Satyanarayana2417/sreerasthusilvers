@@ -1,125 +1,10 @@
 import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Package } from "lucide-react";
 import ProductCard from "./ProductCard";
 import ProductQuickView from "./ProductQuickView";
-import set1 from "@/assets/products/set-1.jpg";
-import ring3 from "@/assets/products/ring-3.jpg";
-import band1 from "@/assets/products/band-1.jpg";
-import ring4 from "@/assets/products/ring-4.jpg";
-import necklace2 from "@/assets/products/necklace-2.jpg";
-import ring1 from "@/assets/products/ring-1.jpg";
-import ring2 from "@/assets/products/ring-2.jpg";
-import necklace1 from "@/assets/products/necklace-1.jpg";
-import earrings1 from "@/assets/products/earrings-1.jpg";
-import watch1 from "@/assets/products/watch-1.jpg";
-
-const products = [
-  {
-    id: "t-001",
-    title: "Gorgeous Golden Blossom Sets",
-    category: "Rings, Wedding",
-    price: 487.35,
-    oldPrice: null,
-    rating: 4.9,
-    reviews: 5,
-    badge: "Free Shipping Over ₹20,000",
-    image: set1,
-  },
-  {
-    id: "t-002",
-    title: "10K Gold Eternity Ring",
-    category: "Diamonds, Rings",
-    price: 963.54,
-    oldPrice: null,
-    rating: 4.8,
-    reviews: 5,
-    discount: 63,
-    image: ring3,
-  },
-  {
-    id: "t-003",
-    title: "Everyday Forever Band",
-    category: "Necklaces & Pendants",
-    price: 442.35,
-    oldPrice: null,
-    rating: 4.7,
-    reviews: 5,
-    image: band1,
-  },
-  {
-    id: "t-004",
-    title: "14k Gold Crew Helium Ring",
-    category: "Gifts Set",
-    price: 100.97,
-    oldPrice: null,
-    rating: 4.9,
-    reviews: 5,
-    image: ring4,
-  },
-  {
-    id: "t-005",
-    title: "Gold Heart Locket Necklace",
-    category: "Necklaces & Pendants",
-    price: 291.93,
-    oldPrice: 796.70,
-    rating: 4.8,
-    reviews: 5,
-    image: necklace2,
-  },
-  {
-    id: "t-006",
-    title: "Royal Diamond Signet",
-    category: "Rings",
-    price: 1299.00,
-    oldPrice: 1599.00,
-    rating: 5.0,
-    reviews: 8,
-    image: ring1,
-  },
-  {
-    id: "t-007",
-    title: "Elegant Solitaire Ring",
-    category: "Diamonds, Rings",
-    price: 2150.00,
-    oldPrice: null,
-    rating: 4.9,
-    reviews: 12,
-    image: ring2,
-  },
-  {
-    id: "t-008",
-    title: "Classic Chain Necklace",
-    category: "Necklaces",
-    price: 875.50,
-    oldPrice: null,
-    rating: 4.8,
-    reviews: 6,
-    image: necklace1,
-  },
-  {
-    id: "t-009",
-    title: "Pearl Drop Earrings",
-    category: "Earrings",
-    price: 345.00,
-    oldPrice: 450.00,
-    rating: 4.7,
-    reviews: 9,
-    image: earrings1,
-  },
-  {
-    id: "t-010",
-    title: "Luxury Gold Watch",
-    category: "Watches",
-    price: 1999.99,
-    oldPrice: null,
-    rating: 5.0,
-    reviews: 15,
-    image: watch1,
-  },
-];
-
-type Product = typeof products[0];
+import { subscribeToProducts } from "@/services/productService";
+import { UIProduct, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
 
 const TrendProducts = () => {
   const ref = useRef(null);
@@ -127,13 +12,31 @@ const TrendProducts = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
   const [isPaused, setIsPaused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [selectedProduct, setSelectedProduct] = useState<UIProduct | null>(null);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const scrollPositionRef = useRef(0);
   const dragStartX = useRef(0);
   const dragScrollStart = useRef(0);
+  const [products, setProducts] = useState<UIProduct[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleQuickView = (product: Product) => {
+  // Real-time listener for new arrivals
+  useEffect(() => {
+    const unsubscribe = subscribeToProducts(
+      (fetchedProducts) => {
+        // Filter for new arrivals only
+        const newArrivals = fetchedProducts.filter(p => p.flags.isNewArrival);
+        const uiProducts = adaptFirebaseArrayToUI(newArrivals.slice(0, 10));
+        setProducts(uiProducts);
+        setLoading(false);
+      },
+      true // activeOnly
+    );
+
+    return () => unsubscribe();
+  }, []);
+
+  const handleQuickView = (product: UIProduct) => {
     if (!isDragging) {
       setSelectedProduct(product);
       setIsQuickViewOpen(true);
@@ -336,14 +239,36 @@ const TrendProducts = () => {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            {duplicatedProducts.map((product, index) => (
-              <div 
-                key={`${product.id}-${index}`} 
-                className="flex-shrink-0 w-[45%] sm:w-[35%] md:w-[28%] lg:w-[18%]"
-              >
-                <ProductCard product={product} index={0} onQuickView={handleQuickView} />
+            {loading ? (
+              // Loading skeleton
+              Array.from({ length: 10 }).map((_, index) => (
+                <div 
+                  key={`skeleton-${index}`} 
+                  className="flex-shrink-0 w-[45%] sm:w-[35%] md:w-[28%] lg:w-[18%]"
+                >
+                  <div className="animate-pulse">
+                    <div className="bg-muted rounded-xl aspect-square mb-4"></div>
+                    <div className="h-4 bg-muted rounded mb-2"></div>
+                    <div className="h-4 bg-muted rounded w-2/3"></div>
+                  </div>
+                </div>
+              ))
+            ) : products.length === 0 ? (
+              // Empty state
+              <div className="w-full py-12 text-center">
+                <Package className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
+                <p className="text-muted-foreground">No trending products available yet.</p>
               </div>
-            ))}
+            ) : (
+              duplicatedProducts.map((product, index) => (
+                <div 
+                  key={`${product.id}-${index}`} 
+                  className="flex-shrink-0 w-[45%] sm:w-[35%] md:w-[28%] lg:w-[18%]"
+                >
+                  <ProductCard product={product} index={0} onQuickView={handleQuickView} />
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

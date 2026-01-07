@@ -1,5 +1,7 @@
 import { motion } from "framer-motion";
 import { Star, Heart, Eye, ShoppingBag } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface Product {
   id: string;
@@ -22,6 +24,9 @@ interface ProductCardProps {
 }
 
 const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
   const handleCardClick = () => {
     onQuickView?.(product);
   };
@@ -29,6 +34,31 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
   const handleQuickViewClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onQuickView?.(product);
+  };
+
+  const handleAddToCart = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    try {
+      await addToCart({
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        image: product.image,
+        category: product.category,
+      });
+      
+      toast({
+        title: "Added to cart",
+        description: `${product.title} has been added to your cart.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -77,7 +107,7 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
             <Eye className="w-4 h-4" />
           </button>
           <button
-            onClick={(e) => e.stopPropagation()}
+            onClick={handleAddToCart}
             className="p-3 bg-background rounded-full shadow-luxury-md hover:bg-primary hover:text-primary-foreground transition-all transform hover:scale-110 focus-gold"
             aria-label="Add to cart"
           >

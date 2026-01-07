@@ -1,123 +1,16 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Heart, ShoppingBag, Check, X } from "lucide-react";
+import { Star, Heart, ShoppingBag, Check, X, Package, ChevronDown } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import necklace1 from "@/assets/products/necklace-1.jpg";
-import necklace2 from "@/assets/products/necklace-2.jpg";
-
-// Necklace products data
-const necklaceProducts = [
-  {
-    id: "n-001",
-    title: "Crystal Accent Gold Hoops",
-    category: "Earrings, Gifts Set",
-    price: 952.26,
-    oldPrice: null,
-    rating: 5,
-    reviews: 5,
-    image: necklace1,
-    alt: "Crystal Accent Gold Hoops",
-  },
-  {
-    id: "n-002",
-    title: "14k Gold Crew Helium Ring",
-    category: "Gifts Set",
-    price: 100.97,
-    oldPrice: null,
-    rating: 5,
-    reviews: 5,
-    image: necklace2,
-    alt: "14k Gold Crew Helium Ring",
-  },
-  {
-    id: "n-003",
-    title: "Classic Eternity Ring Sets",
-    category: "Gifts Set",
-    price: 487.35,
-    oldPrice: null,
-    rating: 4,
-    reviews: 5,
-    image: necklace1,
-    alt: "Classic Eternity Ring Sets",
-  },
-  {
-    id: "n-004",
-    title: "Elegant Pearl Necklace",
-    category: "Necklaces",
-    price: 1299.99,
-    oldPrice: 1599.99,
-    rating: 5,
-    reviews: 12,
-    image: necklace2,
-    alt: "Elegant Pearl Necklace",
-  },
-  {
-    id: "n-005",
-    title: "Diamond Heart Pendant",
-    category: "Necklaces, Pendants",
-    price: 2150.00,
-    oldPrice: null,
-    rating: 5,
-    reviews: 8,
-    image: necklace1,
-    alt: "Diamond Heart Pendant",
-  },
-  {
-    id: "n-006",
-    title: "Gold Chain Necklace",
-    category: "Necklaces",
-    price: 875.50,
-    oldPrice: 1050.00,
-    rating: 4,
-    reviews: 15,
-    image: necklace2,
-    alt: "Gold Chain Necklace",
-  },
-  {
-    id: "n-007",
-    title: "Ruby Studded Necklace",
-    category: "Necklaces, Gems",
-    price: 3450.00,
-    oldPrice: null,
-    rating: 5,
-    reviews: 3,
-    image: necklace1,
-    alt: "Ruby Studded Necklace",
-  },
-  {
-    id: "n-008",
-    title: "Vintage Pearl String",
-    category: "Necklaces, Pearls",
-    price: 1650.00,
-    oldPrice: 1999.00,
-    rating: 5,
-    reviews: 20,
-    image: necklace2,
-    alt: "Vintage Pearl String",
-  },
-  {
-    id: "n-009",
-    title: "Modern Choker Necklace",
-    category: "Necklaces",
-    price: 750.00,
-    oldPrice: null,
-    rating: 4,
-    reviews: 7,
-    image: necklace1,
-    alt: "Modern Choker Necklace",
-  },
-];
-
-type Product = typeof necklaceProducts[0];
+import { subscribeToProductsBySubcategory } from "@/services/productService";
+import { UIProduct, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
+import { Slider } from "@/components/ui/slider";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useCart } from "@/contexts/CartContext";
 
 type SortOption = 'default' | 'price-low-high' | 'price-high-low' | 'newest' | 'best-rating';
-
-interface CartItem {
-  product: Product;
-  quantity: number;
-}
 
 interface Toast {
   id: string;
@@ -128,10 +21,42 @@ interface Toast {
 
 const ShopNecklaces = () => {
   const navigate = useNavigate();
-  const [wishlist, setWishlist] = useState<string[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { toggleWishlist: toggleWishlistHook, isInWishlist } = useWishlist();
+  const { addToCart: addToCartContext } = useCart();
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const [necklaceProducts, setNecklaceProducts] = useState<UIProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+
+  // Real-time listener for necklaces from Firebase
+  useEffect(() => {
+    console.log('ShopNecklaces: Setting up real-time listener...');
+    setLoading(true);
+    
+    const unsubscribe = subscribeToProductsBySubcategory('Necklaces', (fbProducts) => {
+      console.log('ShopNecklaces: Real-time update received:', fbProducts.length, 'products');
+      const uiProducts = adaptFirebaseArrayToUI(fbProducts);
+      console.log('ShopNecklaces: Adapted UI products:', uiProducts);
+      setNecklaceProducts(uiProducts);
+      
+      if (uiProducts.length > 0) {
+        const prices = uiProducts.map(p => p.price);
+        const minPrice = Math.floor(Math.min(...prices));
+        const maxPrice = Math.ceil(Math.max(...prices));
+        setPriceRange([minPrice, maxPrice]);
+      }
+      
+      setLoading(false);
+    });
+
+    // Cleanup listener on unmount
+    return () => {
+      console.log('ShopNecklaces: Cleaning up real-time listener');
+      unsubscribe();
+    };
+  }, []);
 
   // Show toast notification
   const showToast = (message: string, type: 'success' | 'error' | 'info', productTitle?: string) => {
@@ -148,9 +73,35 @@ const ShopNecklaces = () => {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   };
 
+  const { minPrice, maxPrice } = useMemo(() => {
+    if (necklaceProducts.length === 0) return { minPrice: 0, maxPrice: 100000 };
+    const prices = necklaceProducts.map(p => p.price);
+    return {
+      minPrice: Math.floor(Math.min(...prices)),
+      maxPrice: Math.ceil(Math.max(...prices))
+    };
+  }, [necklaceProducts]);
+
+  const categoryCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    necklaceProducts.forEach(product => {
+      const category = product.category || 'Uncategorized';
+      counts[category] = (counts[category] || 0) + 1;
+    });
+    return counts;
+  }, [necklaceProducts]);
+
+  const filteredProducts = useMemo(() => {
+    return necklaceProducts.filter(product => {
+      const priceInRange = product.price >= priceRange[0] && product.price <= priceRange[1];
+      const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(product.category);
+      return priceInRange && categoryMatch;
+    });
+  }, [necklaceProducts, priceRange, selectedCategories]);
+
   // Sorted products based on selected option
   const sortedProducts = useMemo(() => {
-    const products = [...necklaceProducts];
+    const products = [...filteredProducts];
     
     switch (sortBy) {
       case 'price-low-high':
@@ -167,45 +118,38 @@ const ShopNecklaces = () => {
       default:
         return products;
     }
-  }, [sortBy]);
+  }, [sortBy, filteredProducts]);
+
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => 
+      prev.includes(category) 
+        ? prev.filter(c => c !== category)
+        : [...prev, category]
+    );
+  };
 
   const handleProductClick = (productId: string) => {
     navigate(`/product/${productId}`);
   };
 
   const toggleWishlist = (productId: string, productTitle: string) => {
-    setWishlist((prev) => {
-      const isInWishlist = prev.includes(productId);
-      if (isInWishlist) {
-        showToast('Removed from wishlist', 'info', productTitle);
-        return prev.filter((id) => id !== productId);
-      } else {
-        showToast('Added to wishlist', 'success', productTitle);
-        return [...prev, productId];
-      }
-    });
+    toggleWishlistHook(productId, productTitle);
   };
 
-  const addToCart = (product: Product) => {
-    setCart((prev) => {
-      const existingItem = prev.find((item) => item.product.id === product.id);
-      if (existingItem) {
-        showToast('Quantity updated in cart', 'success', product.title);
-        return prev.map((item) =>
-          item.product.id === product.id
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        showToast('Added to cart', 'success', product.title);
-        return [...prev, { product, quantity: 1 }];
-      }
-    });
+  const addToCart = async (product: UIProduct) => {
+    try {
+      await addToCartContext({
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        image: product.image,
+        category: 'Necklaces',
+      });
+      showToast('Added to cart', 'success', product.title);
+    } catch (error) {
+      showToast('Failed to add to cart', 'error', product.title);
+    }
   };
-
-  // Calculate cart totals
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-  const cartTotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
 
   return (
     <div className="min-h-screen w-full overflow-x-clip">
@@ -241,6 +185,53 @@ const ShopNecklaces = () => {
         {/* Products Grid */}
         <section className="py-8 md:py-10">
           <div className="container-custom">
+            <div className="flex flex-col lg:flex-row gap-8">
+              <aside className="lg:w-64 flex-shrink-0">
+                <div className="space-y-6">
+                  <div className="border border-border rounded-lg p-4">
+                    <h3 className="font-semibold text-base mb-4">Categories</h3>
+                    <div className="space-y-2">
+                      {Object.entries(categoryCounts).map(([category, count]) => (
+                        <label key={category} className="flex items-center justify-between cursor-pointer group">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={selectedCategories.includes(category)}
+                              onChange={() => toggleCategory(category)}
+                              className="rounded border-border text-primary focus:ring-primary"
+                            />
+                            <span className="text-sm group-hover:text-primary transition-colors">{category}</span>
+                          </div>
+                          <span className="text-xs text-muted-foreground">({count})</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="border border-border rounded-lg p-4">
+                    <h3 className="font-semibold text-base mb-4">Price Filter</h3>
+                    <div className="space-y-4">
+                      <div className="pt-2 pb-4">
+                        <Slider
+                          min={minPrice}
+                          max={maxPrice}
+                          step={100}
+                          value={priceRange}
+                          onValueChange={(value) => setPriceRange(value as [number, number])}
+                          className="w-full"
+                          minStepsBetweenThumbs={1}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">₹{priceRange[0].toLocaleString('en-IN')}</span>
+                        <span className="text-muted-foreground">₹{priceRange[1].toLocaleString('en-IN')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </aside>
+
+              <div className="flex-1">
             {/* Results Count */}
             <div className="flex items-center justify-between mb-8">
               <p className="text-sm text-muted-foreground">
@@ -260,8 +251,25 @@ const ShopNecklaces = () => {
             </div>
 
             {/* Products Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-              {sortedProducts.map((product, index) => (
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+              {loading ? (
+                // Loading skeleton
+                Array.from({ length: 8 }).map((_, index) => (
+                  <div key={`skeleton-${index}`} className="animate-pulse">
+                    <div className="bg-muted rounded-xl aspect-square mb-4"></div>
+                    <div className="h-4 bg-muted rounded mb-2"></div>
+                    <div className="h-4 bg-muted rounded w-2/3"></div>
+                  </div>
+                ))
+              ) : sortedProducts.length === 0 ? (
+                // Empty state
+                <div className="col-span-full py-16 text-center">
+                  <Package className="w-20 h-20 mx-auto mb-4 text-muted-foreground" />
+                  <h3 className="text-xl font-semibold mb-2">No Necklaces Available</h3>
+                  <p className="text-muted-foreground">Check back soon for new products!</p>
+                </div>
+              ) : (
+                sortedProducts.map((product, index) => (
                 <motion.div
                   key={product.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -287,7 +295,7 @@ const ShopNecklaces = () => {
                         }}
                         whileTap={{ scale: 0.9 }}
                         className={`p-2 rounded-full transition-all duration-300 ${
-                          wishlist.includes(product.id)
+                          isInWishlist(product.id)
                             ? "text-red-500"
                             : "text-white/90 hover:text-red-500"
                         }`}
@@ -295,11 +303,11 @@ const ShopNecklaces = () => {
                           textShadow: '0 1px 3px rgba(0,0,0,0.3)',
                           filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))'
                         }}
-                        aria-label={wishlist.includes(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+                        aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
                       >
                         <Heart
                           className="w-5 h-5"
-                          fill={wishlist.includes(product.id) ? "currentColor" : "none"}
+                          fill={isInWishlist(product.id) ? "currentColor" : "none"}
                           strokeWidth={2}
                         />
                       </motion.button>
@@ -389,7 +397,10 @@ const ShopNecklaces = () => {
                     </motion.button>
                   </div>
                 </motion.div>
-              ))}
+              ))
+              )}
+            </div>
+              </div>
             </div>
           </div>
         </section>
