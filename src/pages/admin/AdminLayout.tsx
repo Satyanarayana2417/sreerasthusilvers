@@ -12,6 +12,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  Layers,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +36,7 @@ const AdminLayout = () => {
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/products', icon: Package, label: 'Products' },
     { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
+    { path: '/admin/banners', icon: Layers, label: 'Banners' },
     { path: '/admin/media', icon: Image, label: 'Media' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];

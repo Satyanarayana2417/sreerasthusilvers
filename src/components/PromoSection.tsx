@@ -28,7 +28,7 @@ const PromoSection = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section ref={ref} className="w-full">
+    <section ref={ref} className="w-full hidden lg:block">
       <div className="grid md:grid-cols-2">
         {promos.map((promo, index) => (
           <motion.div

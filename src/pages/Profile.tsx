@@ -1,89 +1,51 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import Header from '@/components/Header';
+import MobileBottomNav from '@/components/MobileBottomNav';
 import Footer from '@/components/Footer';
-import { Button } from '@/components/ui/button';
 import {
-  ShoppingBag,
-  Star,
   User,
   CreditCard,
   MapPin,
-  Globe,
   Bell,
   Shield,
-  MessageSquare,
   HelpCircle,
-  Tag,
-  FileText,
   Heart,
   Package,
   LogOut,
   ChevronRight,
   Sparkles,
+  Ticket,
+  Globe,
+  Star,
+  MessageCircle,
 } from 'lucide-react';
-
-interface SidebarItem {
-  id: string;
-  label: string;
-  icon: React.ReactNode;
-  badge?: number | string;
-}
-
-interface SidebarSection {
-  title: string;
-  items: SidebarItem[];
-}
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const [activeSection, setActiveSection] = useState('my-orders');
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { logout } = useAuth();
 
-  const sidebarSections: SidebarSection[] = [
-    {
-      title: 'MY ORDERS',
-      items: [
-        { id: 'my-orders', label: 'My Orders', icon: <ShoppingBag className="w-5 h-5" />, badge: 2 },
-      ],
-    },
-    {
-      title: 'ACCOUNT SETTINGS',
-      items: [
-        { id: 'plus-membership', label: 'Brand Plus Membership', icon: <Sparkles className="w-5 h-5" /> },
-        { id: 'edit-profile', label: 'Edit Profile', icon: <User className="w-5 h-5" /> },
-        { id: 'saved-cards', label: 'Saved Cards', icon: <CreditCard className="w-5 h-5" /> },
-        { id: 'saved-addresses', label: 'Saved Addresses', icon: <MapPin className="w-5 h-5" /> },
-        { id: 'language', label: 'Select Language', icon: <Globe className="w-5 h-5" /> },
-        { id: 'notifications', label: 'Notification Settings', icon: <Bell className="w-5 h-5" /> },
-        { id: 'privacy', label: 'Privacy Center', icon: <Shield className="w-5 h-5" /> },
-      ],
-    },
-    {
-      title: 'MY ACTIVITY',
-      items: [
-        { id: 'reviews', label: 'Reviews', icon: <Star className="w-5 h-5" /> },
-        { id: 'questions', label: 'Questions & Answers', icon: <MessageSquare className="w-5 h-5" /> },
-      ],
-    },
-    {
-      title: 'MY STUFF',
-      items: [
-        { id: 'coupons', label: 'My Coupons', icon: <Tag className="w-5 h-5" /> },
-        { id: 'product-requests', label: 'My Product Requests', icon: <FileText className="w-5 h-5" /> },
-        { id: 'wishlist', label: 'My Wishlist', icon: <Heart className="w-5 h-5" /> },
-      ],
-    },
-    {
-      title: 'FREQUENTLY VISITED',
-      items: [
-        { id: 'track-order', label: 'Track Order', icon: <Package className="w-5 h-5" /> },
-        { id: 'help-center', label: 'Help Center', icon: <HelpCircle className="w-5 h-5" /> },
-      ],
-    },
+  const quickAccessCards = [
+    { id: 'orders', label: 'Orders', icon: Package, color: 'text-blue-600', bg: 'bg-blue-50' },
+    { id: 'wishlist', label: 'Wishlist', icon: Heart, color: 'text-pink-600', bg: 'bg-pink-50' },
+    { id: 'coupons', label: 'Coupons', icon: Ticket, color: 'text-orange-600', bg: 'bg-orange-50' },
+    { id: 'help', label: 'Help Center', icon: HelpCircle, color: 'text-green-600', bg: 'bg-green-50' },
+  ];
+
+  const accountSettings = [
+    { id: 'plus', label: 'Venkat Plus', icon: Sparkles, color: 'text-yellow-600' },
+    { id: 'profile', label: 'Edit Profile', icon: User, color: 'text-blue-600' },
+    { id: 'cards', label: 'Saved Credit / Debit & Gift Cards', icon: CreditCard, color: 'text-purple-600' },
+    { id: 'addresses', label: 'Saved Addresses', icon: MapPin, color: 'text-red-600' },
+    { id: 'language', label: 'Select Language', icon: Globe, color: 'text-blue-600' },
+    { id: 'notifications', label: 'Notification Settings', icon: Bell, color: 'text-green-600' },
+    { id: 'privacy', label: 'Privacy Center', icon: Shield, color: 'text-gray-600' },
+  ];
+
+  const myActivity = [
+    { id: 'reviews', label: 'Reviews', icon: Star, color: 'text-yellow-600' },
+    { id: 'questions', label: 'Questions & Answers', icon: MessageCircle, color: 'text-blue-600' },
   ];
 
   const handleLogout = async () => {
@@ -95,258 +57,211 @@ const Profile = () => {
     }
   };
 
-  const renderContent = () => {
-    switch (activeSection) {
-      case 'my-orders':
-        return (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6">My Orders</h2>
-            <div className="bg-card border border-border rounded-lg p-8 text-center">
-              <ShoppingBag className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">No orders yet</h3>
-              <p className="text-muted-foreground mb-6">
-                Start exploring our exquisite collection of silver jewelry
-              </p>
-              <Button onClick={() => navigate('/')} className="bg-foreground text-background hover:bg-foreground/90">
-                Start Shopping
-              </Button>
-            </div>
-          </div>
-        );
-
-      case 'edit-profile':
-        return (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6">Edit Profile</h2>
-            <div className="bg-card border border-border rounded-lg p-6 max-w-2xl">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    defaultValue={user?.displayName || ''}
-                    placeholder="Enter your full name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Email Address</label>
-                  <input
-                    type="email"
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary bg-muted"
-                    defaultValue={user?.email || ''}
-                    disabled
-                  />
-                  <p className="text-xs text-muted-foreground mt-1">Email cannot be changed</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Phone Number</label>
-                  <input
-                    type="tel"
-                    className="w-full px-4 py-3 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                    placeholder="Enter your phone number"
-                  />
-                </div>
-                <div className="flex gap-4 pt-4">
-                  <Button className="bg-foreground text-background hover:bg-foreground/90">
-                    Save Changes
-                  </Button>
-                  <Button variant="outline">Cancel</Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'wishlist':
-        return (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6">My Wishlist</h2>
-            <div className="bg-card border border-border rounded-lg p-8 text-center">
-              <Heart className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">Your wishlist is empty</h3>
-              <p className="text-muted-foreground mb-6">
-                Save your favorite items for later
-              </p>
-              <Button onClick={() => navigate('/wishlist')} className="bg-foreground text-background hover:bg-foreground/90">
-                View Wishlist
-              </Button>
-            </div>
-          </div>
-        );
-
-      case 'saved-addresses':
-        return (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6">Saved Addresses</h2>
-            <div className="bg-card border border-border rounded-lg p-8 text-center">
-              <MapPin className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">No addresses saved</h3>
-              <p className="text-muted-foreground mb-6">
-                Add your delivery addresses for faster checkout
-              </p>
-              <Button className="bg-foreground text-background hover:bg-foreground/90">
-                Add New Address
-              </Button>
-            </div>
-          </div>
-        );
-
-      case 'coupons':
-        return (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6">My Coupons</h2>
-            <div className="bg-card border border-border rounded-lg p-8 text-center">
-              <Tag className="w-16 h-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-semibold mb-2">No coupons available</h3>
-              <p className="text-muted-foreground">
-                Check back later for exclusive offers
-              </p>
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div>
-            <h2 className="text-2xl font-semibold mb-6">
-              {sidebarSections.flatMap(s => s.items).find(i => i.id === activeSection)?.label || 'Coming Soon'}
-            </h2>
-            <div className="bg-card border border-border rounded-lg p-8 text-center">
-              <p className="text-muted-foreground">This feature is coming soon</p>
-            </div>
-          </div>
-        );
-    }
-  };
-
   return (
-    <div className="min-h-screen bg-background" style={{ fontFamily: "'Poppins', sans-serif" }}>
+    <div className="min-h-screen bg-gray-50">
       <Header />
 
-      <div className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="grid lg:grid-cols-[280px_1fr] gap-8">
-          {/* Sidebar */}
-          <aside className="hidden lg:block">
-            <div className="bg-card border border-border rounded-lg overflow-hidden sticky top-4">
-              {/* User Profile Header */}
-              <div className="p-6 border-b border-border bg-gradient-to-br from-primary/5 to-transparent">
-                <div className="flex items-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-primary-foreground text-2xl font-semibold">
-                    {user?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-muted-foreground mb-1">Hello,</p>
-                    <h3 className="font-semibold text-lg truncate">
-                      {user?.displayName || user?.email?.split('@')[0] || 'Guest'}
-                    </h3>
-                  </div>
-                </div>
-              </div>
-
-              {/* Navigation */}
-              <nav className="p-4">
-                {sidebarSections.map((section, idx) => (
-                  <div key={idx} className="mb-6 last:mb-0">
-                    <h4 className="text-xs font-semibold text-muted-foreground mb-3 px-2">
-                      {section.title}
-                    </h4>
-                    <div className="space-y-1">
-                      {section.items.map((item) => (
-                        <motion.button
-                          key={item.id}
-                          onClick={() => setActiveSection(item.id)}
-                          whileHover={{ x: 4 }}
-                          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${
-                            activeSection === item.id
-                              ? 'bg-primary/10 text-primary font-medium'
-                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                          }`}
-                        >
-                          {item.icon}
-                          <span className="flex-1 text-left text-sm">{item.label}</span>
-                          {item.badge && (
-                            <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs font-semibold rounded-full">
-                              {item.badge}
-                            </span>
-                          )}
-                          {activeSection === item.id && (
-                            <ChevronRight className="w-4 h-4" />
-                          )}
-                        </motion.button>
-                      ))}
+      {/* Mobile View */}
+      <div className="lg:hidden">
+        {/* Quick Access Cards */}
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-3">
+            {quickAccessCards.map((card, index) => {
+              const Icon = card.icon;
+              return (
+                <motion.button
+                  key={card.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 hover:shadow-md transition-all"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg ${card.bg} flex items-center justify-center`}>
+                      <Icon className={`w-5 h-5 ${card.color}`} />
                     </div>
+                    <span className="text-sm font-semibold text-gray-900">{card.label}</span>
                   </div>
-                ))}
-
-                {/* Logout Button */}
-                <div className="mt-6 pt-6 border-t border-border">
-                  <button
-                    onClick={handleLogout}
-                    className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-destructive hover:bg-destructive/10 transition-colors"
-                  >
-                    <LogOut className="w-5 h-5" />
-                    <span className="text-sm font-medium">Logout</span>
-                  </button>
-                </div>
-              </nav>
-            </div>
-          </aside>
-
-          {/* Main Content */}
-          <main className="flex-1">
-            <motion.div
-              key={activeSection}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {renderContent()}
-            </motion.div>
-          </main>
+                </motion.button>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Mobile Bottom Navigation */}
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">
-          <div className="grid grid-cols-4 gap-1 p-2">
-            <button
-              onClick={() => setActiveSection('my-orders')}
-              className={`flex flex-col items-center gap-1 p-3 rounded-lg ${
-                activeSection === 'my-orders' ? 'text-primary bg-primary/10' : 'text-muted-foreground'
-              }`}
-            >
-              <ShoppingBag className="w-5 h-5" />
-              <span className="text-xs">Orders</span>
-            </button>
-            <button
-              onClick={() => setActiveSection('wishlist')}
-              className={`flex flex-col items-center gap-1 p-3 rounded-lg ${
-                activeSection === 'wishlist' ? 'text-primary bg-primary/10' : 'text-muted-foreground'
-              }`}
-            >
-              <Heart className="w-5 h-5" />
-              <span className="text-xs">Wishlist</span>
-            </button>
-            <button
-              onClick={() => setActiveSection('edit-profile')}
-              className={`flex flex-col items-center gap-1 p-3 rounded-lg ${
-                activeSection === 'edit-profile' ? 'text-primary bg-primary/10' : 'text-muted-foreground'
-              }`}
-            >
-              <User className="w-5 h-5" />
-              <span className="text-xs">Profile</span>
-            </button>
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="flex flex-col items-center gap-1 p-3 rounded-lg text-muted-foreground"
-            >
-              <HelpCircle className="w-5 h-5" />
-              <span className="text-xs">More</span>
-            </button>
+        {/* Promotional Banner */}
+        <div className="px-4 pb-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="bg-gradient-to-r from-gray-900 to-gray-700 rounded-2xl p-6 text-white overflow-hidden relative"
+          >
+            <div className="relative z-10">
+              <p className="text-xs mb-2 opacity-80">EXCLUSIVE OFFER</p>
+              <h3 className="text-xl font-bold mb-1">Premium Silver</h3>
+              <h3 className="text-xl font-bold mb-3">Collection</h3>
+              <p className="text-2xl font-bold text-yellow-400 mb-2">From ₹2,999*</p>
+              <p className="text-xs opacity-80">Pure 925 Sterling Silver</p>
+            </div>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16"></div>
+            <div className="absolute bottom-0 right-0 w-24 h-24 bg-white/5 rounded-full -mr-12 -mb-12"></div>
+          </motion.div>
+        </div>
+
+        {/* Account Settings */}
+        <div className="px-4 pb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">Account Settings</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {accountSettings.map((setting, index) => {
+              const Icon = setting.icon;
+              return (
+                <motion.button
+                  key={setting.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.5 + index * 0.05 }}
+                  className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                >
+                  <Icon className={`w-5 h-5 ${setting.color}`} />
+                  <span className="text-sm font-medium text-gray-900 flex-1 text-left">
+                    {setting.label}
+                  </span>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* My Activity */}
+        <div className="px-4 pb-4">
+          <h2 className="text-lg font-bold text-gray-900 mb-4">My Activity</h2>
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            {myActivity.map((activity, index) => {
+              const Icon = activity.icon;
+              return (
+                <motion.button
+                  key={activity.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.8 + index * 0.05 }}
+                  className="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                >
+                  <Icon className={`w-5 h-5 ${activity.color}`} />
+                  <span className="text-sm font-medium text-gray-900 flex-1 text-left">
+                    {activity.label}
+                  </span>
+                  <ChevronRight className="w-5 h-5 text-gray-400" />
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Sign Out Button */}
+        <div className="px-4 pb-20">
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9 }}
+            onClick={handleLogout}
+            className="w-full bg-white rounded-2xl shadow-sm border border-gray-100 p-4 hover:bg-gray-50 transition-colors"
+          >
+            <div className="flex items-center justify-center gap-2">
+              <LogOut className="w-5 h-5 text-gray-700" />
+              <span className="text-sm font-medium text-gray-900">
+                Sign Out
+              </span>
+            </div>
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Desktop View */}
+      <div className="hidden lg:block">
+        <div className="container-custom py-8">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <h1 className="text-3xl font-bold mb-8">My Account</h1>
+            
+            {/* Quick Access Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              {quickAccessCards.map((card) => {
+                const Icon = card.icon;
+                return (
+                  <button
+                    key={card.id}
+                    className="bg-white border-2 border-gray-200 rounded-xl p-6 hover:border-primary transition-all"
+                  >
+                    <div className={`w-12 h-12 rounded-lg ${card.bg} flex items-center justify-center mb-4`}>
+                      <Icon className={`w-6 h-6 ${card.color}`} />
+                    </div>
+                    <span className="text-lg font-semibold text-gray-900">{card.label}</span>
+                  </button>
+                );
+              })}
+            </div>
+            
+            {/* Account Settings */}
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold mb-6">Account Settings</h2>
+              <div className="space-y-2">
+                {accountSettings.map((setting) => {
+                  const Icon = setting.icon;
+                  return (
+                    <button
+                      key={setting.id}
+                      className="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Icon className={`w-6 h-6 ${setting.color}`} />
+                      <span className="text-base font-medium text-gray-900 flex-1 text-left">
+                        {setting.label}
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* My Activity */}
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold mb-6">My Activity</h2>
+              <div className="space-y-2">
+                {myActivity.map((activity) => {
+                  const Icon = activity.icon;
+                  return (
+                    <button
+                      key={activity.id}
+                      className="w-full flex items-center gap-4 p-4 rounded-lg hover:bg-gray-50 transition-colors"
+                    >
+                      <Icon className={`w-6 h-6 ${activity.color}`} />
+                      <span className="text-base font-medium text-gray-900 flex-1 text-left">
+                        {activity.label}
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sign Out */}
+            <div className="mt-8">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 p-4 rounded-lg border-2 border-gray-200 hover:bg-gray-50 transition-colors"
+              >
+                <LogOut className="w-6 h-6 text-gray-700" />
+                <span className="text-base font-medium text-gray-900">
+                  Sign Out
+                </span>
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
+      <MobileBottomNav />
       <Footer />
     </div>
   );

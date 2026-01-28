@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import heroMain from "@/assets/hero-main.jpg";
 import heroShineBright from "@/assets/hero-shine-bright.jpg";
 import collectionBanner from "@/assets/collection-banner.jpg";
+import heroPearlNecklace from "@/assets/hero-pearl-necklace.png";
 
 const slides = [
   {
@@ -24,6 +25,14 @@ const slides = [
   },
   {
     id: 3,
+    eyebrow: "ELEGANT PEARLS",
+    title: "Timeless Elegance",
+    subtitle: "Discover our exquisite pearl jewelry collection",
+    cta: "Shop Pearls",
+    image: heroPearlNecklace,
+  },
+  {
+    id: 4,
     eyebrow: "EXCLUSIVE OFFER",
     title: "Up to 30% Off",
     subtitle: "Grab the deal right now! Extra 15% off this season.",
@@ -150,17 +159,17 @@ const HeroCarousel = () => {
       {/* Navigation Arrows */}
       <button
         onClick={prevSlide}
-        className="absolute left-4 lg:left-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-background/80 backdrop-blur-sm rounded-full shadow-luxury-md hover:bg-background transition-all hover:scale-110 focus-gold"
+        className="absolute left-2 md:left-4 lg:left-8 top-1/2 -translate-y-1/2 z-30 p-3 md:p-4 bg-white/95 backdrop-blur-sm rounded-full shadow-2xl hover:bg-white transition-all hover:scale-110 border-2 border-gray-200"
         aria-label="Previous slide"
       >
-        <ChevronLeft className="w-5 h-5" />
+        <ChevronLeft className="w-6 h-6 md:w-7 md:h-7 text-gray-900 stroke-[3]" />
       </button>
       <button
         onClick={nextSlide}
-        className="absolute right-4 lg:right-8 top-1/2 -translate-y-1/2 z-20 p-3 bg-background/80 backdrop-blur-sm rounded-full shadow-luxury-md hover:bg-background transition-all hover:scale-110 focus-gold"
+        className="absolute right-2 md:right-4 lg:right-8 top-1/2 -translate-y-1/2 z-30 p-3 md:p-4 bg-white/95 backdrop-blur-sm rounded-full shadow-2xl hover:bg-white transition-all hover:scale-110 border-2 border-gray-200"
         aria-label="Next slide"
       >
-        <ChevronRight className="w-5 h-5" />
+        <ChevronRight className="w-6 h-6 md:w-7 md:h-7 text-gray-900 stroke-[3]" />
       </button>
 
       {/* Dots Navigation */}
@@ -169,10 +178,10 @@ const HeroCarousel = () => {
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`w-3 h-3 rounded-full transition-all focus-gold ${
+            className={`h-3 rounded-full transition-all focus-gold shadow-md ${
               index === currentSlide
                 ? "bg-primary w-8"
-                : "bg-foreground/30 hover:bg-foreground/50"
+                : "bg-white/70 hover:bg-white/90 w-3"
             }`}
             aria-label={`Go to slide ${index + 1}`}
           />

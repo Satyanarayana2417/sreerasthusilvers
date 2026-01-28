@@ -56,6 +56,7 @@ import GoldRings from "./pages/categories/GoldRings";
 import FashionRings from "./pages/categories/FashionRings";
 
 // Jewelry Category Pages
+import JewelryCollections from "./pages/JewelryCollections";
 import MensJewelry from "./pages/MensJewelry";
 import BirthstoneJewelry from "./pages/BirthstoneJewelry";
 import PearlJewelry from "./pages/PearlJewelry";
@@ -64,6 +65,7 @@ import NewArrivals from "./pages/NewArrivals";
 import JewelrySale from "./pages/JewelrySale";
 
 // Furniture Pages
+import FurnitureCollections from "./pages/FurnitureCollections";
 import SilverSofaCollection from "./pages/SilverSofaCollection";
 import RoyalSilverChairs from "./pages/RoyalSilverChairs";
 import RoyalSilverTables from "./pages/RoyalSilverTables";
@@ -71,6 +73,7 @@ import AntiqueSilverDecor from "./pages/AntiqueSilverDecor";
 import SilverSwingJhoola from "./pages/SilverSwingJhoola";
 
 // Articles Pages
+import ArticlesCollections from "./pages/ArticlesCollections";
 import SilverPoojaKalashSet from "./pages/SilverPoojaKalashSet";
 import SilverCoconut from "./pages/SilverCoconut";
 import SilverFootwear from "./pages/SilverFootwear";
@@ -79,6 +82,7 @@ import SilverCamelCart from "./pages/SilverCamelCart";
 import SilverJhula from "./pages/SilverJhula";
 
 // Other Products Pages
+import OtherProductsCollections from "./pages/OtherProductsCollections";
 import SilverIdols from "./pages/SilverIdols";
 import SilverPoojaItems from "./pages/SilverPoojaItems";
 import SilverGiftArticles from "./pages/SilverGiftArticles";
@@ -100,6 +104,7 @@ import ProductForm from "./pages/admin/ProductForm";
 import Orders from "./pages/admin/Orders";
 import Media from "./pages/admin/Media";
 import Settings from "./pages/admin/Settings";
+import AdminBanners from "./pages/AdminBanners";
 
 const queryClient = new QueryClient();
 
@@ -119,6 +124,18 @@ const App = () => {
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
+              
+              {/* Jewelry Collections Main Page */}
+              <Route path="/jewelry" element={<JewelryCollections />} />
+              
+              {/* Furniture Collections Main Page */}
+              <Route path="/furniture" element={<FurnitureCollections />} />
+              
+              {/* Articles Collections Main Page */}
+              <Route path="/articles" element={<ArticlesCollections />} />
+              
+              {/* Other Products Collections Main Page */}
+              <Route path="/products" element={<OtherProductsCollections />} />
               
               {/* Jewellery Routes */}
               <Route path="/shop/necklaces" element={<ShopNecklaces />} />
@@ -218,6 +235,7 @@ const App = () => {
                 <Route path="orders" element={<Orders />} />
                 <Route path="media" element={<Media />} />
                 <Route path="settings" element={<Settings />} />
+                <Route path="banners" element={<AdminBanners />} />
               </Route>
 
               {/* 404 Catch-all */}

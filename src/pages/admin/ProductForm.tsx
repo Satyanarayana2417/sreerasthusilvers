@@ -37,6 +37,7 @@ import {
 } from '@/services/cloudinaryService';
 
 const shopCategories = [
+  'Top Deals',
   'Jewellery',
   'Furniture',
   'Articles',

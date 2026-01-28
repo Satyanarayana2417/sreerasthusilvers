@@ -1,9 +1,11 @@
 import Header from "@/components/Header";
-import HeroCarousel from "@/components/HeroCarousel";
-import PromoTiles from "@/components/PromoTiles";
-import MarqueeBand from "@/components/MarqueeBand";
-import LuxurySofaSection from "@/components/LuxurySofaSection";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import MobileSearchBar from "@/components/MobileSearchBar";
+import CategoryIconNav from "@/components/CategoryIconNav";
+import HeroBanner from "@/components/HeroBanner";
+import TopDeals from "@/components/TopDeals";
 import BestSellers from "@/components/BestSellers";
+import MarqueeBand from "@/components/MarqueeBand";
 import CategoryShowcase from "@/components/CategoryShowcase";
 import FeatureIcons from "@/components/FeatureIcons";
 import TrendProducts from "@/components/TrendProducts";
@@ -17,14 +19,20 @@ import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
-    <div className="min-h-screen w-full overflow-x-clip">
+    <div className="min-h-screen w-full overflow-x-clip pb-16 lg:pb-0">
       <Header />
+      
+      {/* Mobile Search Bar - Sticky */}
+      <MobileSearchBar />
+      
+      {/* Category Navigation */}
+      <CategoryIconNav />
+      
       <main>
-        <HeroCarousel />
-        <PromoTiles />
-        <MarqueeBand />
-        <LuxurySofaSection />
+        <HeroBanner />
+        <TopDeals />
         <BestSellers />
+        <MarqueeBand />
         <CategoryShowcase />
         <FeatureIcons />
         <TrendProducts />
@@ -35,7 +43,9 @@ const Index = () => {
         <NewsletterForm />
         <InstagramGallery />
       </main>
+      
       <Footer />
+      <MobileBottomNav />
     </div>
   );
 };
