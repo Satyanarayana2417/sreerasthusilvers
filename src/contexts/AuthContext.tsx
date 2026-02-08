@@ -7,6 +7,8 @@ import {
   onAuthStateChanged,
   sendPasswordResetEmail,
   updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup,
 } from 'firebase/auth';
 import {
   doc,
@@ -35,6 +37,7 @@ interface AuthContextType {
   isAdmin: boolean;
   signup: (email: string, password: string, username: string) => Promise<void>;
   login: (email: string, password: string) => Promise<UserProfile>;
+  loginWithGoogle: () => Promise<UserProfile>;
   logout: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (data: Partial<UserProfile>) => Promise<void>;
@@ -127,6 +130,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return profile;
   };
 
+  // Google login function
+  const loginWithGoogle = async (): Promise<UserProfile> => {
+    const provider = new GoogleAuthProvider();
+    const userCredential = await signInWithPopup(auth, provider);
+    const { uid, email, displayName, photoURL } = userCredential.user;
+
+    // Check if user profile exists
+    let profile = await fetchUserProfile(uid);
+
+    if (!profile) {
+      // Create new profile for first-time Google users
+      const userProfileData: UserProfile = {
+        uid,
+        email,
+        username: displayName || email?.split('@')[0] || 'User',
+        role: 'user',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        avatar: photoURL || undefined,
+      };
+
+      await setDoc(doc(db, 'users', uid), {
+        ...userProfileData,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      });
+
+      profile = userProfileData;
+    }
+
+    setUserProfile(profile);
+    return profile;
+  };
+
   // Logout function
   const logout = async () => {
     await signOut(auth);
@@ -159,6 +196,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAdmin: userProfile?.role === 'admin',
     signup,
     login,
+    loginWithGoogle,
     logout,
     resetPassword,
     updateUserProfile,

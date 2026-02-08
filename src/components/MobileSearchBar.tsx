@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Search, Camera, Mic, ShoppingBag } from "lucide-react";
+import { Search, Mic, ShoppingBag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { getAllProducts } from "@/services/productService";
 import { UIProduct, adaptFirebaseToUI } from "@/lib/productAdapter";
@@ -58,26 +58,21 @@ const MobileSearchBar = () => {
   }, [searchQuery, allProducts]);
 
   return (
-    <div className="lg:hidden sticky top-0 z-50 bg-blue-500 px-4 py-3" ref={searchRef}>
+    <div className="lg:hidden sticky top-0 z-40 bg-white px-4 py-2 shadow-sm" ref={searchRef}>
       <div className="relative">
-        <div className="relative flex items-center bg-white rounded-lg overflow-hidden shadow-md">
+        <div className="relative flex items-center bg-white rounded-lg overflow-hidden border border-gray-300">
           <Search className="absolute left-3 w-5 h-5 text-gray-400" />
           <input
             type="text"
-            placeholder="Search for Silver Products, Jewelry..."
+            placeholder="Search any Product.."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             onFocus={() => searchQuery && setShowSearchResults(true)}
-            className="w-full pl-10 pr-20 py-2.5 text-sm text-gray-900 placeholder-gray-500 focus:outline-none"
+            className="w-full pl-10 pr-12 py-2.5 text-sm text-gray-700 placeholder-gray-400 bg-white focus:outline-none"
           />
-          <div className="absolute right-2 flex items-center gap-2">
-            <button className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
-              <Mic className="w-4 h-4 text-gray-600" />
-            </button>
-            <button className="p-1.5 hover:bg-gray-100 rounded-md transition-colors">
-              <Camera className="w-4 h-4 text-gray-600" />
-            </button>
-          </div>
+          <button className="absolute right-3 p-1 hover:bg-gray-200 rounded-md transition-colors">
+            <Mic className="w-5 h-5 text-gray-400" />
+          </button>
         </div>
 
         {/* Search Results Dropdown */}

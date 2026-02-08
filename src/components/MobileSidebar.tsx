@@ -51,7 +51,7 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
             className="fixed top-0 left-0 bottom-0 w-[280px] bg-white z-50 lg:hidden shadow-2xl"
           >
             {/* Header */}
-            <div className="bg-blue-500 text-white p-4 flex items-center justify-between">
+            <div className="bg-slate-900 text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
                   <User className="w-6 h-6" />

@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Search, Heart, ShoppingBag, User, ChevronDown, ChevronRight } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo-new.png";
 import ring4 from "@/assets/products/ring-4.jpg";
 import { useCart } from "@/contexts/CartContext";
@@ -127,6 +127,7 @@ const pagesMenuData = [
 
 const Header = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, userProfile } = useAuth();
   const { toggleCart, totalItems } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -140,6 +141,12 @@ const Header = () => {
   const [allProducts, setAllProducts] = useState<UIProduct[]>([]);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // Check if current page is an auth page
+  const isAuthPage = location.pathname.startsWith('/login') || 
+                     location.pathname.startsWith('/signup') || 
+                     location.pathname.startsWith('/forgot-password') ||
+                     location.pathname.startsWith('/admin');
 
   // Load all products for search
   useEffect(() => {
@@ -216,8 +223,8 @@ const Header = () => {
 
   return (
     <>
-      {/* Mobile Header - Only on Mobile */}
-      <MobileHeader />
+      {/* Mobile Header - Only on Mobile, hidden on auth pages */}
+      {!isAuthPage && <MobileHeader />}
 
       {/* Announcement Bar - Hidden on mobile */}
       <div className="hidden md:block bg-foreground overflow-hidden w-full max-w-[100vw]">
@@ -361,7 +368,7 @@ const Header = () => {
             <div className="flex items-center gap-1 lg:gap-3 flex-shrink-0">
               {/* User Profile */}
               <button 
-                onClick={() => navigate(user ? "/profile" : "/auth/login")}
+                onClick={() => navigate(user ? "/account" : "/account")}
                 className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors group"
                 aria-label="Account"
               >

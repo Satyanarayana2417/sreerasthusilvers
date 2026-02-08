@@ -1,7 +1,7 @@
-import { Home, Grid, User, ShoppingCart, Menu } from "lucide-react";
+import { Home, Grid, ShoppingCart, Menu } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MobileSidebar from "./MobileSidebar";
 
 const MobileBottomNav = () => {
@@ -10,11 +10,17 @@ const MobileBottomNav = () => {
   const { totalItems, toggleCart } = useCart();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
+  // Listen for sidebar toggle events from MobileHeader
+  useEffect(() => {
+    const handleToggle = () => setIsSidebarOpen(true);
+    window.addEventListener('toggle-mobile-sidebar', handleToggle);
+    return () => window.removeEventListener('toggle-mobile-sidebar', handleToggle);
+  }, []);
+
   const navItems = [
     { name: "Home", icon: Home, href: "/", action: () => navigate("/") },
     { name: "Categories", icon: Grid, href: "#", action: () => {} },
     { name: "Cart", icon: ShoppingCart, href: "#", action: toggleCart, badge: totalItems, showPrice: true },
-    { name: "Sign In", icon: User, href: "/profile", action: () => navigate("/profile") },
     { name: "Menu", icon: Menu, href: "#", action: () => setIsSidebarOpen(true) },
   ];
 

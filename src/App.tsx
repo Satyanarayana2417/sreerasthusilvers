@@ -29,6 +29,7 @@ import About from "./pages/About";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
+import Account from "./pages/Account";
 import LoadingScreen from "./components/LoadingScreen";
 
 // Bracelet Category Pages
@@ -208,13 +209,17 @@ const App = () => {
                   <Profile />
                 </ProtectedRoute>
               } />
+              <Route path="/account" element={<Account />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
               
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
+              {/* Auth Routes - all point to Account page */}
+              <Route path="/login" element={<Account />} />
+              <Route path="/auth/login" element={<Account />} />
               <Route path="/signup" element={<Signup />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/auth/signup" element={<Signup />} />
+              <Route path="/auth/forgot-password" element={<ForgotPassword />} />
 
               {/* Admin Login (separate from admin panel) */}
               <Route path="/admin" element={<AdminLogin />} />
