@@ -301,8 +301,15 @@
     background: rgba(0, 0, 0, 0.2);
   }
 
-  .product-card:hover .product-card-actions {
+  .product-card:hover .product-card-actions,
+  .product-card:active .product-card-actions {
     @apply opacity-100;
+  }
+
+  @media (pointer: coarse) {
+    .product-card-actions {
+      @apply opacity-100;
+    }
   }
 
   /* Underline Animation */
@@ -348,5 +355,14 @@
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
     }
+  }
+
+  /* Hide scrollbar */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

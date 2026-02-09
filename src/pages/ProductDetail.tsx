@@ -6,10 +6,14 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getProduct, getActiveProducts } from "@/services/productService";
 import { UIProductDetail, adaptFirebaseToUIDetail, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 
 const ProductDetail = () => {
   const { productId } = useParams();
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -68,9 +72,38 @@ const ProductDetail = () => {
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
   const decrementQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
 
-  const handleAddToCart = () => {
-    setAddedToCart(true);
-    setTimeout(() => setAddedToCart(false), 2000);
+  const handleAddToCart = async () => {
+    if (!product) return;
+
+    try {
+      // Add items based on quantity
+      for (let i = 0; i < quantity; i++) {
+        await addToCart({
+          id: product.id,
+          name: product.title,
+          price: product.price,
+          image: product.image,
+          category: product.category || 'Products',
+        });
+      }
+      
+      // Show success state
+      setAddedToCart(true);
+      setTimeout(() => setAddedToCart(false), 2000);
+      
+      // Show toast notification
+      toast({
+        title: "Added to cart",
+        description: `${product.title} (${quantity}) has been added to your cart.`,
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   // Show loading state

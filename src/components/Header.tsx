@@ -129,7 +129,7 @@ const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, userProfile } = useAuth();
-  const { toggleCart, totalItems } = useCart();
+  const { totalItems, toggleCart } = useCart();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);

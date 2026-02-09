@@ -30,7 +30,9 @@ import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
 import Account from "./pages/Account";
+import SavedAddresses from "./pages/SavedAddresses";
 import LoadingScreen from "./components/LoadingScreen";
+import MobileCart from "./pages/MobileCart";
 
 // Bracelet Category Pages
 import DiamondBracelets from "./pages/categories/DiamondBracelets";
@@ -126,6 +128,9 @@ const App = () => {
               {/* Public Routes */}
               <Route path="/" element={<Index />} />
               
+              {/* Mobile Cart Page */}
+              <Route path="/cart" element={<MobileCart />} />
+              
               {/* Jewelry Collections Main Page */}
               <Route path="/jewelry" element={<JewelryCollections />} />
               
@@ -210,6 +215,7 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/account" element={<Account />} />
+              <Route path="/account/addresses" element={<SavedAddresses />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
               

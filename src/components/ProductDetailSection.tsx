@@ -2,10 +2,38 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Clock, Minus, Plus, Heart } from "lucide-react";
 import silverSofa from "@/assets/silversofa.png";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 
 const ProductDetailSection = () => {
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
+  const handleAddToCart = async () => {
+    try {
+      for (let i = 0; i < quantity; i++) {
+        await addToCart({
+          id: 'royal-silver-sofa',
+          name: 'Royal Silver Sofa',
+          price: 99500,
+          image: silverSofa,
+          category: 'Chair Collection',
+        });
+      }
+      toast({
+        title: "Added to cart",
+        description: `Royal Silver Sofa${quantity > 1 ? ` (×${quantity})` : ''} has been added to your cart.`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
   const decrementQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
@@ -132,6 +160,7 @@ const ProductDetailSection = () => {
             {/* Action Buttons */}
             <div className="flex flex-col sm:flex-row gap-4">
               <motion.button
+                onClick={handleAddToCart}
                 className="flex-1 px-8 py-4 border border-foreground text-foreground font-medium text-sm uppercase tracking-wider rounded-full hover:bg-foreground hover:text-background transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -139,6 +168,10 @@ const ProductDetailSection = () => {
                 Add to cart
               </motion.button>
               <motion.button
+                onClick={() => {
+                  handleAddToCart();
+                  // Navigate to checkout after adding
+                }}
                 className="flex-1 px-8 py-4 bg-foreground text-background font-medium text-sm uppercase tracking-wider rounded-full hover:bg-foreground/90 transition-all duration-300"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}

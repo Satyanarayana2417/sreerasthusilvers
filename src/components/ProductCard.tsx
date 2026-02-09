@@ -39,6 +39,9 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
   const handleAddToCart = async (e: React.MouseEvent) => {
     e.stopPropagation();
     
+    console.log('🛒 Add to Cart clicked for:', product.title);
+    console.log('📦 Product ID:', product.id);
+    
     try {
       await addToCart({
         id: product.id,
@@ -48,11 +51,14 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
         category: product.category,
       });
       
+      console.log('✅ Successfully added to cart');
+      
       toast({
         title: "Added to cart",
         description: `${product.title} has been added to your cart.`,
       });
     } catch (error) {
+      console.error('❌ Error adding to cart:', error);
       toast({
         title: "Error",
         description: "Failed to add item to cart. Please try again.",
@@ -156,6 +162,15 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
             </span>
           )}
         </div>
+
+        {/* Always-visible Add to Cart button */}
+        <button
+          onClick={handleAddToCart}
+          className="w-full mt-2 py-2.5 px-4 bg-foreground text-background text-sm font-medium rounded-full hover:bg-foreground/90 active:scale-[0.97] transition-all duration-200 flex items-center justify-center gap-2"
+        >
+          <ShoppingBag className="w-4 h-4" />
+          Add to Cart
+        </button>
       </div>
     </motion.div>
   );

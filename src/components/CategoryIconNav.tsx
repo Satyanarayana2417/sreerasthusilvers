@@ -46,7 +46,7 @@ const categories = [
     color: "bg-red-50" 
   },
   { 
-    name: "Furniture", 
+    name: "Silver Chairs", 
     image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop",
     href: "/furniture/royal-silver-chairs", 
     color: "bg-amber-50" 

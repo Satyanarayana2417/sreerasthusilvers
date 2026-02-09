@@ -1,5 +1,5 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { doc, setDoc, getDoc, onSnapshot, updateDoc, deleteField } from 'firebase/firestore';
+import React, { createContext, useContext, useState, useEffect, useRef, ReactNode } from 'react';
+import { doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 import { db, auth } from '@/config/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 
@@ -36,307 +36,219 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 // Local storage key for guest users
 const CART_STORAGE_KEY = 'sree_rasthu_cart';
 
+// Helper: save items to localStorage
+const saveToLocalStorage = (cartItems: CartItem[]) => {
+  try {
+    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+  } catch (e) {
+    console.error('localStorage save error:', e);
+  }
+};
+
+// Helper: load items from localStorage
+const loadFromLocalStorage = (): CartItem[] => {
+  try {
+    const saved = localStorage.getItem(CART_STORAGE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
 export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(() => loadFromLocalStorage());
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [authResolved, setAuthResolved] = useState(false);
+  const firebaseSyncRef = useRef(false);
 
   // Listen to auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('🔐 Auth state changed:', user?.uid || 'Guest');
       setCurrentUserId(user?.uid || null);
-      
-      // If user logs in, migrate guest cart to Firebase
+      setAuthResolved(true);
+
       if (user?.uid) {
         migrateGuestCartToFirebase(user.uid);
       }
     });
-
     return () => unsubscribe();
   }, []);
 
   // Migrate guest cart from localStorage to Firebase when user logs in
   const migrateGuestCartToFirebase = async (userId: string) => {
     try {
-      const guestCart = localStorage.getItem(CART_STORAGE_KEY);
-      if (guestCart) {
-        const guestItems: CartItem[] = JSON.parse(guestCart);
-        if (guestItems.length > 0) {
-          console.log('📦 Migrating guest cart to Firebase:', guestItems.length, 'items');
-          
-          // Convert array to object for Firebase
-          const cartData: Record<string, CartItem> = {};
-          guestItems.forEach(item => {
-            cartData[item.id] = item;
-          });
+      const guestItems = loadFromLocalStorage();
+      if (guestItems.length > 0) {
+        const cartData: Record<string, CartItem> = {};
+        guestItems.forEach(item => { cartData[item.id] = item; });
 
-          await setDoc(doc(db, 'carts', userId), {
-            items: cartData,
-            updatedAt: new Date().toISOString(),
-          }, { merge: true });
+        await setDoc(doc(db, 'carts', userId), {
+          items: cartData,
+          updatedAt: new Date().toISOString(),
+        }, { merge: true });
 
-          // Clear guest cart
-          localStorage.removeItem(CART_STORAGE_KEY);
-          console.log('✅ Guest cart migrated successfully');
-        }
+        localStorage.removeItem(CART_STORAGE_KEY);
       }
     } catch (error) {
-      console.error('❌ Error migrating guest cart:', error);
+      console.error('Error migrating guest cart:', error);
     }
   };
 
-  // Load cart based on user authentication
+  // Firebase real-time listener for logged-in users
   useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
+    if (!currentUserId) return;
 
-    const loadCart = async () => {
-      setLoading(true);
-      
-      if (currentUserId) {
-        // Load from Firebase with real-time listener for logged-in users
-        console.log('👤 Loading cart from Firebase for user:', currentUserId);
-        
-        const cartRef = doc(db, 'carts', currentUserId);
-        
-        unsubscribe = onSnapshot(
-          cartRef,
-          (snapshot) => {
-            console.log('👂 Firebase listener triggered');
-            console.log('📄 Snapshot exists?', snapshot.exists());
-            
-            if (snapshot.exists()) {
-              const data = snapshot.data();
-              console.log('📦 Raw Firebase data:', data);
-              
-              const cartItems: CartItem[] = data.items 
-                ? Object.values(data.items) 
-                : [];
-              
-              console.log('🔄 Firebase cart updated:', cartItems.length, 'items');
-              console.log('🛍️ Cart items:', cartItems);
-              setItems(cartItems);
-            } else {
-              console.log('📭 No existing cart - starting fresh');
-              setItems([]);
-            }
-            setLoading(false);
-          },
-          (error: any) => {
-            console.error('❌ Firebase listener error:', error);
-            console.error('❌ Error code:', error?.code);
-            console.error('❌ Error message:', error?.message);
-            setLoading(false);
-          }
-        );
-      } else {
-        // Load from localStorage for guest users
-        console.log('👻 Loading cart from localStorage (guest)');
-        try {
-          const savedCart = localStorage.getItem(CART_STORAGE_KEY);
-          if (savedCart) {
-            const parsedCart = JSON.parse(savedCart);
-            console.log('📦 Loaded', parsedCart.length, 'items from localStorage');
-            setItems(parsedCart);
-          } else {
-            setItems([]);
-          }
-        } catch (error) {
-          console.error('❌ Error loading localStorage cart:', error);
+    setLoading(true);
+    firebaseSyncRef.current = true;
+
+    const cartRef = doc(db, 'carts', currentUserId);
+    const unsubscribe = onSnapshot(
+      cartRef,
+      (snapshot) => {
+        if (snapshot.exists()) {
+          const data = snapshot.data();
+          const cartItems: CartItem[] = data.items ? Object.values(data.items) : [];
+          setItems(cartItems);
+        } else {
           setItems([]);
         }
         setLoading(false);
+      },
+      (error: any) => {
+        console.error('Firebase cart listener error:', error?.code, error?.message);
+        // Fall back to localStorage if Firebase fails
+        firebaseSyncRef.current = false;
+        setItems(loadFromLocalStorage());
+        setLoading(false);
       }
-    };
-
-    loadCart();
+    );
 
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      unsubscribe();
+      firebaseSyncRef.current = false;
     };
   }, [currentUserId]);
 
-  // Save cart to localStorage for guest users
+  // Persist to localStorage whenever items change (for guest users & as fallback)
   useEffect(() => {
-    if (!currentUserId && !loading) {
-      try {
-        localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
-        console.log('💾 Saved to localStorage:', items.length, 'items');
-      } catch (error) {
-        console.error('❌ Error saving to localStorage:', error);
-      }
+    if (!currentUserId) {
+      saveToLocalStorage(items);
     }
-  }, [items, currentUserId, loading]);
+  }, [items, currentUserId]);
 
-  // Add item to cart (Firebase + localStorage)
+  // ─── ADD TO CART ───
+  // Always update local state immediately (optimistic), then sync to Firebase
   const addToCart = async (item: Omit<CartItem, 'quantity'>) => {
-    console.log('🛒 Adding to cart:', item.name);
-    console.log('🔑 Current user ID:', currentUserId || 'GUEST');
-    
-    try {
-      if (currentUserId) {
-        // Add to Firebase for logged-in users
-        console.log('📡 Attempting Firebase write...');
+    // 1. Optimistic local state update
+    setItems((prev) => {
+      const existing = prev.find((i) => i.id === item.id);
+      if (existing) {
+        return prev.map((i) =>
+          i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
+        );
+      }
+      return [...prev, { ...item, quantity: 1 }];
+    });
+
+    // 2. Sync to Firebase in the background (non-blocking)
+    if (currentUserId) {
+      try {
         const cartRef = doc(db, 'carts', currentUserId);
-        
-        console.log('📖 Reading existing cart...');
         const cartSnap = await getDoc(cartRef);
-        
+
         let updatedItems: Record<string, CartItem> = {};
-        
         if (cartSnap.exists()) {
-          console.log('📦 Found existing cart');
           updatedItems = cartSnap.data().items || {};
-        } else {
-          console.log('🆕 Creating new cart');
         }
 
-        // Check if item exists, increment quantity or add new
         if (updatedItems[item.id]) {
           updatedItems[item.id].quantity += 1;
-          console.log('➕ Incremented quantity for:', item.name, 'to', updatedItems[item.id].quantity);
         } else {
           updatedItems[item.id] = { ...item, quantity: 1 };
-          console.log('✨ Added new item:', item.name);
         }
 
-        console.log('💾 Writing to Firebase...');
         await setDoc(cartRef, {
           items: updatedItems,
           updatedAt: new Date().toISOString(),
         }, { merge: true });
-
-        console.log('✅ Firebase cart updated successfully');
-        console.log('📊 Total items in cart:', Object.keys(updatedItems).length);
-      } else {
-        console.log('👻 Guest mode - using localStorage');
-        // Add to local state for guest users
-        setItems((prevItems) => {
-          const existingItem = prevItems.find((i) => i.id === item.id);
-          
-          if (existingItem) {
-            console.log('➕ Incremented quantity for:', item.name);
-            return prevItems.map((i) =>
-              i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i
-            );
-          } else {
-            console.log('✨ Added new item:', item.name);
-            return [...prevItems, { ...item, quantity: 1 }];
-          }
-        });
-      }
-      
-      // Open cart when item is added
-      setIsCartOpen(true);
-    } catch (error: any) {
-      console.error('❌ ERROR adding to cart:', error);
-      console.error('❌ Error code:', error?.code);
-      console.error('❌ Error message:', error?.message);
-      
-      // More specific error messages
-      if (error?.code === 'permission-denied') {
-        alert('Permission denied. Please make sure you are logged in.');
-      } else if (error?.code === 'unavailable') {
-        alert('Network error. Please check your internet connection.');
-      } else {
-        alert('Failed to add item to cart. Please try again.');
+      } catch (error: any) {
+        console.error('Firebase sync failed for addToCart:', error?.code);
+        // Local state already updated — cart still works
+        saveToLocalStorage(items);
       }
     }
   };
 
-  // Remove item from cart
+  // ─── REMOVE FROM CART ───
   const removeFromCart = async (id: string) => {
-    console.log('🗑️ Removing from cart:', id);
-    
-    try {
-      if (currentUserId) {
-        // Remove from Firebase
+    // Optimistic local update
+    setItems((prev) => prev.filter((item) => item.id !== id));
+
+    if (currentUserId) {
+      try {
         const cartRef = doc(db, 'carts', currentUserId);
         const cartSnap = await getDoc(cartRef);
-        
         if (cartSnap.exists()) {
           const updatedItems = { ...cartSnap.data().items };
           delete updatedItems[id];
-
           await setDoc(cartRef, {
             items: updatedItems,
             updatedAt: new Date().toISOString(),
           }, { merge: true });
-
-          console.log('✅ Item removed from Firebase');
         }
-      } else {
-        // Remove from local state
-        setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      } catch (error) {
+        console.error('Firebase sync failed for removeFromCart:', error);
       }
-    } catch (error) {
-      console.error('❌ Error removing from cart:', error);
     }
   };
 
-  // Update item quantity
+  // ─── UPDATE QUANTITY ───
   const updateQuantity = async (id: string, quantity: number) => {
-    console.log('🔢 Updating quantity for', id, 'to', quantity);
-    
     if (quantity <= 0) {
-      removeFromCart(id);
-      return;
+      return removeFromCart(id);
     }
 
-    try {
-      if (currentUserId) {
-        // Update in Firebase
+    // Optimistic local update
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, quantity } : item))
+    );
+
+    if (currentUserId) {
+      try {
         const cartRef = doc(db, 'carts', currentUserId);
         const cartSnap = await getDoc(cartRef);
-        
         if (cartSnap.exists()) {
           const updatedItems = { ...cartSnap.data().items };
           if (updatedItems[id]) {
             updatedItems[id].quantity = quantity;
-
             await setDoc(cartRef, {
               items: updatedItems,
               updatedAt: new Date().toISOString(),
             }, { merge: true });
-
-            console.log('✅ Quantity updated in Firebase');
           }
         }
-      } else {
-        // Update local state
-        setItems((prevItems) =>
-          prevItems.map((item) =>
-            item.id === id ? { ...item, quantity } : item
-          )
-        );
+      } catch (error) {
+        console.error('Firebase sync failed for updateQuantity:', error);
       }
-    } catch (error) {
-      console.error('❌ Error updating quantity:', error);
     }
   };
 
-  // Clear entire cart
+  // ─── CLEAR CART ───
   const clearCart = async () => {
-    console.log('🧹 Clearing cart');
-    
-    try {
-      if (currentUserId) {
-        // Clear Firebase cart
+    setItems([]);
+
+    if (currentUserId) {
+      try {
         const cartRef = doc(db, 'carts', currentUserId);
         await setDoc(cartRef, {
           items: {},
           updatedAt: new Date().toISOString(),
         });
-        console.log('✅ Firebase cart cleared');
-      } else {
-        // Clear local state
-        setItems([]);
+      } catch (error) {
+        console.error('Firebase sync failed for clearCart:', error);
       }
-    } catch (error) {
-      console.error('❌ Error clearing cart:', error);
     }
   };
 

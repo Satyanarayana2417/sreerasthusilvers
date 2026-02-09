@@ -1,6 +1,8 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Star, Heart, GitCompare, Minus, Plus } from "lucide-react";
 import { useState } from "react";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface Product {
   id: string;
@@ -25,6 +27,38 @@ interface ProductQuickViewProps {
 const ProductQuickView = ({ product, isOpen, onClose }: ProductQuickViewProps) => {
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const { addToCart } = useCart();
+  const { toast } = useToast();
+
+  const handleAddToCart = async () => {
+    if (!product) return;
+    setIsAdding(true);
+    try {
+      for (let i = 0; i < quantity; i++) {
+        await addToCart({
+          id: product.id,
+          name: product.title,
+          price: product.price,
+          image: product.image,
+          category: product.category,
+        });
+      }
+      toast({
+        title: "Added to cart",
+        description: `${product.title}${quantity > 1 ? ` (×${quantity})` : ''} has been added to your cart.`,
+      });
+      onClose();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsAdding(false);
+    }
+  };
 
   if (!product) return null;
 
@@ -157,8 +191,12 @@ const ProductQuickView = ({ product, isOpen, onClose }: ProductQuickViewProps) =
                     </div>
 
                     {/* Add to Cart Button */}
-                    <button className="flex-1 min-w-[140px] px-6 py-3 bg-foreground text-background font-medium text-sm rounded-full hover:bg-foreground/90 transition-all">
-                      Add to cart
+                    <button
+                      onClick={handleAddToCart}
+                      disabled={isAdding}
+                      className="flex-1 min-w-[140px] px-6 py-3 bg-foreground text-background font-medium text-sm rounded-full hover:bg-foreground/90 active:scale-[0.97] transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+                    >
+                      {isAdding ? 'Adding...' : 'Add to cart'}
                     </button>
                   </div>
 
