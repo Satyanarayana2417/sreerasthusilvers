@@ -132,36 +132,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Google login function
   const loginWithGoogle = async (): Promise<UserProfile> => {
-    const provider = new GoogleAuthProvider();
-    const userCredential = await signInWithPopup(auth, provider);
-    const { uid, email, displayName, photoURL } = userCredential.user;
-
-    // Check if user profile exists
-    let profile = await fetchUserProfile(uid);
-
-    if (!profile) {
-      // Create new profile for first-time Google users
-      const userProfileData: UserProfile = {
-        uid,
-        email,
-        username: displayName || email?.split('@')[0] || 'User',
-        role: 'user',
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        avatar: photoURL || undefined,
-      };
-
-      await setDoc(doc(db, 'users', uid), {
-        ...userProfileData,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
+    try {
+      const provider = new GoogleAuthProvider();
+      // Add additional scopes if needed
+      provider.addScope('profile');
+      provider.addScope('email');
+      
+      // Set custom parameters to ensure the account selection prompt
+      provider.setCustomParameters({
+        prompt: 'select_account'
       });
 
-      profile = userProfileData;
-    }
+      const userCredential = await signInWithPopup(auth, provider);
+      const { uid, email, displayName, photoURL } = userCredential.user;
 
-    setUserProfile(profile);
-    return profile;
+      // Check if user profile exists
+      let profile = await fetchUserProfile(uid);
+
+      if (!profile) {
+        // Create new profile for first-time Google users
+        const userProfileData: UserProfile = {
+          uid,
+          email,
+          username: displayName || email?.split('@')[0] || 'User',
+          role: 'user',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          avatar: photoURL || undefined,
+        };
+
+        await setDoc(doc(db, 'users', uid), {
+          ...userProfileData,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        });
+
+        profile = userProfileData;
+      }
+
+      setUserProfile(profile);
+      return profile;
+    } catch (error: any) {
+      console.error('Google Sign-In Error:', error);
+      console.error('Error code:', error.code);
+      console.error('Error message:', error.message);
+      throw error; // Re-throw to be handled by the UI
+    }
   };
 
   // Logout function

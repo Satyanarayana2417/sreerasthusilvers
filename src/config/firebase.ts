@@ -24,4 +24,11 @@ export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;
 
+// Verify Firebase configuration
+if (typeof window !== 'undefined') {
+  console.log('[Firebase] Configuration loaded successfully');
+  console.log('[Firebase] Project ID:', firebaseConfig.projectId);
+  console.log('[Firebase] Auth Domain:', firebaseConfig.authDomain);
+}
+
 export default app;
