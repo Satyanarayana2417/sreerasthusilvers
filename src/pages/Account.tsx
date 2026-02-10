@@ -20,6 +20,7 @@ import {
   Package,
   LogOut,
   ChevronRight,
+  ChevronDown,
   Sparkles,
   Ticket,
   Globe,
@@ -28,6 +29,8 @@ import {
   Mail,
   Lock,
   Eye,
+  Settings,
+  RotateCcw,
   EyeOff,
 } from 'lucide-react';
 
@@ -547,12 +550,53 @@ const AccountPage = () => {
     return (
       <>
         <Header />
-        <div className="min-h-screen pt-16 bg-gray-50 pb-20" style={{ fontFamily: "'Poppins', sans-serif" }}>
-          <div className="px-4 py-4">
-            {/* Account Header */}
+        <div className="min-h-screen pt-1 bg-gray-50 pb-20" style={{ fontFamily: "'Poppins', sans-serif" }}>
+          <div className="px-4 py-2">
+            {/* Amazon-style Account Header */}
             <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Your Account</h2>
-              <p className="text-xs text-gray-600">{userProfile?.username || 'satya'}, Email: {userProfile?.email || user?.email}</p>
+              {/* Top Row: User info and icons */}
+              <div className="flex items-center justify-between mb-4">
+                {/* User Avatar and Name */}
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 flex items-center justify-center">
+                    <User className="w-5 h-5 text-white" />
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium text-gray-900">
+                      Hello, {(userProfile?.username || user?.email?.split('@')[0] || 'User').slice(0, 12)}...
+                    </span>
+                    <ChevronDown className="w-4 h-4 text-gray-500" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Action Pills */}
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
+                <button 
+                  onClick={() => setSelectedMenu('orders')}
+                  className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                >
+                  Orders
+                </button>
+                <button 
+                  onClick={() => navigate('/wishlist')}
+                  className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                >
+                  Buy Again
+                </button>
+                <button 
+                  onClick={() => setSelectedMenu('profile')}
+                  className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                >
+                  Account
+                </button>
+                <button 
+                  onClick={() => navigate('/wishlist')}
+                  className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                >
+                  Lists
+                </button>
+              </div>
             </div>
 
             {/* Navigation Menu */}

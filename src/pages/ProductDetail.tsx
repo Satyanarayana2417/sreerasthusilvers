@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Heart, Minus, Plus, ChevronRight, ShoppingBag, Truck, Shield, RotateCcw, Check, Loader2 } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import { Star, Heart, Minus, Plus, ChevronRight, ShoppingBag, Truck, Shield, RotateCcw, Check, Loader2, X, ChevronLeft } from "lucide-react";
 import { getProduct, getActiveProducts } from "@/services/productService";
 import { UIProductDetail, adaptFirebaseToUIDetail, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
 import { useCart } from "@/contexts/CartContext";
@@ -22,6 +20,9 @@ const ProductDetail = () => {
   const [relatedProducts, setRelatedProducts] = useState<UIProductDetail[]>([]);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [showImagePopup, setShowImagePopup] = useState(false);
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
   // Fetch product and related products
   useEffect(() => {
@@ -106,15 +107,60 @@ const ProductDetail = () => {
     }
   };
 
+  const handleBuyNow = async () => {
+    if (!product) return;
+
+    try {
+      // Add items based on quantity
+      for (let i = 0; i < quantity; i++) {
+        await addToCart({
+          id: product.id,
+          name: product.title,
+          price: product.price,
+          image: product.image,
+          category: product.category || 'Products',
+        });
+      }
+      // Navigate to checkout
+      navigate('/checkout');
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  // Swipe handlers for image popup
+  const minSwipeDistance = 50;
+
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchEnd(null);
+    setTouchStart(e.targetTouches[0].clientX);
+  };
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX);
+  };
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return;
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+    
+    if (isLeftSwipe && selectedImage < productImages.length - 1) {
+      setSelectedImage(selectedImage + 1);
+    }
+    if (isRightSwipe && selectedImage > 0) {
+      setSelectedImage(selectedImage - 1);
+    }
+  };
+
   // Show loading state
   if (loading) {
     return (
       <div className="min-h-screen w-full">
-        <Header />
         <main className="container-custom py-20 flex items-center justify-center">
           <Loader2 className="w-12 h-12 animate-spin text-primary" />
         </main>
-        <Footer />
       </div>
     );
   }
@@ -123,7 +169,6 @@ const ProductDetail = () => {
   if (notFound || !product) {
     return (
       <div className="min-h-screen w-full">
-        <Header />
         <main className="container-custom py-20 text-center">
           <h1 className="text-2xl font-semibold mb-4">Product Not Found</h1>
           <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
@@ -134,7 +179,6 @@ const ProductDetail = () => {
             Back to Shop
           </button>
         </main>
-        <Footer />
       </div>
     );
   }
@@ -142,12 +186,11 @@ const ProductDetail = () => {
   // Generate SKU
   const sku = `sreerasthu-${product.category.toLowerCase().replace(/[^a-z]/g, "-")}-${product.id}`;
 
-  // Product images for gallery
-  const productImages = [product.image, product.image, product.image, product.image];
+  // Product images for gallery - only show unique images
+  const productImages = [product.image];
 
   return (
     <div className="min-h-screen w-full overflow-x-clip">
-      <Header />
       <main>
         {/* Breadcrumb */}
         <section className="bg-secondary/30 py-2">
@@ -157,7 +200,9 @@ const ProductDetail = () => {
               <ChevronRight className="w-4 h-4" />
               <a href="/shop/necklaces" className="hover:text-primary transition-colors">Shop</a>
               <ChevronRight className="w-4 h-4" />
-              <span className="text-foreground">{product.title}</span>
+              <span className="text-foreground">
+                {product.title.length > 20 ? product.title.slice(0, 20) + '...' : product.title}
+              </span>
             </div>
           </div>
         </section>
@@ -173,39 +218,39 @@ const ProductDetail = () => {
                 transition={{ duration: 0.5 }}
               >
                 {/* Main Image */}
-                <div className="relative bg-muted rounded-2xl overflow-hidden aspect-[4/3] max-w-lg mx-auto mb-4">
+                <div 
+                  className="relative bg-muted rounded-2xl overflow-hidden aspect-[4/3] max-w-lg mx-auto mb-4 cursor-pointer md:cursor-default"
+                  onClick={() => window.innerWidth < 768 && setShowImagePopup(true)}
+                >
                   <img
                     src={productImages[selectedImage]}
                     alt={product.alt}
                     className="w-full h-full object-cover"
                   />
-                  {product.oldPrice && (
-                    <div className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs font-bold px-2 py-1 rounded-full">
-                      SALE
-                    </div>
-                  )}
                 </div>
 
-                {/* Thumbnail Gallery */}
-                <div className="grid grid-cols-4 gap-2 max-w-lg mx-auto">
-                  {productImages.map((img, index) => (
-                    <button
-                      key={index}
-                      onClick={() => setSelectedImage(index)}
-                      className={`aspect-square bg-muted rounded-lg overflow-hidden border-2 transition-all ${
-                        selectedImage === index
-                          ? "border-primary"
-                          : "border-transparent hover:border-primary/50"
-                      }`}
-                    >
-                      <img
-                        src={img}
-                        alt={`${product.title} view ${index + 1}`}
-                        className="w-full h-full object-contain p-1"
-                      />
-                    </button>
-                  ))}
-                </div>
+                {/* Thumbnail Gallery - only show if multiple images */}
+                {productImages.length > 1 && (
+                  <div className="grid grid-cols-4 gap-2 max-w-lg mx-auto">
+                    {productImages.map((img, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setSelectedImage(index)}
+                        className={`aspect-square bg-muted rounded-lg overflow-hidden border-2 transition-all ${
+                          selectedImage === index
+                            ? "border-primary"
+                            : "border-transparent hover:border-primary/50"
+                        }`}
+                      >
+                        <img
+                          src={img}
+                          alt={`${product.title} view ${index + 1}`}
+                          className="w-full h-full object-contain p-1"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </motion.div>
 
               {/* Product Info */}
@@ -274,8 +319,8 @@ const ProductDetail = () => {
                     `Exquisitely crafted with attention to detail. This stunning piece from our ${product.category} collection showcases timeless elegance and superior craftsmanship.`}
                 </p>
 
-                {/* Quantity & Actions */}
-                <div className="flex flex-wrap items-center gap-4 mb-6">
+                {/* Quantity & Actions - Hidden on mobile, shown on desktop */}
+                <div className="hidden md:flex flex-wrap items-center gap-4 mb-6">
                   {/* Quantity Selector */}
                   <div className="flex items-center border border-border rounded-full overflow-hidden">
                     <button
@@ -434,7 +479,117 @@ const ProductDetail = () => {
           </div>
         </section>
       </main>
-      <Footer />
+
+      {/* Fixed Bottom Bar for Mobile */}
+      <div className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-4 py-3 z-50">
+        <div className="flex gap-3">
+          <motion.button
+            onClick={handleAddToCart}
+            whileTap={{ scale: 0.95 }}
+            className="flex-1 py-3.5 font-medium text-sm rounded-full border-2 border-gray-300 bg-white text-gray-800 flex items-center justify-center gap-2"
+          >
+            {addedToCart ? (
+              <>
+                <Check className="w-5 h-5" />
+                Added
+              </>
+            ) : (
+              <>
+                <ShoppingBag className="w-4 h-4" />
+                Add to cart
+              </>
+            )}
+          </motion.button>
+          <motion.button
+            onClick={handleBuyNow}
+            whileTap={{ scale: 0.95 }}
+            className="flex-1 py-3.5 font-semibold text-sm rounded-full bg-black text-white flex items-center justify-center"
+          >
+            Buy at ₹{product?.price.toLocaleString("en-IN")}
+          </motion.button>
+        </div>
+      </div>
+
+      {/* Full Screen Image Popup for Mobile */}
+      {showImagePopup && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="md:hidden fixed inset-0 bg-black z-[100] flex flex-col"
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between p-4 bg-black/80">
+            <span className="text-white text-sm">
+              {selectedImage + 1} / {productImages.length}
+            </span>
+            <button
+              onClick={() => setShowImagePopup(false)}
+              className="text-white p-2"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+
+          {/* Image Container with Swipe */}
+          <div
+            className="flex-1 flex items-center justify-center relative"
+            onTouchStart={onTouchStart}
+            onTouchMove={onTouchMove}
+            onTouchEnd={onTouchEnd}
+          >
+            <motion.img
+              key={selectedImage}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.2 }}
+              src={productImages[selectedImage]}
+              alt={product?.alt}
+              className="max-w-full max-h-full object-contain p-4"
+            />
+
+            {/* Navigation Arrows */}
+            {productImages.length > 1 && (
+              <>
+                {selectedImage > 0 && (
+                  <button
+                    onClick={() => setSelectedImage(selectedImage - 1)}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/20 rounded-full p-2"
+                  >
+                    <ChevronLeft className="w-6 h-6 text-white" />
+                  </button>
+                )}
+                {selectedImage < productImages.length - 1 && (
+                  <button
+                    onClick={() => setSelectedImage(selectedImage + 1)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/20 rounded-full p-2"
+                  >
+                    <ChevronRight className="w-6 h-6 text-white" />
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Thumbnail Dots */}
+          {productImages.length > 1 && (
+            <div className="flex justify-center gap-2 p-4 bg-black/80">
+              {productImages.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setSelectedImage(index)}
+                  className={`w-2 h-2 rounded-full transition-all ${
+                    selectedImage === index ? "bg-white w-4" : "bg-white/50"
+                  }`}
+                />
+              ))}
+            </div>
+          )}
+        </motion.div>
+      )}
+
+      {/* Bottom padding for mobile to account for fixed bar */}
+      <div className="md:hidden h-20"></div>
     </div>
   );
 };

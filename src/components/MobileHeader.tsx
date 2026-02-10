@@ -1,4 +1,4 @@
-import { Menu, User } from "lucide-react";
+import { User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
@@ -36,22 +36,10 @@ const MobileHeader = () => {
     <header className={`lg:hidden bg-white shadow-sm sticky top-0 z-50 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
     }`}>
-      {/* Top Bar with Menu, Logo, and Profile */}
+      {/* Top Bar with Logo and Profile */}
       <div className="flex items-center justify-between px-4 py-3">
-        {/* Menu Icon */}
-        <button 
-          className="p-2 -ml-2 hover:bg-gray-100 rounded-lg transition-colors"
-          onClick={() => {
-            // Toggle mobile sidebar functionality
-            const event = new CustomEvent('toggle-mobile-sidebar');
-            window.dispatchEvent(event);
-          }}
-        >
-          <Menu className="w-6 h-6 text-gray-700" />
-        </button>
-
-        {/* Logo */}
-        <a href="/" className="flex items-center gap-2">
+        {/* Logo - Left Side */}
+        <a href="/" className="flex items-center gap-2 ml-2">
           <img src={logo} alt="Logo" className="h-10 w-auto object-contain" style={{ imageRendering: 'crisp-edges' }} />
         </a>
 
