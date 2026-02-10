@@ -1,4 +1,4 @@
-import { Home, Grid, ShoppingCart, Menu } from "lucide-react";
+import { Home, Grid, ShoppingCart, Menu, Heart } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
 import { useState, useEffect } from "react";
@@ -33,43 +33,72 @@ const MobileBottomNav = () => {
     <>
       <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 z-50 safe-area-pb">
-        <div className="flex items-center justify-around h-16">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-pb">
+        {/* SVG Background with curved notch */}
+        <svg 
+          className="absolute bottom-0 left-0 right-0 w-full h-16" 
+          viewBox="0 0 375 64" 
+          preserveAspectRatio="none"
+          fill="none"
+        >
+          <path 
+            d="M0 20 H130 Q145 20 152 30 Q167 55 187.5 55 Q208 55 223 30 Q230 20 245 20 H375 V64 H0 Z"
+            fill="white"
+            filter="drop-shadow(0 -4px 12px rgba(0,0,0,0.08))"
+          />
+        </svg>
+
+        {/* Center floating button */}
+        <button
+          onClick={() => navigate("/cart")}
+          className="absolute left-1/2 -translate-x-1/2 top-0 z-10"
+        >
+          <div className={`w-11 h-11 rounded-full flex items-center justify-center shadow-lg ${isActive("/cart") ? "bg-emerald-700" : "bg-emerald-600"}`}>
+            <ShoppingCart className="w-5 h-5 text-white" strokeWidth={1.5} />
+          </div>
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[16px] h-[16px] px-1 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+              {totalItems}
+            </span>
+          )}
+        </button>
+
+        {/* Navigation items */}
+        <div className="flex items-center justify-around h-14 relative pt-3">
           {/* Home */}
           <button
             onClick={() => navigate("/")}
             className="flex flex-col items-center justify-center flex-1 h-full"
           >
-            <Home className={`w-[22px] h-[22px] ${isActive("/") ? "text-orange-500" : "text-gray-500"}`} />
-            <span className={`text-[10px] font-medium mt-1 ${isActive("/") ? "text-orange-500" : "text-gray-500"}`}>
-              Home
-            </span>
+            <Home className={`w-6 h-6 ${isActive("/") ? "text-gray-800" : "text-gray-400"}`} strokeWidth={1.5} />
+            {isActive("/") && (
+              <span className="w-1 h-1 bg-emerald-600 rounded-full mt-1"></span>
+            )}
           </button>
 
           {/* Categories */}
           <button
-            onClick={() => {}}
+            onClick={() => navigate("/categories")}
             className="flex flex-col items-center justify-center flex-1 h-full"
           >
-            <Grid className="w-[22px] h-[22px] text-gray-500" />
-            <span className="text-[10px] font-medium mt-1 text-gray-500">Categories</span>
+            <Grid className={`w-6 h-6 ${isActive("/categories") ? "text-gray-800" : "text-gray-400"}`} strokeWidth={1.5} />
+            {isActive("/categories") && (
+              <span className="w-1 h-1 bg-emerald-600 rounded-full mt-1"></span>
+            )}
           </button>
 
-          {/* Cart — special orange badge design */}
+          {/* Empty space for center button */}
+          <div className="flex-1"></div>
+
+          {/* Wishlist/Saved */}
           <button
-            onClick={() => navigate("/cart")}
-            className="flex flex-col items-center justify-center flex-1 h-full relative"
+            onClick={() => navigate("/wishlist")}
+            className="flex flex-col items-center justify-center flex-1 h-full"
           >
-            <div className="relative">
-              <ShoppingCart className="w-[22px] h-[22px] text-gray-600" />
-              {/* Orange circle badge */}
-              <span className="absolute -top-2.5 -right-3 min-w-[20px] h-[20px] px-1 bg-orange-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm shadow-orange-500/30">
-                {totalItems}
-              </span>
-            </div>
-            <span className="text-[10px] font-semibold mt-1 text-gray-700">
-              {formatMobilePrice(subtotal)}
-            </span>
+            <Heart className={`w-6 h-6 ${isActive("/wishlist") ? "text-gray-800" : "text-gray-400"}`} strokeWidth={1.5} />
+            {isActive("/wishlist") && (
+              <span className="w-1 h-1 bg-emerald-600 rounded-full mt-1"></span>
+            )}
           </button>
 
           {/* Menu */}
@@ -77,8 +106,7 @@ const MobileBottomNav = () => {
             onClick={() => setIsSidebarOpen(true)}
             className="flex flex-col items-center justify-center flex-1 h-full"
           >
-            <Menu className="w-[22px] h-[22px] text-gray-500" />
-            <span className="text-[10px] font-medium mt-1 text-gray-500">Menu</span>
+            <Menu className={`w-6 h-6 text-gray-400`} strokeWidth={1.5} />
           </button>
         </div>
       </nav>

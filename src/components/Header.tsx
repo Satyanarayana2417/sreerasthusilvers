@@ -372,7 +372,16 @@ const Header = () => {
                 className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors group"
                 aria-label="Account"
               >
-                <User className="w-5 h-5 text-gray-700 group-hover:text-blue-600" />
+                {user?.photoURL ? (
+                  <img 
+                    src={user.photoURL} 
+                    alt="Profile" 
+                    className="w-6 h-6 rounded-full object-cover border border-black"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <User className="w-5 h-5 text-gray-700 group-hover:text-blue-600" />
+                )}
                 <span className="hidden lg:block text-sm font-medium text-gray-700 group-hover:text-blue-600">
                   {user ? userProfile?.username || 'Account' : 'Login'}
                 </span>

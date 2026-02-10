@@ -33,6 +33,8 @@ import Account from "./pages/Account";
 import SavedAddresses from "./pages/SavedAddresses";
 import LoadingScreen from "./components/LoadingScreen";
 import MobileCart from "./pages/MobileCart";
+import MobileOrders from "./pages/MobileOrders";
+import MobileCategories from "./pages/MobileCategories";
 
 // Bracelet Category Pages
 import DiamondBracelets from "./pages/categories/DiamondBracelets";
@@ -131,6 +133,9 @@ const App = () => {
               {/* Mobile Cart Page */}
               <Route path="/cart" element={<MobileCart />} />
               
+              {/* Mobile Categories Page */}
+              <Route path="/categories" element={<MobileCategories />} />
+              
               {/* Jewelry Collections Main Page */}
               <Route path="/jewelry" element={<JewelryCollections />} />
               
@@ -215,6 +220,7 @@ const App = () => {
                 </ProtectedRoute>
               } />
               <Route path="/account" element={<Account />} />
+              <Route path="/account/orders" element={<MobileOrders />} />
               <Route path="/account/addresses" element={<SavedAddresses />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />

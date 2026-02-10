@@ -549,8 +549,7 @@ const AccountPage = () => {
   if (isMobile) {
     return (
       <>
-        <Header />
-        <div className="min-h-screen pt-1 bg-gray-50 pb-20" style={{ fontFamily: "'Poppins', sans-serif" }}>
+        <div className="min-h-screen pt-2 bg-gray-50 pb-20" style={{ fontFamily: "'Poppins', sans-serif" }}>
           <div className="px-4 py-2">
             {/* Amazon-style Account Header */}
             <div className="bg-white rounded-lg shadow-sm p-4 mb-4">
@@ -558,9 +557,18 @@ const AccountPage = () => {
               <div className="flex items-center justify-between mb-4">
                 {/* User Avatar and Name */}
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 flex items-center justify-center">
-                    <User className="w-5 h-5 text-white" />
-                  </div>
+                  {user?.photoURL ? (
+                    <img 
+                      src={user.photoURL} 
+                      alt="Profile" 
+                      className="w-10 h-10 rounded-full object-cover border border-black"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 flex items-center justify-center">
+                      <User className="w-5 h-5 text-white" />
+                    </div>
+                  )}
                   <div className="flex items-center gap-1">
                     <span className="text-sm font-medium text-gray-900">
                       Hello, {(userProfile?.username || user?.email?.split('@')[0] || 'User').slice(0, 12)}...
@@ -573,7 +581,7 @@ const AccountPage = () => {
               {/* Quick Action Pills */}
               <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                 <button 
-                  onClick={() => setSelectedMenu('orders')}
+                  onClick={() => navigate('/account/orders')}
                   className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
                 >
                   Orders
@@ -601,12 +609,14 @@ const AccountPage = () => {
 
             {/* Navigation Menu */}
             <div className="bg-white rounded-lg shadow-sm mb-4">
-              {menuItems.map((item) => (
+              {menuItems.filter(item => item.id !== 'orders' && item.id !== 'archived' && item.id !== 'saved').map((item) => (
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item)}
                   className={`w-full flex items-center gap-3 px-4 py-3 border-b border-gray-100 last:border-b-0 text-left transition-colors ${
-                    selectedMenu === item.id
+                    item.id === 'logout'
+                      ? 'text-red-600 hover:bg-red-50'
+                      : selectedMenu === item.id
                       ? 'bg-blue-50 text-blue-600'
                       : 'text-gray-700'
                   }`}
@@ -618,85 +628,6 @@ const AccountPage = () => {
             </div>
 
             {/* Main Content */}
-            {selectedMenu === 'orders' && (
-              <div className="bg-white rounded-lg shadow-sm">
-                {/* Order Tabs */}
-                <div className="border-b border-gray-200 px-4 pt-4">
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setSelectedOrderTab('current')}
-                      className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                        selectedOrderTab === 'current'
-                          ? 'border-blue-600 text-blue-600'
-                          : 'border-transparent text-gray-600'
-                      }`}
-                    >
-                      Current
-                    </button>
-                    <button
-                      onClick={() => setSelectedOrderTab('all')}
-                      className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                        selectedOrderTab === 'all'
-                          ? 'border-blue-600 text-blue-600'
-                          : 'border-transparent text-gray-600'
-                      }`}
-                    >
-                      All orders
-                    </button>
-                  </div>
-                </div>
-
-                {/* Orders List */}
-                <div className="p-4 space-y-4">
-                  {ordersLoading ? (
-                    <div className="flex justify-center items-center py-8">
-                      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                    </div>
-                  ) : filteredOrders.length === 0 ? (
-                    <div className="text-center py-8">
-                      <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                      <p className="text-sm text-gray-600">No orders found</p>
-                    </div>
-                  ) : (
-                    filteredOrders.map((order) => (
-                      <div 
-                        key={order.id} 
-                        className="border border-gray-200 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow bg-gray-50"
-                        style={{ fontFamily: "'Poppins', sans-serif" }}
-                        onClick={() => {
-                          setSelectedOrder(order);
-                          setShowOrderModal(true);
-                        }}
-                      >
-                        {/* Order Items Display */}
-                        <div className="space-y-3">
-                          {order.items.map((item, idx) => (
-                            <div key={idx} className="flex gap-3">
-                              <div className="w-16 h-16 bg-white rounded-lg flex-shrink-0 overflow-hidden">
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-1">{item.name}</h4>
-                                <p className="text-xs text-gray-600">Price: {formatPrice(item.price)}</p>
-                                <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <span className={`text-xs font-medium ${getStatusColor(order.status)}`}>
-                                    {getStatusLabel(order.status)}
-                                  </span>
-                                  <span className="text-xs text-gray-500">•</span>
-                                  <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
-                                </div>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-
             {selectedMenu === 'addresses' && (
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Your Addresses</h3>

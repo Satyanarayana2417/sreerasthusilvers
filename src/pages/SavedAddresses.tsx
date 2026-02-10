@@ -5,10 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
-import LoadingScreen from '@/components/LoadingScreen';
 import { useToast } from '@/hooks/use-toast';
 import {
   getUserAddresses,
@@ -38,7 +35,6 @@ const SavedAddresses = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [addresses, setAddresses] = useState<Address[]>([]);
-  const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [formLoading, setFormLoading] = useState(false);
@@ -66,7 +62,6 @@ const SavedAddresses = () => {
     if (!user) return;
     
     try {
-      setLoading(true);
       const userAddresses = await getUserAddresses(user.uid);
       setAddresses(userAddresses);
     } catch (error) {
@@ -76,8 +71,6 @@ const SavedAddresses = () => {
         description: 'Failed to load addresses',
         variant: 'destructive',
       });
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -207,14 +200,9 @@ const SavedAddresses = () => {
     setShowForm(false);
   };
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
   return (
     <>
-      <Header />
-      <div className="min-h-screen pt-16 bg-gray-50">
+      <div className="min-h-screen pt-4 bg-gray-50" style={{ fontFamily: "'Poppins', sans-serif" }}>
         <div className="container mx-auto px-4 py-8 max-w-4xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">
@@ -226,8 +214,8 @@ const SavedAddresses = () => {
                 <ArrowLeft className="w-6 h-6 text-gray-700" />
               </button>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">Saved Addresses</h1>
-                <p className="text-gray-600 mt-1">Manage your delivery addresses</p>
+                <h1 className="text-lg font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Saved Addresses</h1>
+                <p className="text-xs text-gray-600 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>Manage your delivery addresses</p>
               </div>
             </div>
           </div>
@@ -241,9 +229,10 @@ const SavedAddresses = () => {
             >
               <Button
                 onClick={() => setShowForm(true)}
-                className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white px-8 py-6 rounded-xl shadow-lg"
+                className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm px-6 py-3 rounded-xl shadow-lg"
+                style={{ fontFamily: "'Poppins', sans-serif" }}
               >
-                <Plus className="w-5 h-5 mr-2" />
+                <Plus className="w-4 h-4 mr-2" />
                 Add New Address
               </Button>
             </motion.div>
@@ -261,7 +250,7 @@ const SavedAddresses = () => {
               >
                 <div className="bg-white rounded-2xl shadow-lg p-6 md:p-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-bold text-gray-900">
+                    <h2 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                       {editingAddress ? 'Edit Address' : 'Add New Address'}
                     </h2>
                     <button
@@ -275,7 +264,7 @@ const SavedAddresses = () => {
                   <form onSubmit={handleSubmit} className="space-y-6">
                     {/* Full Name */}
                     <div>
-                      <Label htmlFor="fullName" className="text-sm font-medium text-gray-700 mb-2 block">
+                      <Label htmlFor="fullName" className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: "'Poppins', sans-serif" }}>
                         Full Name *
                       </Label>
                       <Input
@@ -291,7 +280,7 @@ const SavedAddresses = () => {
 
                     {/* Phone Number */}
                     <div>
-                      <Label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700 mb-2 block">
+                      <Label htmlFor="phoneNumber" className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: "'Poppins', sans-serif" }}>
                         Phone Number *
                       </Label>
                       <Input
@@ -309,7 +298,7 @@ const SavedAddresses = () => {
                     {/* Pin Code & Locality */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <Label htmlFor="pinCode" className="text-sm font-medium text-gray-700 mb-2 block">
+                        <Label htmlFor="pinCode" className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: "'Poppins', sans-serif" }}>
                           Pin Code *
                         </Label>
                         <Input
@@ -324,7 +313,7 @@ const SavedAddresses = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="locality" className="text-sm font-medium text-gray-700 mb-2 block">
+                        <Label htmlFor="locality" className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: "'Poppins', sans-serif" }}>
                           Locality
                         </Label>
                         <Input
@@ -340,7 +329,7 @@ const SavedAddresses = () => {
 
                     {/* Address */}
                     <div>
-                      <Label htmlFor="address" className="text-sm font-medium text-gray-700 mb-2 block">
+                      <Label htmlFor="address" className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: "'Poppins', sans-serif" }}>
                         Address (Area and Street) *
                       </Label>
                       <Input
@@ -357,7 +346,7 @@ const SavedAddresses = () => {
                     {/* City & State */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <Label htmlFor="city" className="text-sm font-medium text-gray-700 mb-2 block">
+                        <Label htmlFor="city" className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: "'Poppins', sans-serif" }}>
                           City *
                         </Label>
                         <Input
@@ -371,7 +360,7 @@ const SavedAddresses = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="state" className="text-sm font-medium text-gray-700 mb-2 block">
+                        <Label htmlFor="state" className="text-sm font-medium text-gray-700 mb-2 block" style={{ fontFamily: "'Poppins', sans-serif" }}>
                           State *
                         </Label>
                         <Input
@@ -397,7 +386,7 @@ const SavedAddresses = () => {
                         }
                         className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                      <Label htmlFor="isDefault" className="text-sm font-medium text-gray-700 cursor-pointer">
+                      <Label htmlFor="isDefault" className="text-sm font-medium text-gray-700 cursor-pointer" style={{ fontFamily: "'Poppins', sans-serif" }}>
                         Set as default shipping address
                       </Label>
                     </div>
@@ -408,6 +397,7 @@ const SavedAddresses = () => {
                         type="submit"
                         disabled={formLoading}
                         className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white h-12 rounded-xl font-semibold shadow-lg"
+                        style={{ fontFamily: "'Poppins', sans-serif" }}
                       >
                         {formLoading ? (
                           <>
@@ -426,6 +416,7 @@ const SavedAddresses = () => {
                         onClick={resetForm}
                         variant="outline"
                         className="px-8 h-12 rounded-xl border-gray-300"
+                        style={{ fontFamily: "'Poppins', sans-serif" }}
                       >
                         Cancel
                       </Button>
@@ -447,8 +438,8 @@ const SavedAddresses = () => {
                 <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                   <MapPin className="w-10 h-10 text-gray-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No addresses saved</h3>
-                <p className="text-gray-600">Add your first delivery address to get started</p>
+                <h3 className="text-sm font-semibold text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>No addresses saved</h3>
+                <p className="text-xs text-gray-600" style={{ fontFamily: "'Poppins', sans-serif" }}>Add your first delivery address to get started</p>
               </motion.div>
             ) : (
               addresses.map((address, index) => (
@@ -464,29 +455,29 @@ const SavedAddresses = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center space-x-3 mb-3">
-                        <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Home className="w-5 h-5 text-blue-600" />
+                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                          <Home className="w-4 h-4 text-blue-600" />
                         </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900 text-lg">
+                          <h3 className="font-semibold text-gray-900 text-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>
                             {address.fullName}
                           </h3>
                           {address.isDefault && (
-                            <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium">
+                            <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium" style={{ fontFamily: "'Poppins', sans-serif" }}>
                               Default
                             </span>
                           )}
                         </div>
                       </div>
 
-                      <div className="ml-13 space-y-1 text-gray-700">
+                      <div className="ml-13 space-y-1 text-gray-700 text-xs" style={{ fontFamily: "'Poppins', sans-serif" }}>
                         <p>{address.address}</p>
                         {address.locality && <p>{address.locality}</p>}
                         <p>
                           {address.city}, {address.state} - {address.pinCode}
                         </p>
                         <div className="flex items-center space-x-2 pt-2">
-                          <Phone className="w-4 h-4 text-gray-500" />
+                          <Phone className="w-3 h-3 text-gray-500" />
                           <span className="text-gray-600">{address.phoneNumber}</span>
                         </div>
                       </div>
@@ -525,7 +516,6 @@ const SavedAddresses = () => {
           </div>
         </div>
       </div>
-      <Footer />
       <MobileBottomNav />
     </>
   );

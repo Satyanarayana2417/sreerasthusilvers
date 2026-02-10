@@ -117,7 +117,7 @@ const MobileCart = () => {
         >
           <ArrowLeft className="w-6 h-6 text-gray-800" />
         </button>
-        <h1 className="text-lg font-semibold text-gray-900">My Cart List</h1>
+        <h1 className="text-lg font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>My Cart List</h1>
         <button className="p-2 -mr-2 hover:bg-gray-100 rounded-full transition-colors">
           <MoreVertical className="w-6 h-6 text-gray-800" />
         </button>
@@ -147,7 +147,7 @@ const MobileCart = () => {
 
               {/* Product Details */}
               <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-1">
+                <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   {item.name}
                 </h3>
 

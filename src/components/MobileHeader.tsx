@@ -48,7 +48,14 @@ const MobileHeader = () => {
           className="p-1 hover:bg-gray-100 rounded-full transition-colors"
           onClick={() => navigate('/account')}
         >
-          {user ? (
+          {user?.photoURL ? (
+            <img 
+              src={user.photoURL} 
+              alt="Profile" 
+              className="w-9 h-9 rounded-full object-cover border border-black"
+              referrerPolicy="no-referrer"
+            />
+          ) : user ? (
             <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
               <User className="w-5 h-5 text-white" />
             </div>
