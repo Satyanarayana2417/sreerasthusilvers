@@ -172,6 +172,7 @@ const MobileCart = () => {
 
               {/* Quantity Controls */}
               <div className="flex items-center gap-2">
+                {/* Minus button - transparent */}
                 <button
                   onClick={() => {
                     if (item.quantity > 1) {
@@ -180,24 +181,20 @@ const MobileCart = () => {
                       removeFromCart(item.id);
                     }
                   }}
-                  className="w-7 h-7 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
+                  className="w-7 h-7 rounded-full bg-transparent border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
                 >
-                  {item.quantity === 1 ? (
-                    <Trash2 className="w-3.5 h-3.5 text-red-500" />
-                  ) : (
-                    <Minus className="w-3.5 h-3.5 text-gray-600" />
-                  )}
+                  <Minus className="w-3.5 h-3.5 text-gray-700" />
                 </button>
 
-                <div className="w-9 h-9 rounded-full bg-gray-900 flex items-center justify-center">
-                  <span className="text-sm font-semibold text-white">{item.quantity}</span>
-                </div>
+                {/* Quantity display - transparent and small */}
+                <span className="text-sm font-semibold text-gray-900 min-w-[20px] text-center">{item.quantity}</span>
 
+                {/* Plus button - transparent */}
                 <button
                   onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                  className="w-7 h-7 rounded-full bg-gray-900 flex items-center justify-center hover:bg-gray-800 active:scale-95 transition-all"
+                  className="w-7 h-7 rounded-full bg-transparent border border-gray-300 flex items-center justify-center hover:bg-gray-50 active:scale-95 transition-all"
                 >
-                  <Plus className="w-3.5 h-3.5 text-white" />
+                  <Plus className="w-3.5 h-3.5 text-gray-700" />
                 </button>
               </div>
             </motion.div>

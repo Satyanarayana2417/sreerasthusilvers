@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { ArrowLeft, Tag, Gift, ChevronDown, Shield, ChevronRight, Plus, Minus, Zap, CreditCard, MapPin, MoreVertical, Sparkles, ShoppingBag, Truck, Home, Edit, X, Loader2 } from 'lucide-react';
+import { ArrowLeft, Tag, Gift, ChevronDown, Shield, ChevronRight, Plus, Minus, Zap, CreditCard, MapPin, MoreVertical, Sparkles, ShoppingBag, Truck, Home, Edit, X, Loader2, Trash2 } from 'lucide-react';
 import { getActiveProducts } from '@/services/productService';
 import { adaptFirebaseToUI, UIProduct } from '@/lib/productAdapter';
 import { getUserAddresses, getDefaultAddress, Address, addAddress, AddressFormData } from '@/services/addressService';
@@ -721,22 +721,36 @@ const MobileCheckout = () => {
                     </div>
 
                     {/* Quantity controls */}
-                    <div className="flex items-center border border-green-500 rounded-lg overflow-hidden bg-green-50 flex-shrink-0">
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      {/* Delete button */}
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                      >
+                        <Trash2 className="w-4 h-4" strokeWidth={2} />
+                      </button>
+
+                      {/* Minus button - transparent */}
                       <button
                         onClick={() => {
                           if (item.quantity > 1) updateQuantity(item.id, item.quantity - 1);
-                          else removeFromCart(item.id);
                         }}
-                        className="w-8 h-8 flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-900/20 hover:bg-gray-900/5 rounded-full transition-colors"
                       >
-                        <Minus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                        <Minus className="w-3.5 h-3.5 text-gray-900" strokeWidth={2.5} />
                       </button>
-                      <span className="w-7 text-center text-sm font-bold text-green-700" style={{ fontFamily: "'Poppins', sans-serif" }}>{item.quantity}</span>
+
+                      {/* Quantity display */}
+                      <div className="w-8 h-8 flex items-center justify-center bg-gray-900 rounded-full">
+                        <span className="text-sm font-bold text-white" style={{ fontFamily: "'Poppins', sans-serif" }}>{item.quantity}</span>
+                      </div>
+
+                      {/* Plus button - transparent */}
                       <button
                         onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                        className="w-8 h-8 flex items-center justify-center text-green-600 hover:bg-green-100 transition-colors"
+                        className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-900/20 hover:bg-gray-900/5 rounded-full transition-colors"
                       >
-                        <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+                        <Plus className="w-3.5 h-3.5 text-gray-900" strokeWidth={2.5} />
                       </button>
                     </div>
 
