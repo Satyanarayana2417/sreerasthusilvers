@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
@@ -7,6 +7,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import LoadingScreen from '@/components/LoadingScreen';
+import { subscribeToUserOrders, Order, updateOrderStatus } from '@/services/orderService';
 import {
   Loader2,
   User,
@@ -368,6 +369,44 @@ const AccountPage = () => {
   const [selectedMenu, setSelectedMenu] = useState('orders');
   const [selectedOrderTab, setSelectedOrderTab] = useState('current');
   const [isMobile, setIsMobile] = useState(false);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showOrderModal, setShowOrderModal] = useState(false);
+
+  // Subscribe to user orders
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('Setting up order subscription for user:', user.uid);
+    setOrdersLoading(true);
+    
+    const unsubscribe = subscribeToUserOrders(
+      user.uid,
+      (fetchedOrders) => {
+        console.log('Fetched orders:', fetchedOrders.length);
+        setOrders(fetchedOrders);
+        setOrdersLoading(false);
+      },
+      (error) => {
+        console.error('Error fetching orders:', error);
+        console.error('Error details:', error.message, (error as any).code);
+        
+        // Check if it's an index error
+        if (error.message?.includes('index') || error.message?.includes('requires an index')) {
+          console.error('FIRESTORE INDEX REQUIRED: Please create the composite index for orders collection');
+          console.error('Follow the link in the error message above or check the browser console');
+        }
+        
+        setOrdersLoading(false);
+      }
+    );
+
+    return () => {
+      console.log('Cleaning up order subscription');
+      unsubscribe();
+    };
+  }, [user]);
 
   // Detect mobile
   React.useEffect(() => {
@@ -418,26 +457,80 @@ const AccountPage = () => {
     { id: 'questions', label: 'Questions & Answers', icon: MessageCircle, color: 'text-blue-600' },
   ];
 
-  // Mock orders data
-  const orders = [
-    {
-      id: '73262',
-      products: 4,
-      by: userProfile?.username || 'Alex John',
-      date: '13:45, Nov 10, 2025',
-      status: 'On the way',
-      statusColor: 'text-orange-600',
-      deliveryDate: 'Fri, 13 Nov, 2025',
-      address: 'Great street, New York Brooklyn 5A, PO: 212891',
-      total: 340.00,
-      items: [
-        { name: 'Great product name goes here', quantity: 1, price: 340, color: 'Silver', size: 'Large', image: '/src/assets/products/necklace-1.jpg' },
-        { name: 'Table lamp for c', quantity: 1, price: 0, color: 'Silver', size: 'Large', image: '/src/assets/products/ring-1.jpg' },
-        { name: 'Great product name goes here', quantity: 2, price: 87, color: 'Silver', size: '', image: '/src/assets/products/bracelet-1.jpg' },
-        { name: 'Great cup white', quantity: 1, price: 0, color: 'Silver', size: '', image: '/src/assets/products/earring-1.jpg' },
-      ]
+  // Filter orders based on selected tab
+  const filteredOrders = orders.filter(order => {
+    if (selectedOrderTab === 'current') {
+      return ['pending', 'processing', 'shipped'].includes(order.status);
+    } else if (selectedOrderTab === 'all') {
+      return true;
     }
-  ];
+    return false;
+  });
+
+  // Format price in INR
+  const formatPrice = (price: number) => {
+    return `₹${price.toFixed(2)}`;
+  };
+
+  // Get status color
+  const getStatusColor = (status: Order['status']) => {
+    switch (status) {
+      case 'pending':
+        return 'text-yellow-600';
+      case 'processing':
+        return 'text-blue-600';
+      case 'shipped':
+        return 'text-purple-600';
+      case 'delivered':
+        return 'text-green-600';
+      case 'cancelled':
+        return 'text-red-600';
+      default:
+        return 'text-gray-600';
+    }
+  };
+
+  // Get status label
+  const getStatusLabel = (status: Order['status']) => {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'processing':
+        return 'Processing';
+      case 'shipped':
+        return 'On the way';
+      case 'delivered':
+        return 'Delivered';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  };
+
+  // Format date
+  const formatDate = (timestamp: any) => {
+    if (!timestamp) return 'N/A';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    return date.toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+    }) + ', ' + date.toLocaleTimeString('en-US', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+  };
+
+  // Format payment method
+  const formatPaymentMethod = (method: string) => {
+    if (method === 'cod') return 'Cash On Delivery';
+    if (method === 'online') return 'Online Payment';
+    if (method === 'card') return 'Card Payment';
+    // Capitalize first letter of each word
+    return method.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
 
   const handleMenuClick = (menu: any) => {
     if (menu.action === 'logout') {
@@ -497,16 +590,6 @@ const AccountPage = () => {
                       Current
                     </button>
                     <button
-                      onClick={() => setSelectedOrderTab('unpaid')}
-                      className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
-                        selectedOrderTab === 'unpaid'
-                          ? 'border-blue-600 text-blue-600'
-                          : 'border-transparent text-gray-600'
-                      }`}
-                    >
-                      Unpaid
-                    </button>
-                    <button
                       onClick={() => setSelectedOrderTab('all')}
                       className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
                         selectedOrderTab === 'all'
@@ -521,57 +604,51 @@ const AccountPage = () => {
 
                 {/* Orders List */}
                 <div className="p-4 space-y-4">
-                  {orders.map((order) => (
-                    <div key={order.id} className="border border-gray-200 rounded-lg p-4">
-                      {/* Order Header */}
-                      <div className="mb-3">
-                        <h3 className="text-sm font-bold text-gray-900 mb-1">Order #: {order.id}</h3>
-                        <p className="text-xs text-gray-600">
-                          {order.products} Products | By {order.by}
-                        </p>
-                        <p className="text-xs text-gray-600">{order.date}</p>
-                      </div>
-
-                      {/* Order Details */}
-                      <div className="space-y-2 mb-4 text-xs">
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Status:</span>
-                          <span className={`font-medium ${order.statusColor}`}>{order.status}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Date of delivery:</span>
-                          <span className="font-medium text-gray-900">{order.deliveryDate}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Delivered to:</span>
-                          <span className="font-medium text-gray-900 text-right ml-2">{order.address}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-600">Total:</span>
-                          <span className="font-bold text-gray-900">USD {order.total.toFixed(2)}</span>
-                        </div>
-                      </div>
-
-                      {/* Order Items */}
-                      <div className="space-y-3">
-                        {order.items.map((item, idx) => (
-                          <div key={idx} className="flex gap-3 bg-gray-50 rounded-lg p-3">
-                            <div className="w-16 h-16 bg-white rounded-lg flex-shrink-0 overflow-hidden">
-                              <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <h4 className="text-xs font-semibold text-gray-900 mb-1 truncate">{item.name}</h4>
-                              <p className="text-xs text-gray-600">
-                                Quantity: {item.quantity}x {item.price > 0 && `= USD ${item.price}`}
-                              </p>
-                              <p className="text-xs text-gray-600">Color: {item.color}</p>
-                              {item.size && <p className="text-xs text-gray-600">Size: {item.size}</p>}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                  {ordersLoading ? (
+                    <div className="flex justify-center items-center py-8">
+                      <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
                     </div>
-                  ))}
+                  ) : filteredOrders.length === 0 ? (
+                    <div className="text-center py-8">
+                      <Package className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                      <p className="text-sm text-gray-600">No orders found</p>
+                    </div>
+                  ) : (
+                    filteredOrders.map((order) => (
+                      <div 
+                        key={order.id} 
+                        className="border border-gray-200 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow bg-gray-50"
+                        style={{ fontFamily: "'Poppins', sans-serif" }}
+                        onClick={() => {
+                          setSelectedOrder(order);
+                          setShowOrderModal(true);
+                        }}
+                      >
+                        {/* Order Items Display */}
+                        <div className="space-y-3">
+                          {order.items.map((item, idx) => (
+                            <div key={idx} className="flex gap-3">
+                              <div className="w-16 h-16 bg-white rounded-lg flex-shrink-0 overflow-hidden">
+                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <h4 className="text-sm font-semibold text-gray-900 mb-1">{item.name}</h4>
+                                <p className="text-xs text-gray-600">Price: {formatPrice(item.price)}</p>
+                                <p className="text-xs text-gray-600">Quantity: {item.quantity}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`text-xs font-medium ${getStatusColor(order.status)}`}>
+                                    {getStatusLabel(order.status)}
+                                  </span>
+                                  <span className="text-xs text-gray-500">•</span>
+                                  <span className="text-xs text-gray-500">{formatDate(order.createdAt)}</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))
+                  )}
                 </div>
               </div>
             )}
@@ -616,6 +693,64 @@ const AccountPage = () => {
           </div>
         </div>
         <MobileBottomNav />
+
+        {/* Order Details Modal - Mobile */}
+        {showOrderModal && selectedOrder && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg max-w-md w-full max-h-[90vh] overflow-y-auto" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex justify-between items-center">
+                <h3 className="text-lg font-bold text-gray-900">Order Details</h3>
+                <button 
+                  onClick={() => setShowOrderModal(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              
+              <div className="p-4 space-y-4">
+                {/* Order Number */}
+                <div>
+                  <h4 className="text-base font-bold text-gray-900">Order #: {selectedOrder.orderId}</h4>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {selectedOrder.items.length} Products | By sree rasthu silvers | {formatDate(selectedOrder.createdAt)}
+                  </p>
+                </div>
+
+                {/* Order Details Grid */}
+                <div className="space-y-3 text-sm">
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600 font-medium">Status:</span>
+                    <span className={`font-semibold ${getStatusColor(selectedOrder.status)}`}>
+                      {getStatusLabel(selectedOrder.status)}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2 border-b border-gray-100">
+                    <span className="text-gray-600 font-medium">Payment:</span>
+                    <span className="font-semibold text-gray-900">
+                      {formatPaymentMethod(selectedOrder.paymentMethod)}
+                    </span>
+                  </div>
+                  
+                  <div className="py-2 border-b border-gray-100">
+                    <span className="text-gray-600 font-medium block mb-1">Delivered to:</span>
+                    <span className="font-semibold text-gray-900 text-sm">
+                      {selectedOrder.shippingAddress.address}, {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}
+                    </span>
+                  </div>
+                  
+                  <div className="flex justify-between py-2">
+                    <span className="text-gray-600 font-medium">Total:</span>
+                    <span className="font-bold text-gray-900 text-lg">
+                      {formatPrice(selectedOrder.total)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </>
     );
   }
@@ -674,16 +809,6 @@ const AccountPage = () => {
                         Current
                       </button>
                       <button
-                        onClick={() => setSelectedOrderTab('unpaid')}
-                        className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                          selectedOrderTab === 'unpaid'
-                            ? 'border-blue-600 text-blue-600'
-                            : 'border-transparent text-gray-600 hover:text-gray-900'
-                        }`}
-                      >
-                        Unpaid
-                      </button>
-                      <button
                         onClick={() => setSelectedOrderTab('all')}
                         className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
                           selectedOrderTab === 'all'
@@ -698,56 +823,51 @@ const AccountPage = () => {
 
                   {/* Orders List */}
                   <div className="p-6 space-y-6">
-                    {orders.map((order) => (
-                      <div key={order.id} className="border border-gray-200 rounded-lg p-6">
-                        {/* Order Header */}
-                        <div className="mb-4">
-                          <h3 className="text-lg font-bold text-gray-900 mb-1">Order #: {order.id}</h3>
-                          <p className="text-sm text-gray-600">
-                            {order.products} Products | By {order.by} | {order.date}
-                          </p>
-                        </div>
-
-                        {/* Order Details */}
-                        <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-6 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Status:</span>
-                            <span className={`font-medium ${order.statusColor}`}>{order.status}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Date of delivery:</span>
-                            <span className="font-medium text-gray-900">{order.deliveryDate}</span>
-                          </div>
-                          <div className="flex justify-between col-span-2">
-                            <span className="text-gray-600">Delivered to:</span>
-                            <span className="font-medium text-gray-900">{order.address}</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-600">Total:</span>
-                            <span className="font-bold text-gray-900">USD {order.total.toFixed(2)}</span>
-                          </div>
-                        </div>
-
-                        {/* Order Items */}
-                        <div className="grid grid-cols-2 gap-4">
-                          {order.items.map((item, idx) => (
-                            <div key={idx} className="flex gap-4 bg-gray-50 rounded-lg p-4">
-                              <div className="w-20 h-20 bg-white rounded-lg flex-shrink-0 overflow-hidden">
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm font-semibold text-gray-900 mb-1 truncate">{item.name}</h4>
-                                <p className="text-xs text-gray-600">
-                                  Quantity: {item.quantity}x {item.price > 0 && `= USD ${item.price}`}
-                                </p>
-                                <p className="text-xs text-gray-600">Color: {item.color}</p>
-                                {item.size && <p className="text-xs text-gray-600">Size: {item.size}</p>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                    {ordersLoading ? (
+                      <div className="flex justify-center items-center py-12">
+                        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
                       </div>
-                    ))}
+                    ) : filteredOrders.length === 0 ? (
+                      <div className="text-center py-12">
+                        <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                        <p className="text-gray-600">No orders found</p>
+                      </div>
+                    ) : (
+                      filteredOrders.map((order) => (
+                        <div 
+                          key={order.id} 
+                          className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow bg-gray-50"
+                          style={{ fontFamily: "'Poppins', sans-serif" }}
+                          onClick={() => {
+                            setSelectedOrder(order);
+                            setShowOrderModal(true);
+                          }}
+                        >
+                          {/* Order Items Display */}
+                          <div className="space-y-4">
+                            {order.items.map((item, idx) => (
+                              <div key={idx} className="flex gap-4">
+                                <div className="w-20 h-20 bg-white rounded-lg flex-shrink-0 overflow-hidden">
+                                  <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-base font-semibold text-gray-900 mb-1">{item.name}</h4>
+                                  <p className="text-sm text-gray-600">Price: {formatPrice(item.price)}</p>
+                                  <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                                  <div className="flex items-center gap-2 mt-1">
+                                    <span className={`text-sm font-medium ${getStatusColor(order.status)}`}>
+                                      {getStatusLabel(order.status)}
+                                    </span>
+                                    <span className="text-sm text-gray-500">•</span>
+                                    <span className="text-sm text-gray-500">{formatDate(order.createdAt)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </div>
               )}
@@ -794,6 +914,64 @@ const AccountPage = () => {
         </div>
       </div>
       <Footer />
+
+      {/* Order Details Modal - Desktop */}
+      {showOrderModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            <div className="sticky top-0 bg-white border-b border-gray-200 p-6 flex justify-between items-center">
+              <h3 className="text-2xl font-bold text-gray-900">Order Details</h3>
+              <button 
+                onClick={() => setShowOrderModal(false)}
+                className="text-gray-500 hover:text-gray-700 text-2xl"
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div className="p-6 space-y-6">
+              {/* Order Number */}
+              <div>
+                <h4 className="text-xl font-bold text-gray-900">Order #: {selectedOrder.orderId}</h4>
+                <p className="text-base text-gray-600 mt-2">
+                  {selectedOrder.items.length} Products | By sree rasthu silvers | {formatDate(selectedOrder.createdAt)}
+                </p>
+              </div>
+
+              {/* Order Details Grid */}
+              <div className="space-y-4 text-base">
+                <div className="flex justify-between py-3 border-b border-gray-200">
+                  <span className="text-gray-600 font-medium">Status:</span>
+                  <span className={`font-semibold text-lg ${getStatusColor(selectedOrder.status)}`}>
+                    {getStatusLabel(selectedOrder.status)}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between py-3 border-b border-gray-200">
+                  <span className="text-gray-600 font-medium">Payment:</span>
+                  <span className="font-semibold text-gray-900">
+                    {formatPaymentMethod(selectedOrder.paymentMethod)}
+                  </span>
+                </div>
+                
+                <div className="py-3 border-b border-gray-200">
+                  <span className="text-gray-600 font-medium block mb-2">Delivered to:</span>
+                  <span className="font-semibold text-gray-900">
+                    {selectedOrder.shippingAddress.address}, {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}
+                  </span>
+                </div>
+                
+                <div className="flex justify-between py-3">
+                  <span className="text-gray-600 font-medium text-lg">Total:</span>
+                  <span className="font-bold text-gray-900 text-2xl">
+                    {formatPrice(selectedOrder.total)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

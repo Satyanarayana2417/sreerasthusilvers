@@ -12,6 +12,7 @@ import { ArrowLeft, Tag, Gift, ChevronDown, Shield, ChevronRight, Plus, Minus, Z
 import { getActiveProducts } from '@/services/productService';
 import { adaptFirebaseToUI, UIProduct } from '@/lib/productAdapter';
 import { getUserAddresses, getDefaultAddress, Address, addAddress, AddressFormData } from '@/services/addressService';
+import { createOrder, generateOrderNumber, OrderFormData, OrderItem } from '@/services/orderService';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 
@@ -84,8 +85,8 @@ const SlideToPayButton = ({ amount, onComplete }: { amount: string; onComplete: 
 // ─── Mobile Checkout Component ───
 const MobileCheckout = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { items, subtotal, updateQuantity, removeFromCart, totalItems, addToCart } = useCart();
+  const { user, userProfile } = useAuth();
+  const { items, subtotal, updateQuantity, removeFromCart, totalItems, addToCart, clearCart } = useCart();
   const { toast } = useToast();
   const [suggestedProducts, setSuggestedProducts] = useState<UIProduct[]>([]);
   const [activeTab, setActiveTab] = useState('Did you forget?');
@@ -98,8 +99,9 @@ const MobileCheckout = () => {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Cash On Delivery');
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
-  const [orderId] = useState(() => Math.floor(10000000 + Math.random() * 90000000).toString());
+  const [orderId] = useState(() => generateOrderNumber());
   const [showAllItems, setShowAllItems] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState<AddressFormData>({
@@ -240,9 +242,95 @@ const MobileCheckout = () => {
     const originalPrice = Math.round(item.price * 1.3);
     return acc + (originalPrice - item.price) * item.quantity;
   }, 0);
-  const total = subtotal + deliveryCharge + taxAmount;
+  const discount = 20; // Coupon discount
+  const total = subtotal + deliveryCharge + taxAmount - discount;
 
   const addOnTabs = ['Did you forget?', 'Best Sellers', 'New Arrivals'];
+
+  // Handle order placement
+  const handlePlaceOrder = async () => {
+    if (!user || !selectedAddress) {
+      toast({
+        title: 'Error',
+        description: 'Please add a delivery address',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (items.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Your cart is empty',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsPlacingOrder(true);
+
+    try {
+      // Convert cart items to order items
+      const orderItems: OrderItem[] = items.map(item => ({
+        productId: item.id,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity,
+      }));
+
+      // Prepare order data
+      const orderData: OrderFormData = {
+        orderId: orderId,
+        userId: user.uid,
+        userEmail: user.email || '',
+        userName: userProfile?.username || user.displayName || 'Guest',
+        items: orderItems,
+        subtotal: subtotal,
+        deliveryCharge: deliveryCharge,
+        taxAmount: taxAmount,
+        discount: discount,
+        total: total,
+        shippingAddress: {
+          fullName: selectedAddress.fullName,
+          mobile: selectedAddress.phoneNumber,
+          pincode: selectedAddress.pinCode,
+          address: selectedAddress.address,
+          locality: selectedAddress.locality || '',
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          landmark: '',
+          alternativePhone: '',
+          addressType: 'home',
+        },
+        paymentMethod: selectedPaymentMethod,
+        status: 'pending',
+      };
+
+      // Create order in Firestore
+      await createOrder(orderData);
+
+      // Clear cart
+      clearCart();
+
+      // Show success page
+      setShowOrderSuccess(true);
+
+      toast({
+        title: 'Success',
+        description: '✓ Order placed successfully!',
+      });
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to place order. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col pb-24" style={{ fontFamily: "'Poppins', sans-serif" }}>
@@ -986,12 +1074,17 @@ const MobileCheckout = () => {
               transition={{ delay: 0.3, type: 'spring', damping: 25, stiffness: 200 }}
               className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]"
             >
-              <SlideToPayButton
-                amount="Place Order"
-                onComplete={() => {
-                  setShowOrderSuccess(true);
-                }}
-              />
+              {isPlacingOrder ? (
+                <div className="h-14 rounded-full flex items-center justify-center bg-gradient-to-r from-green-500 to-green-600 text-white font-semibold">
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  Placing Order...
+                </div>
+              ) : (
+                <SlideToPayButton
+                  amount="Place Order"
+                  onComplete={handlePlaceOrder}
+                />
+              )}
             </motion.div>
           </motion.div>
         )}
@@ -1200,8 +1293,8 @@ const MobileCheckout = () => {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { items, subtotal } = useCart();
+  const { user, userProfile } = useAuth();
+  const { items, subtotal, clearCart } = useCart();
   const { toast } = useToast();
   const [couponCode, setCouponCode] = useState('');
   const [showOffers, setShowOffers] = useState(false);
@@ -1215,8 +1308,9 @@ const Checkout = () => {
   const [showPaymentDetails, setShowPaymentDetails] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('Cash On Delivery');
   const [showOrderSuccess, setShowOrderSuccess] = useState(false);
-  const [orderId] = useState(() => Math.floor(10000000 + Math.random() * 90000000).toString());
+  const [orderId] = useState(() => generateOrderNumber());
   const [showAllItems, setShowAllItems] = useState(false);
+  const [isPlacingOrder, setIsPlacingOrder] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState<AddressFormData>({
@@ -1353,6 +1447,94 @@ const Checkout = () => {
   // Calculate delivery charge (free for orders above ₹5000)
   const deliveryCharge = subtotal >= 5000 ? 0 : 60;
   const taxAmount = Math.round(subtotal * 0.03); // 3% tax
+  const discount = 20; // Coupon discount
+  const desktopTotal = subtotal + deliveryCharge + taxAmount - discount;
+
+  // Handle order placement
+  const handlePlaceOrder = async () => {
+    if (!user || !selectedAddress) {
+      toast({
+        title: 'Error',
+        description: 'Please add a delivery address',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (items.length === 0) {
+      toast({
+        title: 'Error',
+        description: 'Your cart is empty',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsPlacingOrder(true);
+
+    try {
+      // Convert cart items to order items
+      const orderItems: OrderItem[] = items.map(item => ({
+        productId: item.id,
+        name: item.name,
+        image: item.image,
+        price: item.price,
+        quantity: item.quantity,
+      }));
+
+      // Prepare order data
+      const orderData: OrderFormData = {
+        orderId: orderId,
+        userId: user.uid,
+        userEmail: user.email || '',
+        userName: userProfile?.username || user.displayName || 'Guest',
+        items: orderItems,
+        subtotal: subtotal,
+        deliveryCharge: deliveryCharge,
+        taxAmount: taxAmount,
+        discount: discount,
+        total: total,
+        shippingAddress: {
+          fullName: selectedAddress.fullName,
+          mobile: selectedAddress.phoneNumber,
+          pincode: selectedAddress.pinCode,
+          address: selectedAddress.address,
+          locality: selectedAddress.locality || '',
+          city: selectedAddress.city,
+          state: selectedAddress.state,
+          landmark: '',
+          alternativePhone: '',
+          addressType: 'home',
+        },
+        paymentMethod: selectedPaymentMethod,
+        status: 'pending',
+      };
+
+      // Create order in Firestore
+      await createOrder(orderData);
+
+      // Clear cart
+      clearCart();
+
+      // Close payment modal and show success
+      setShowPaymentDetails(false);
+      setShowOrderSuccess(true);
+
+      toast({
+        title: 'Success',
+        description: '✓ Order placed successfully!',
+      });
+    } catch (error) {
+      console.error('Error placing order:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to place order. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPlacingOrder(false);
+    }
+  };
   const total = subtotal + deliveryCharge + taxAmount;
 
   const offers = [
@@ -2108,7 +2290,7 @@ const Checkout = () => {
                       <Separator className="my-3" />
                       <div className="flex items-center justify-between">
                         <span className="font-bold text-gray-900">Total (include vat and tax)</span>
-                        <span className="text-xl font-bold text-gray-900">{formatPrice(total)}</span>
+                        <span className="text-xl font-bold text-gray-900">{formatPrice(desktopTotal)}</span>
                       </div>
                     </div>
                   </div>
@@ -2142,17 +2324,23 @@ const Checkout = () => {
                       variant="outline"
                       onClick={() => setShowPaymentDetails(false)}
                       className="flex-1 h-12 text-sm font-semibold border-gray-300"
+                      disabled={isPlacingOrder}
                     >
                       Cancel
                     </Button>
                     <Button
-                      onClick={() => {
-                        setShowPaymentDetails(false);
-                        setShowOrderSuccess(true);
-                      }}
+                      onClick={handlePlaceOrder}
+                      disabled={isPlacingOrder}
                       className="flex-1 h-12 bg-green-500 hover:bg-green-600 text-white font-semibold text-sm"
                     >
-                      CONTINUE
+                      {isPlacingOrder ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                          Placing Order...
+                        </>
+                      ) : (
+                        'CONTINUE'
+                      )}
                     </Button>
                   </div>
                 </div>

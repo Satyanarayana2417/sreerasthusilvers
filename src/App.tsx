@@ -104,10 +104,10 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
 import ProductForm from "./pages/admin/ProductForm";
-import Orders from "./pages/admin/Orders";
 import Media from "./pages/admin/Media";
 import Settings from "./pages/admin/Settings";
 import AdminBanners from "./pages/AdminBanners";
+import AdminOrders from "./pages/AdminOrders";
 
 const queryClient = new QueryClient();
 
@@ -243,7 +243,7 @@ const App = () => {
                 <Route path="products" element={<Products />} />
                 <Route path="products/new" element={<ProductForm />} />
                 <Route path="products/:productId" element={<ProductForm />} />
-                <Route path="orders" element={<Orders />} />
+                <Route path="orders" element={<AdminOrders />} />
                 <Route path="media" element={<Media />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="banners" element={<AdminBanners />} />
