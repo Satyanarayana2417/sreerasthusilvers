@@ -230,47 +230,61 @@ const MobileOrders = () => {
       
       const file = new File([imageBlob], `order-receipt-${selectedOrder.orderId}.png`, { type: 'image/png' });
       
-      if (platform === 'native' && navigator.canShare && navigator.canShare({ files: [file] })) {
+      // Helper function to download the image
+      const downloadImage = () => {
+        const url = URL.createObjectURL(imageBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `order-receipt-${selectedOrder.orderId}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      };
+      
+      // Check if native file sharing is supported (mainly mobile devices)
+      const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
+      
+      if (platform === 'native' && canShareFiles) {
+        // Native share with file (mobile)
         await navigator.share({
           title: `Order Receipt - ORD-${selectedOrder.orderId}`,
-          text: `Sree Rasthu Silvers Order Receipt\nOrder ID: ORD-${selectedOrder.orderId}\nTotal: ₹${selectedOrder.total.toLocaleString('en-IN')}`,
           files: [file],
         });
       } else if (platform === 'download') {
-        // Download the image
-        const url = URL.createObjectURL(imageBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `order-receipt-${selectedOrder.orderId}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        alert('Receipt image downloaded! You can now share it on any platform.');
+        // Just download
+        downloadImage();
+        alert('Receipt image saved to your downloads!');
+      } else if (canShareFiles) {
+        // Mobile - use native share for all platforms
+        await navigator.share({
+          title: `Order Receipt - ORD-${selectedOrder.orderId}`,
+          files: [file],
+        });
       } else {
-        // Fallback - download and open share platform
-        const url = URL.createObjectURL(imageBlob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `order-receipt-${selectedOrder.orderId}.png`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+        // Desktop fallback - download first, then open platform
+        downloadImage();
         
-        if (platform === 'whatsapp') {
-          window.open('https://wa.me/', '_blank');
-          alert('Receipt downloaded! Attach the image in WhatsApp.');
-        } else if (platform === 'email') {
-          window.open(`mailto:?subject=Order Receipt - ORD-${selectedOrder.orderId}&body=Please find the attached order receipt image.`, '_blank');
-          alert('Receipt downloaded! Attach the image in your email.');
-        }
+        setTimeout(() => {
+          if (platform === 'whatsapp') {
+            window.open('https://web.whatsapp.com/', '_blank');
+            alert('Receipt downloaded! Open WhatsApp and attach the image from your Downloads folder.');
+          } else if (platform === 'email') {
+            window.open(`mailto:?subject=Order Receipt - ORD-${selectedOrder.orderId}`, '_blank');
+            alert('Receipt downloaded! Attach the image from your Downloads folder to the email.');
+          } else {
+            alert('Receipt image downloaded! You can now share it on any platform.');
+          }
+        }, 500);
       }
       
       setShowShareMenu(false);
     } catch (error) {
       console.error('Error sharing receipt:', error);
-      alert('Failed to share receipt. Please try downloading instead.');
+      // If share was cancelled by user, don't show error
+      if ((error as Error).name !== 'AbortError') {
+        alert('Failed to share receipt. Please try the "Save" option to download the image.');
+      }
     } finally {
       setIsGeneratingImage(false);
     }
