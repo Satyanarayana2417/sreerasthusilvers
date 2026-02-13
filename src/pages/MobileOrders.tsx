@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscribeToUserOrders, Order } from '@/services/orderService';
+import html2canvas from 'html2canvas';
 import {
   Loader2,
   Package,
@@ -22,6 +23,7 @@ import {
   Mail,
   Copy,
   X,
+  Download,
 } from 'lucide-react';
 
 const MobileOrders = () => {
@@ -33,6 +35,8 @@ const MobileOrders = () => {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to user orders
   useEffect(() => {
@@ -156,6 +160,92 @@ const MobileOrders = () => {
     if (method === 'online') return 'Online Payment';
     if (method === 'card') return 'Card Payment';
     return method.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  // Generate receipt image and share
+  const generateReceiptImage = async (order: Order): Promise<Blob | null> => {
+    if (!receiptRef.current) return null;
+    
+    try {
+      const canvas = await html2canvas(receiptRef.current, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      
+      return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob);
+        }, 'image/png', 1.0);
+      });
+    } catch (error) {
+      console.error('Error generating receipt image:', error);
+      return null;
+    }
+  };
+
+  // Share receipt as image
+  const shareReceiptImage = async (platform: 'whatsapp' | 'email' | 'download' | 'native') => {
+    if (!selectedOrder) return;
+    
+    setIsGeneratingImage(true);
+    
+    try {
+      const imageBlob = await generateReceiptImage(selectedOrder);
+      
+      if (!imageBlob) {
+        alert('Failed to generate receipt image. Please try again.');
+        setIsGeneratingImage(false);
+        return;
+      }
+      
+      const file = new File([imageBlob], `order-receipt-${selectedOrder.orderId}.png`, { type: 'image/png' });
+      
+      if (platform === 'native' && navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: `Order Receipt - ORD-${selectedOrder.orderId}`,
+          text: `Sree Rasthu Silvers Order Receipt\nOrder ID: ORD-${selectedOrder.orderId}\nTotal: ₹${selectedOrder.total.toLocaleString('en-IN')}`,
+          files: [file],
+        });
+      } else if (platform === 'download') {
+        // Download the image
+        const url = URL.createObjectURL(imageBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `order-receipt-${selectedOrder.orderId}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        alert('Receipt image downloaded! You can now share it on any platform.');
+      } else {
+        // Fallback - download and open share platform
+        const url = URL.createObjectURL(imageBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `order-receipt-${selectedOrder.orderId}.png`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        if (platform === 'whatsapp') {
+          window.open('https://wa.me/', '_blank');
+          alert('Receipt downloaded! Attach the image in WhatsApp.');
+        } else if (platform === 'email') {
+          window.open(`mailto:?subject=Order Receipt - ORD-${selectedOrder.orderId}&body=Please find the attached order receipt image.`, '_blank');
+          alert('Receipt downloaded! Attach the image in your email.');
+        }
+      }
+      
+      setShowShareMenu(false);
+    } catch (error) {
+      console.error('Error sharing receipt:', error);
+      alert('Failed to share receipt. Please try downloading instead.');
+    } finally {
+      setIsGeneratingImage(false);
+    }
   };
 
     return (
@@ -543,6 +633,119 @@ For support: +91 98198 73745
         )}
       </AnimatePresence>
 
+      {/* Hidden Receipt Component for Image Generation */}
+      {selectedOrder && (
+        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+          <div
+            ref={receiptRef}
+            style={{
+              width: '380px',
+              padding: '24px',
+              backgroundColor: '#ffffff',
+              fontFamily: "'Poppins', sans-serif",
+            }}
+          >
+            {/* Header */}
+            <div style={{ textAlign: 'center', marginBottom: '20px', borderBottom: '2px solid #f97316', paddingBottom: '16px' }}>
+              <h1 style={{ fontSize: '22px', fontWeight: 'bold', color: '#f97316', margin: 0 }}>SREE RASTHU SILVERS</h1>
+              <p style={{ fontSize: '11px', color: '#6b7280', margin: '4px 0 0 0' }}>92.5% Pure Silver Jewelry</p>
+            </div>
+
+            {/* Receipt Title */}
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <h2 style={{ fontSize: '16px', fontWeight: '600', color: '#1f2937', margin: 0 }}>ORDER RECEIPT</h2>
+            </div>
+
+            {/* Order Info */}
+            <div style={{ backgroundColor: '#fff7ed', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Order ID:</span>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#1f2937' }}>ORD-{selectedOrder.orderId}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Date:</span>
+                <span style={{ fontSize: '12px', color: '#1f2937' }}>{formatDate(selectedOrder.createdAt)}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Status:</span>
+                <span style={{ fontSize: '12px', fontWeight: '600', color: '#f97316' }}>{getStatusLabel(selectedOrder.status)}</span>
+              </div>
+            </div>
+
+            {/* Items */}
+            <div style={{ marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#1f2937', marginBottom: '10px', borderBottom: '1px solid #e5e7eb', paddingBottom: '6px' }}>Items Ordered</h3>
+              {selectedOrder.items.map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px', paddingBottom: '10px', borderBottom: idx < selectedOrder.items.length - 1 ? '1px dashed #e5e7eb' : 'none' }}>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontSize: '12px', fontWeight: '500', color: '#1f2937', margin: 0 }}>{item.name}</p>
+                    <p style={{ fontSize: '11px', color: '#6b7280', margin: '2px 0 0 0' }}>Qty: {item.quantity} × ₹{item.price.toLocaleString('en-IN')}</p>
+                  </div>
+                  <span style={{ fontSize: '12px', fontWeight: '600', color: '#1f2937' }}>₹{(item.quantity * item.price).toLocaleString('en-IN')}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Price Details */}
+            <div style={{ backgroundColor: '#f9fafb', padding: '12px', borderRadius: '8px', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '13px', fontWeight: '600', color: '#1f2937', marginBottom: '10px' }}>Price Details</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Selling Price</span>
+                <span style={{ fontSize: '12px', color: '#1f2937' }}>₹{selectedOrder.subtotal.toLocaleString('en-IN')}</span>
+              </div>
+              {selectedOrder.discount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#16a34a' }}>Discount</span>
+                  <span style={{ fontSize: '12px', color: '#16a34a' }}>-₹{selectedOrder.discount.toLocaleString('en-IN')}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Total Fees</span>
+                <span style={{ fontSize: '12px', color: '#1f2937' }}>₹{(selectedOrder.deliveryCharge + selectedOrder.taxAmount).toLocaleString('en-IN')}</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderTop: '2px solid #f97316' }}>
+                <span style={{ fontSize: '14px', fontWeight: '700', color: '#f97316' }}>Total Amount</span>
+                <span style={{ fontSize: '14px', fontWeight: '700', color: '#1f2937' }}>₹{selectedOrder.total.toLocaleString('en-IN')}</span>
+              </div>
+            </div>
+
+            {/* Payment & Delivery */}
+            <div style={{ marginBottom: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '12px', color: '#6b7280' }}>Payment:</span>
+                <span style={{ fontSize: '12px', fontWeight: '500', color: '#1f2937' }}>{formatPaymentMethod(selectedOrder.paymentMethod)}</span>
+              </div>
+              <div style={{ marginTop: '10px' }}>
+                <p style={{ fontSize: '12px', color: '#6b7280', margin: '0 0 4px 0' }}>Delivery Address:</p>
+                <p style={{ fontSize: '12px', color: '#1f2937', margin: 0, lineHeight: '1.4' }}>
+                  {selectedOrder.shippingAddress.fullName}<br />
+                  {selectedOrder.shippingAddress.address}<br />
+                  {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state}<br />
+                  PIN: {selectedOrder.shippingAddress.pincode}<br />
+                  Mobile: {selectedOrder.shippingAddress.mobile}
+                </p>
+              </div>
+            </div>
+
+            {/* Tracking Info */}
+            {(selectedOrder.trackingId || selectedOrder.carrier) && (
+              <div style={{ backgroundColor: '#eff6ff', padding: '10px', borderRadius: '8px', marginBottom: '16px' }}>
+                <p style={{ fontSize: '12px', fontWeight: '600', color: '#1d4ed8', marginBottom: '6px' }}>Tracking Information</p>
+                {selectedOrder.trackingId && <p style={{ fontSize: '11px', color: '#4b5563', margin: '0 0 4px 0' }}>ID: {selectedOrder.trackingId}</p>}
+                {selectedOrder.carrier && <p style={{ fontSize: '11px', color: '#4b5563', margin: 0 }}>Carrier: {selectedOrder.carrier}</p>}
+              </div>
+            )}
+
+            {/* Footer */}
+            <div style={{ textAlign: 'center', borderTop: '1px solid #e5e7eb', paddingTop: '16px' }}>
+              <p style={{ fontSize: '12px', fontWeight: '500', color: '#1f2937', margin: '0 0 4px 0' }}>Thank you for shopping with us! 🎉</p>
+              <p style={{ fontSize: '11px', color: '#6b7280', margin: '0 0 8px 0' }}>For support: +91 98198 73745</p>
+              <p style={{ fontSize: '10px', color: '#9ca3af', margin: 0 }}>www.sreerasthusilvers.com</p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Share Menu Modal */}
       <AnimatePresence>
         {showShareMenu && selectedOrder && (
@@ -573,16 +776,21 @@ For support: +91 98198 73745
                 </button>
               </div>
 
+              {/* Generating Image Indicator */}
+              {isGeneratingImage && (
+                <div className="flex items-center justify-center py-4 mb-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-orange-500 mr-3"></div>
+                  <span className="text-sm text-gray-600">Generating receipt image...</span>
+                </div>
+              )}
+
               {/* Share Options Grid */}
               <div className="grid grid-cols-4 gap-4">
                 {/* WhatsApp */}
                 <button
-                  onClick={() => {
-                    const orderReceipt = `🛍️ *SREE RASTHU SILVERS - ORDER RECEIPT*\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 *Order ID:* ORD-${selectedOrder.orderId}\n📅 *Date:* ${formatDate(selectedOrder.createdAt)}\n📌 *Status:* ${getStatusLabel(selectedOrder.status)}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🛒 *ITEMS ORDERED*\n\n${selectedOrder.items.map((item, idx) => `${idx + 1}. ${item.name}\n   Qty: ${item.quantity} × ₹${item.price.toLocaleString('en-IN')}\n   Subtotal: ₹${(item.quantity * item.price).toLocaleString('en-IN')}`).join('\n\n')}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n💰 *PRICE DETAILS*\n\nSelling Price: ₹${selectedOrder.subtotal.toLocaleString('en-IN')}${selectedOrder.discount > 0 ? `\nDiscount: -₹${selectedOrder.discount.toLocaleString('en-IN')}` : ''}\nTotal Fees: ₹${(selectedOrder.deliveryCharge + selectedOrder.taxAmount).toLocaleString('en-IN')}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n*TOTAL AMOUNT: ₹${selectedOrder.total.toLocaleString('en-IN')}*\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💳 *Payment:* ${formatPaymentMethod(selectedOrder.paymentMethod)}\n\n📍 *Delivery Address:*\n${selectedOrder.shippingAddress.fullName}\n${selectedOrder.shippingAddress.address}\n${selectedOrder.shippingAddress.city}, ${selectedOrder.shippingAddress.state}\nPIN: ${selectedOrder.shippingAddress.pincode}\nMobile: ${selectedOrder.shippingAddress.mobile}\n${selectedOrder.trackingId ? `\n🚚 *Tracking ID:* ${selectedOrder.trackingId}` : ''}${selectedOrder.carrier ? `\n🚛 *Carrier:* ${selectedOrder.carrier}` : ''}${selectedOrder.trackingUrl ? `\n📦 *Track Package:* ${selectedOrder.trackingUrl}` : ''}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nThank you for shopping with us! 🎉\n\nFor support: +91 98198 73745`;
-                    window.open(`https://wa.me/?text=${encodeURIComponent(orderReceipt)}`, '_blank');
-                    setShowShareMenu(false);
-                  }}
-                  className="flex flex-col items-center gap-2"
+                  onClick={() => shareReceiptImage('whatsapp')}
+                  disabled={isGeneratingImage}
+                  className="flex flex-col items-center gap-2 disabled:opacity-50"
                 >
                   <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center">
                     <MessageCircle className="w-7 h-7 text-green-600" />
@@ -592,12 +800,9 @@ For support: +91 98198 73745
 
                 {/* Gmail */}
                 <button
-                  onClick={() => {
-                    const orderReceipt = `SREE RASTHU SILVERS - ORDER RECEIPT\n\nOrder ID: ORD-${selectedOrder.orderId}\nDate: ${formatDate(selectedOrder.createdAt)}\nStatus: ${getStatusLabel(selectedOrder.status)}\n\nITEMS ORDERED\n${selectedOrder.items.map((item, idx) => `${idx + 1}. ${item.name}\n   Qty: ${item.quantity} × ₹${item.price.toLocaleString('en-IN')}\n   Subtotal: ₹${(item.quantity * item.price).toLocaleString('en-IN')}`).join('\n\n')}\n\nPRICE DETAILS\nSelling Price: ₹${selectedOrder.subtotal.toLocaleString('en-IN')}${selectedOrder.discount > 0 ? `\nDiscount: -₹${selectedOrder.discount.toLocaleString('en-IN')}` : ''}\nTotal Fees: ₹${(selectedOrder.deliveryCharge + selectedOrder.taxAmount).toLocaleString('en-IN')}\nTOTAL AMOUNT: ₹${selectedOrder.total.toLocaleString('en-IN')}\n\nPayment: ${formatPaymentMethod(selectedOrder.paymentMethod)}\n\nDelivery Address:\n${selectedOrder.shippingAddress.fullName}\n${selectedOrder.shippingAddress.address}\n${selectedOrder.shippingAddress.city}, ${selectedOrder.shippingAddress.state}\nPIN: ${selectedOrder.shippingAddress.pincode}\nMobile: ${selectedOrder.shippingAddress.mobile}\n\nThank you for shopping with us!\n\nFor support: +91 98198 73745`;
-                    window.open(`mailto:?subject=Order Receipt - ORD-${selectedOrder.orderId}&body=${encodeURIComponent(orderReceipt)}`, '_blank');
-                    setShowShareMenu(false);
-                  }}
-                  className="flex flex-col items-center gap-2"
+                  onClick={() => shareReceiptImage('email')}
+                  disabled={isGeneratingImage}
+                  className="flex flex-col items-center gap-2 disabled:opacity-50"
                 >
                   <div className="w-14 h-14 bg-red-100 rounded-2xl flex items-center justify-center">
                     <Mail className="w-7 h-7 text-red-600" />
@@ -607,24 +812,9 @@ For support: +91 98198 73745
 
                 {/* Instagram */}
                 <button
-                  onClick={async () => {
-                    const orderReceipt = `🛍️ SREE RASTHU SILVERS - ORDER RECEIPT\n\n📦 Order: ORD-${selectedOrder.orderId}\n📅 ${formatDate(selectedOrder.createdAt)}\n💰 Total: ₹${selectedOrder.total.toLocaleString('en-IN')}\n\nFor support: +91 98198 73745`;
-                    try {
-                      if (navigator.share) {
-                        await navigator.share({
-                          title: 'Order Receipt',
-                          text: orderReceipt,
-                        });
-                      } else {
-                        await navigator.clipboard.writeText(orderReceipt);
-                        alert('Copied to clipboard! Open Instagram and paste.');
-                      }
-                    } catch (error) {
-                      console.error('Error:', error);
-                    }
-                    setShowShareMenu(false);
-                  }}
-                  className="flex flex-col items-center gap-2"
+                  onClick={() => shareReceiptImage('native')}
+                  disabled={isGeneratingImage}
+                  className="flex flex-col items-center gap-2 disabled:opacity-50"
                 >
                   <div className="w-14 h-14 bg-pink-100 rounded-2xl flex items-center justify-center">
                     <Share2 className="w-7 h-7 text-pink-600" />
@@ -632,43 +822,23 @@ For support: +91 98198 73745
                   <span className="text-xs text-gray-700">Instagram</span>
                 </button>
 
-                {/* Copy to Clipboard */}
+                {/* Download Image */}
                 <button
-                  onClick={async () => {
-                    const orderReceipt = `🛍️ SREE RASTHU SILVERS - ORDER RECEIPT\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n📦 Order ID: ORD-${selectedOrder.orderId}\n📅 Date: ${formatDate(selectedOrder.createdAt)}\n📌 Status: ${getStatusLabel(selectedOrder.status)}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n🛒 ITEMS ORDERED\n\n${selectedOrder.items.map((item, idx) => `${idx + 1}. ${item.name}\n   Qty: ${item.quantity} × ₹${item.price.toLocaleString('en-IN')}\n   Subtotal: ₹${(item.quantity * item.price).toLocaleString('en-IN')}`).join('\n\n')}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n💰 PRICE DETAILS\n\nSelling Price: ₹${selectedOrder.subtotal.toLocaleString('en-IN')}${selectedOrder.discount > 0 ? `\nDiscount: -₹${selectedOrder.discount.toLocaleString('en-IN')}` : ''}\nTotal Fees: ₹${(selectedOrder.deliveryCharge + selectedOrder.taxAmount).toLocaleString('en-IN')}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nTOTAL AMOUNT: ₹${selectedOrder.total.toLocaleString('en-IN')}\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n💳 Payment: ${formatPaymentMethod(selectedOrder.paymentMethod)}\n\n📍 Delivery Address:\n${selectedOrder.shippingAddress.fullName}\n${selectedOrder.shippingAddress.address}\n${selectedOrder.shippingAddress.city}, ${selectedOrder.shippingAddress.state}\nPIN: ${selectedOrder.shippingAddress.pincode}\nMobile: ${selectedOrder.shippingAddress.mobile}\n${selectedOrder.trackingId ? `\n🚚 Tracking ID: ${selectedOrder.trackingId}` : ''}${selectedOrder.carrier ? `\n🚛 Carrier: ${selectedOrder.carrier}` : ''}${selectedOrder.trackingUrl ? `\n📦 Track: ${selectedOrder.trackingUrl}` : ''}\n\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━\nThank you for shopping with us! 🎉\n\nFor support: +91 98198 73745`;
-                    try {
-                      await navigator.clipboard.writeText(orderReceipt);
-                      alert('Order details copied to clipboard!');
-                    } catch (error) {
-                      console.error('Error:', error);
-                    }
-                    setShowShareMenu(false);
-                  }}
-                  className="flex flex-col items-center gap-2"
+                  onClick={() => shareReceiptImage('download')}
+                  disabled={isGeneratingImage}
+                  className="flex flex-col items-center gap-2 disabled:opacity-50"
                 >
                   <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center">
-                    <Copy className="w-7 h-7 text-gray-600" />
+                    <Download className="w-7 h-7 text-gray-600" />
                   </div>
-                  <span className="text-xs text-gray-700">Copy</span>
+                  <span className="text-xs text-gray-700">Save</span>
                 </button>
 
                 {/* Facebook Messenger */}
                 <button
-                  onClick={async () => {
-                    const orderReceipt = `Order Receipt - ORD-${selectedOrder.orderId}\nTotal: ₹${selectedOrder.total.toLocaleString('en-IN')}\n\nFor support: +91 98198 73745`;
-                    try {
-                      if (navigator.share) {
-                        await navigator.share({
-                          title: 'Order Receipt',
-                          text: orderReceipt,
-                        });
-                      }
-                    } catch (error) {
-                      console.error('Error:', error);
-                    }
-                    setShowShareMenu(false);
-                  }}
-                  className="flex flex-col items-center gap-2"
+                  onClick={() => shareReceiptImage('native')}
+                  disabled={isGeneratingImage}
+                  className="flex flex-col items-center gap-2 disabled:opacity-50"
                 >
                   <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center">
                     <MessageCircle className="w-7 h-7 text-blue-600" />
@@ -678,12 +848,9 @@ For support: +91 98198 73745
 
                 {/* SMS */}
                 <button
-                  onClick={() => {
-                    const orderReceipt = `Order Receipt - ORD-${selectedOrder.orderId}\nDate: ${formatDate(selectedOrder.createdAt)}\nTotal: ₹${selectedOrder.total.toLocaleString('en-IN')}\n\nSree Rasthu Silvers\nSupport: +91 98198 73745`;
-                    window.open(`sms:?body=${encodeURIComponent(orderReceipt)}`, '_blank');
-                    setShowShareMenu(false);
-                  }}
-                  className="flex flex-col items-center gap-2"
+                  onClick={() => shareReceiptImage('native')}
+                  disabled={isGeneratingImage}
+                  className="flex flex-col items-center gap-2 disabled:opacity-50"
                 >
                   <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center">
                     <MessageCircle className="w-7 h-7 text-green-700" />
@@ -693,12 +860,9 @@ For support: +91 98198 73745
 
                 {/* Telegram */}
                 <button
-                  onClick={() => {
-                    const orderReceipt = `🛍️ SREE RASTHU SILVERS - ORDER RECEIPT\n\n📦 Order: ORD-${selectedOrder.orderId}\n📅 ${formatDate(selectedOrder.createdAt)}\n💰 Total: ₹${selectedOrder.total.toLocaleString('en-IN')}\n\nFor support: +91 98198 73745`;
-                    window.open(`https://t.me/share/url?text=${encodeURIComponent(orderReceipt)}`, '_blank');
-                    setShowShareMenu(false);
-                  }}
-                  className="flex flex-col items-center gap-2"
+                  onClick={() => shareReceiptImage('native')}
+                  disabled={isGeneratingImage}
+                  className="flex flex-col items-center gap-2 disabled:opacity-50"
                 >
                   <div className="w-14 h-14 bg-sky-100 rounded-2xl flex items-center justify-center">
                     <Share2 className="w-7 h-7 text-sky-600" />
@@ -708,21 +872,9 @@ For support: +91 98198 73745
 
                 {/* More (Native Share) */}
                 <button
-                  onClick={async () => {
-                    const orderReceipt = `🛍️ SREE RASTHU SILVERS - ORDER RECEIPT\n\n📦 Order: ORD-${selectedOrder.orderId}\n📅 ${formatDate(selectedOrder.createdAt)}\n📌 Status: ${getStatusLabel(selectedOrder.status)}\n💰 Total: ₹${selectedOrder.total.toLocaleString('en-IN')}\n\nFor support: +91 98198 73745`;
-                    try {
-                      if (navigator.share) {
-                        await navigator.share({
-                          title: 'Order Receipt - Sree Rasthu Silvers',
-                          text: orderReceipt,
-                        });
-                      }
-                    } catch (error) {
-                      console.error('Error:', error);
-                    }
-                    setShowShareMenu(false);
-                  }}
-                  className="flex flex-col items-center gap-2"
+                  onClick={() => shareReceiptImage('native')}
+                  disabled={isGeneratingImage}
+                  className="flex flex-col items-center gap-2 disabled:opacity-50"
                 >
                   <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center">
                     <Share2 className="w-7 h-7 text-gray-600" />
