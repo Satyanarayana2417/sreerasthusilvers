@@ -53,7 +53,17 @@ export interface Order {
   total: number;
   shippingAddress: ShippingAddress;
   paymentMethod: string;
-  status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled';
+  status: 'pending' | 'processing' | 'shipped' | 'outForDelivery' | 'delivered' | 'cancelled';
+  // Tracking fields
+  trackingId?: string;
+  carrier?: string;
+  trackingUrl?: string;
+  lastUpdated?: Timestamp;
+  statusHistory?: {
+    status: string;
+    timestamp: Timestamp;
+    note?: string;
+  }[];
   createdAt: Timestamp;
   updatedAt: Timestamp;
 }
@@ -223,13 +233,81 @@ export const updateOrderStatus = async (
 ): Promise<void> => {
   try {
     const docRef = doc(db, ORDERS_COLLECTION, orderId);
+    const now = Timestamp.now();
+    
+    // Get current order to update status history
+    const orderSnap = await getDoc(docRef);
+    const currentData = orderSnap.data();
+    const statusHistory = currentData?.statusHistory || [];
+    
     await updateDoc(docRef, {
       status,
-      updatedAt: Timestamp.now(),
+      updatedAt: now,
+      lastUpdated: now,
+      statusHistory: [...statusHistory, { status, timestamp: now }],
     });
   } catch (error) {
     console.error('Error updating order status:', error);
     throw new Error('Failed to update order status');
+  }
+};
+
+/**
+ * Update order tracking information (admin only)
+ */
+export interface TrackingUpdate {
+  status: Order['status'];
+  trackingId?: string;
+  carrier?: string;
+  trackingUrl?: string;
+  note?: string;
+}
+
+export const updateOrderTracking = async (
+  orderId: string,
+  trackingData: TrackingUpdate
+): Promise<void> => {
+  try {
+    const docRef = doc(db, ORDERS_COLLECTION, orderId);
+    const now = Timestamp.now();
+    
+    // Get current order to update status history
+    const orderSnap = await getDoc(docRef);
+    const currentData = orderSnap.data();
+    const statusHistory = currentData?.statusHistory || [];
+    
+    const updateData: Record<string, any> = {
+      status: trackingData.status,
+      updatedAt: now,
+      lastUpdated: now,
+      statusHistory: [
+        ...statusHistory, 
+        { 
+          status: trackingData.status, 
+          timestamp: now,
+          note: trackingData.note 
+        }
+      ],
+    };
+    
+    // Only add tracking fields if provided
+    if (trackingData.trackingId !== undefined) {
+      updateData.trackingId = trackingData.trackingId;
+    }
+    if (trackingData.carrier !== undefined) {
+      updateData.carrier = trackingData.carrier;
+    }
+    if (trackingData.trackingUrl !== undefined) {
+      updateData.trackingUrl = trackingData.trackingUrl;
+    }
+    
+    console.log('🔄 [Update] Updating order tracking:', orderId);
+    console.log('🔄 [Update] Update data:', updateData);
+    await updateDoc(docRef, updateData);
+    console.log('✅ [Update] Order tracking updated successfully');
+  } catch (error) {
+    console.error('❌ [Update] Error updating order tracking:', error);
+    throw new Error('Failed to update order tracking');
   }
 };
 
@@ -284,6 +362,7 @@ export const getOrderStats = async () => {
       pending: orders.filter(o => o.status === 'pending').length,
       processing: orders.filter(o => o.status === 'processing').length,
       shipped: orders.filter(o => o.status === 'shipped').length,
+      outForDelivery: orders.filter(o => o.status === 'outForDelivery').length,
       delivered: orders.filter(o => o.status === 'delivered').length,
       cancelled: orders.filter(o => o.status === 'cancelled').length,
       totalRevenue: orders

@@ -240,7 +240,7 @@ const Wishlist = () => {
                       <div className="p-4 space-y-3">
                         <div className="space-y-1">
                           <h3
-                            className="font-semibold text-foreground line-clamp-2 cursor-pointer hover:text-primary transition-colors"
+                            className="font-normal text-foreground line-clamp-2 cursor-pointer hover:text-primary transition-colors"
                             onClick={() => handleProductClick(product.id)}
                           >
                             {product.title}
@@ -255,7 +255,7 @@ const Wishlist = () => {
                         <div className="flex items-center justify-between">
                           <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-xl font-bold text-primary">
+                              <span className="text-xl font-normal text-primary">
                                 ₹{product.price.toLocaleString()}
                               </span>
                               {product.oldPrice && product.oldPrice > product.price && (
@@ -391,7 +391,7 @@ const Wishlist = () => {
                     {/* Product Info */}
                     <div className="p-3">
                       <h3
-                        className="text-sm font-medium text-gray-900 mb-1 line-clamp-1"
+                        className="text-sm font-normal text-gray-900 mb-1 line-clamp-1"
                         style={{ fontFamily: "'Poppins', sans-serif" }}
                         onClick={() => handleProductClick(product.id)}
                       >
@@ -399,7 +399,7 @@ const Wishlist = () => {
                       </h3>
                       
                       <div className="flex items-center gap-1.5 mb-2">
-                        <span className="text-base font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                        <span className="text-base font-normal text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                           ₹{product.price.toLocaleString('en-IN')}
                         </span>
                         {product.oldPrice && product.oldPrice > product.price && (

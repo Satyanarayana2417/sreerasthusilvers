@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Package, 
   Loader2, 
@@ -8,7 +8,14 @@ import {
   Filter,
   ChevronDown,
   Trash2,
-  RefreshCw
+  RefreshCw,
+  X,
+  Truck,
+  MapPin,
+  CheckCircle2,
+  Clock,
+  XCircle,
+  ExternalLink
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -17,6 +24,8 @@ import {
   subscribeToAllOrders, 
   Order, 
   updateOrderStatus,
+  updateOrderTracking,
+  TrackingUpdate,
   deleteOrder,
   getOrderStats
 } from '@/services/orderService';
@@ -31,11 +40,19 @@ const AdminOrders = () => {
   const [statusFilter, setStatusFilter] = useState<'all' | Order['status']>('all');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderDetails, setShowOrderDetails] = useState(false);
+  const [showTrackingDrawer, setShowTrackingDrawer] = useState(false);
+  const [trackingUpdating, setTrackingUpdating] = useState(false);
+  const [trackingForm, setTrackingForm] = useState({
+    status: 'pending' as Order['status'],
+    trackingUrl: '',
+    note: '',
+  });
   const [stats, setStats] = useState({
     total: 0,
     pending: 0,
     processing: 0,
     shipped: 0,
+    outForDelivery: 0,
     delivered: 0,
     cancelled: 0,
     totalRevenue: 0,
@@ -99,6 +116,50 @@ const AdminOrders = () => {
     }
   };
 
+  const openTrackingDrawer = (order: Order) => {
+    setSelectedOrder(order);
+    setTrackingForm({
+      status: order.status,
+      trackingUrl: order.trackingUrl || '',
+      note: '',
+    });
+    setShowTrackingDrawer(true);
+  };
+
+  const handleTrackingUpdate = async () => {
+    if (!selectedOrder) return;
+    
+    setTrackingUpdating(true);
+    try {
+      const trackingData: TrackingUpdate = {
+        status: trackingForm.status,
+        trackingUrl: trackingForm.trackingUrl || undefined,
+        note: trackingForm.note || undefined,
+      };
+      
+      await updateOrderTracking(selectedOrder.id, trackingData);
+      
+      toast.success(
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+          <div>
+            <p className="font-semibold">Tracking Updated Successfully</p>
+            <p className="text-sm text-gray-500">Order #{selectedOrder.orderId} - {trackingForm.status}</p>
+          </div>
+        </div>,
+        { duration: 4000 }
+      );
+      
+      setShowTrackingDrawer(false);
+      await loadStats();
+    } catch (error) {
+      console.error('Error updating tracking:', error);
+      toast.error('Failed to update tracking information');
+    } finally {
+      setTrackingUpdating(false);
+    }
+  };
+
   const handleDeleteOrder = async (orderId: string) => {
     if (!confirm('Are you sure you want to delete this order?')) return;
 
@@ -128,17 +189,57 @@ const AdminOrders = () => {
   const getStatusBadgeClass = (status: Order['status']) => {
     switch (status) {
       case 'pending':
-        return 'bg-yellow-50 text-yellow-700';
+        return 'bg-amber-50 text-amber-700 border border-amber-200';
       case 'processing':
-        return 'bg-blue-50 text-blue-700';
+        return 'bg-orange-50 text-orange-700 border border-orange-200';
       case 'shipped':
-        return 'bg-purple-50 text-purple-700';
+        return 'bg-blue-50 text-blue-700 border border-blue-200';
+      case 'outForDelivery':
+        return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
       case 'delivered':
-        return 'bg-green-50 text-green-700';
+        return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
       case 'cancelled':
-        return 'bg-red-50 text-red-700';
+        return 'bg-red-50 text-red-700 border border-red-200';
       default:
-        return 'bg-gray-50 text-gray-700';
+        return 'bg-gray-50 text-gray-700 border border-gray-200';
+    }
+  };
+
+  const getStatusIcon = (status: Order['status']) => {
+    switch (status) {
+      case 'pending':
+        return <Clock className="w-4 h-4" />;
+      case 'processing':
+        return <Package className="w-4 h-4" />;
+      case 'shipped':
+        return <Truck className="w-4 h-4" />;
+      case 'outForDelivery':
+        return <MapPin className="w-4 h-4" />;
+      case 'delivered':
+        return <CheckCircle2 className="w-4 h-4" />;
+      case 'cancelled':
+        return <XCircle className="w-4 h-4" />;
+      default:
+        return <Package className="w-4 h-4" />;
+    }
+  };
+
+  const getStatusLabel = (status: Order['status']) => {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'processing':
+        return 'Processing';
+      case 'shipped':
+        return 'Shipped';
+      case 'outForDelivery':
+        return 'Out for Delivery';
+      case 'delivered':
+        return 'Delivered';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
     }
   };
 
@@ -212,7 +313,8 @@ const AdminOrders = () => {
 
         {/* Orders Table */}
         <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <style>{`.overflow-x-auto::-webkit-scrollbar { display: none; }`}</style>
             <table className="min-w-full">
               <thead className="bg-white border-b border-gray-200">
                 <tr>
@@ -270,11 +372,12 @@ const AdminOrders = () => {
                         <select
                           value={order.status}
                           onChange={(e) => handleStatusChange(order.id, e.target.value as Order['status'])}
-                          className={`text-sm font-medium px-4 py-1.5 rounded-md ${getStatusBadgeClass(order.status)} border-0 cursor-pointer`}
+                          className={`text-sm font-medium px-4 py-1.5 rounded-md ${getStatusBadgeClass(order.status)} cursor-pointer`}
                         >
                           <option value="pending">Pending</option>
                           <option value="processing">Processing</option>
                           <option value="shipped">Shipped</option>
+                          <option value="outForDelivery">Out for Delivery</option>
                           <option value="delivered">Delivered</option>
                           <option value="cancelled">Cancelled</option>
                         </select>
@@ -290,14 +393,12 @@ const AdminOrders = () => {
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
                           <Button
-                            onClick={() => {
-                              setSelectedOrder(order);
-                              setShowOrderDetails(true);
-                            }}
+                            onClick={() => openTrackingDrawer(order)}
                             variant="outline"
                             size="sm"
-                            className="text-sm"
+                            className="text-sm bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
                           >
+                            <Truck className="w-4 h-4 mr-1" />
                             Manage Tracking
                           </Button>
                           <button
@@ -318,7 +419,189 @@ const AdminOrders = () => {
         </div>
       </div>
 
-      {/* Order Details Modal */}
+      {/* Premium Manage Tracking Slide-Over Drawer */}
+      <AnimatePresence>
+        {showTrackingDrawer && selectedOrder && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={() => setShowTrackingDrawer(false)}
+            />
+            
+            {/* Slide-over Drawer */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-amber-600 to-amber-500 px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <Truck className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Manage Tracking</h2>
+                      <p className="text-amber-100 text-sm">Order #{selectedOrder.orderId}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowTrackingDrawer(false)}
+                    className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto h-[calc(100%-180px)]">
+                {/* Customer Info Card */}
+                <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Customer Information</h3>
+                  <div className="space-y-2">
+                    <p className="text-base font-semibold text-gray-900">{selectedOrder.userName}</p>
+                    <p className="text-sm text-gray-600">{selectedOrder.userEmail}</p>
+                    <p className="text-sm text-gray-600">
+                      {selectedOrder.shippingAddress.address}, {selectedOrder.shippingAddress.city}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Order Items Preview */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Order Items ({selectedOrder.items.length})</h3>
+                  <div className="space-y-2">
+                    {selectedOrder.items.slice(0, 2).map((item, idx) => (
+                      <div key={idx} className="flex items-center gap-3 bg-gray-50 rounded-lg p-2">
+                        <img src={item.image} alt={item.name} className="w-12 h-12 rounded-lg object-cover" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">{item.name}</p>
+                          <p className="text-xs text-gray-500">Qty: {item.quantity} × ₹{item.price.toFixed(2)}</p>
+                        </div>
+                      </div>
+                    ))}
+                    {selectedOrder.items.length > 2 && (
+                      <p className="text-xs text-gray-500 text-center">+{selectedOrder.items.length - 2} more items</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status Update Section */}
+                <div className="space-y-5">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Update Tracking</h3>
+                  
+                  {/* Status Dropdown */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Order Status</label>
+                    <div className="relative">
+                      <select
+                        value={trackingForm.status}
+                        onChange={(e) => setTrackingForm({ ...trackingForm, status: e.target.value as Order['status'] })}
+                        className="w-full px-4 py-3 pr-10 border border-gray-200 rounded-xl bg-white text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent appearance-none cursor-pointer"
+                      >
+                        <option value="pending">⏳ Pending</option>
+                        <option value="processing">📦 Processing</option>
+                        <option value="shipped">🚚 Shipped</option>
+                        <option value="outForDelivery">📍 Out for Delivery</option>
+                        <option value="delivered">✅ Delivered</option>
+                        <option value="cancelled">❌ Cancelled</option>
+                      </select>
+                      <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                    </div>
+                  </div>
+
+                  {/* Tracking URL Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tracking URL (Optional)</label>
+                    <Input
+                      type="url"
+                      value={trackingForm.trackingUrl}
+                      onChange={(e) => setTrackingForm({ ...trackingForm, trackingUrl: e.target.value })}
+                      placeholder="https://..."
+                      className="h-12 border-gray-200 rounded-xl focus:ring-amber-500 focus:border-amber-500"
+                    />
+                  </div>
+
+                  {/* Note Input */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Status Note (Optional)</label>
+                    <textarea
+                      value={trackingForm.note}
+                      onChange={(e) => setTrackingForm({ ...trackingForm, note: e.target.value })}
+                      placeholder="Add a note for this status update..."
+                      rows={2}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent resize-none text-sm"
+                    />
+                  </div>
+                </div>
+
+                {/* Current Tracking Info Preview */}
+                {(selectedOrder.trackingId || selectedOrder.carrier) && (
+                  <div className="mt-6 bg-blue-50 rounded-xl p-4">
+                    <h4 className="text-sm font-semibold text-blue-700 mb-2">Current Tracking Info</h4>
+                    {selectedOrder.trackingId && (
+                      <p className="text-sm text-blue-600">ID: {selectedOrder.trackingId}</p>
+                    )}
+                    {selectedOrder.carrier && (
+                      <p className="text-sm text-blue-600">Carrier: {selectedOrder.carrier}</p>
+                    )}
+                    {selectedOrder.trackingUrl && (
+                      <a 
+                        href={selectedOrder.trackingUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-sm text-blue-600 hover:underline flex items-center gap-1 mt-1"
+                      >
+                        Track Package <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Footer Actions */}
+              <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowTrackingDrawer(false)}
+                    className="flex-1 h-12 border-gray-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleTrackingUpdate}
+                    disabled={trackingUpdating}
+                    className="flex-1 h-12 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600 text-white"
+                  >
+                    {trackingUpdating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Updating...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Update Status
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Order Details Modal (View Only) */}
       {showOrderDetails && selectedOrder && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <motion.div
