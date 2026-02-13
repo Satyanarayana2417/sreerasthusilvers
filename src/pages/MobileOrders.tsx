@@ -4,6 +4,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscribeToUserOrders, Order } from '@/services/orderService';
 import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import logoImage from '@/assets/logo-new.png';
 import {
   Loader2,
   Package,
@@ -36,6 +39,7 @@ const MobileOrders = () => {
   const [showOrderModal, setShowOrderModal] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
 
   // Subscribe to user orders
@@ -287,6 +291,321 @@ const MobileOrders = () => {
       }
     } finally {
       setIsGeneratingImage(false);
+    }
+  };
+
+  // Convert number to words for invoice
+  const numberToWords = (num: number): string => {
+    const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+    const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+    
+    if (num === 0) return 'Zero';
+    
+    const convertLessThanThousand = (n: number): string => {
+      if (n < 20) return ones[n];
+      if (n < 100) return tens[Math.floor(n / 10)] + (n % 10 ? ' ' + ones[n % 10] : '');
+      return ones[Math.floor(n / 100)] + ' Hundred' + (n % 100 ? ' ' + convertLessThanThousand(n % 100) : '');
+    };
+    
+    const intPart = Math.floor(num);
+    let words = '';
+    
+    if (intPart >= 10000000) {
+      words += convertLessThanThousand(Math.floor(intPart / 10000000)) + ' Crore ';
+    }
+    if (intPart >= 100000) {
+      words += convertLessThanThousand(Math.floor((intPart % 10000000) / 100000)) + ' Lakh ';
+    }
+    if (intPart >= 1000) {
+      words += convertLessThanThousand(Math.floor((intPart % 100000) / 1000)) + ' Thousand ';
+    }
+    if (intPart % 1000 !== 0) {
+      words += convertLessThanThousand(intPart % 1000);
+    }
+    
+    return words.trim() + ' Rupees Only';
+  };
+
+  // Download Invoice as PDF
+  const downloadInvoice = async () => {
+    if (!selectedOrder) return;
+    
+    setIsDownloadingInvoice(true);
+    
+    try {
+      // Create PDF document
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      let yPos = 15;
+      
+      // Add logo (convert to base64 and add)
+      try {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.src = logoImage;
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+        });
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0);
+        const logoBase64 = canvas.toDataURL('image/png');
+        doc.addImage(logoBase64, 'PNG', margin, yPos, 45, 15);
+      } catch (e) {
+        // If logo fails, just add text
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(249, 115, 22);
+        doc.text('SREE RASTHU SILVERS', margin, yPos + 10);
+      }
+      
+      // Title - Tax Invoice
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 0, 0);
+      doc.text('Tax Invoice/Bill of Supply', pageWidth - margin, yPos + 5, { align: 'right' });
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      doc.text('(Original for Recipient)', pageWidth - margin, yPos + 10, { align: 'right' });
+      
+      yPos += 25;
+      
+      // Horizontal line
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 8;
+      
+      // Sold By and Billing Address section
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Sold By:', margin, yPos);
+      doc.text('Billing Address:', pageWidth / 2 + 10, yPos);
+      
+      yPos += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      
+      // Sold By details
+      const soldByLines = [
+        'Sree Rasthu Silvers',
+        'Ramasomayajulu St, Rama Rao Peta',
+        'Kakinada, Andhra Pradesh 533001',
+        'India',
+        'Phone: 63049 60489'
+      ];
+      soldByLines.forEach((line, idx) => {
+        doc.text(line, margin, yPos + (idx * 4));
+      });
+      
+      // Billing Address details
+      const billingLines = [
+        selectedOrder.shippingAddress.fullName,
+        selectedOrder.shippingAddress.address,
+        `${selectedOrder.shippingAddress.city}, ${selectedOrder.shippingAddress.state}`,
+        `PIN: ${selectedOrder.shippingAddress.pincode}`,
+        'India',
+        `State/UT Code: ${selectedOrder.shippingAddress.state === 'Andhra Pradesh' ? '37' : '00'}`
+      ];
+      billingLines.forEach((line, idx) => {
+        doc.text(line, pageWidth / 2 + 10, yPos + (idx * 4), { align: 'left' });
+      });
+      
+      yPos += 30;
+      
+      // Shipping Address section
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('Shipping Address:', pageWidth / 2 + 10, yPos);
+      yPos += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      
+      const shippingLines = [
+        selectedOrder.shippingAddress.fullName,
+        selectedOrder.shippingAddress.address,
+        `${selectedOrder.shippingAddress.city}, ${selectedOrder.shippingAddress.state}`,
+        `PIN: ${selectedOrder.shippingAddress.pincode}`,
+        'India',
+        `State/UT Code: ${selectedOrder.shippingAddress.state === 'Andhra Pradesh' ? '37' : '00'}`,
+        `Place of Supply: ${selectedOrder.shippingAddress.state}`,
+        `Place of Delivery: ${selectedOrder.shippingAddress.state}`
+      ];
+      shippingLines.forEach((line, idx) => {
+        doc.text(line, pageWidth / 2 + 10, yPos + (idx * 4));
+      });
+      
+      yPos += 10;
+      
+      // Order details on left side
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text(`Order Number: ${selectedOrder.orderId}`, margin, yPos);
+      yPos += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      
+      const orderDateObj = selectedOrder.createdAt instanceof Date 
+        ? selectedOrder.createdAt 
+        : new Date((selectedOrder.createdAt as any).seconds * 1000);
+      const orderDateStr = orderDateObj.toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      doc.text(`Order Date: ${orderDateStr}`, margin, yPos);
+      
+      // Invoice details on right
+      const invoiceNum = `INV-${selectedOrder.orderId}`;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(8);
+      doc.text(`Invoice Number: ${invoiceNum}`, pageWidth - margin, yPos - 5, { align: 'right' });
+      doc.setFont('helvetica', 'normal');
+      doc.text(`Invoice Date: ${orderDateStr}`, pageWidth - margin, yPos, { align: 'right' });
+      
+      yPos += 25;
+      
+      // Helper function for formatting currency without rupee symbol for table
+      const formatAmount = (amount: number) => {
+        return amount.toFixed(2);
+      };
+      
+      // Items table
+      const tableData = selectedOrder.items.map((item, idx) => {
+        const netAmount = item.price * item.quantity;
+        const taxRate = 3; // 3% GST for jewelry
+        const taxAmount = (netAmount * taxRate) / 100;
+        return [
+          (idx + 1).toString(),
+          item.name,
+          formatAmount(item.price),
+          item.quantity.toString(),
+          formatAmount(netAmount),
+          `${taxRate}%`,
+          'IGST',
+          formatAmount(taxAmount),
+          formatAmount(netAmount + taxAmount)
+        ];
+      });
+      
+      // Add delivery charges row if any
+      if (selectedOrder.deliveryCharge > 0) {
+        tableData.push([
+          (selectedOrder.items.length + 1).toString(),
+          'Delivery Charges',
+          formatAmount(selectedOrder.deliveryCharge),
+          '1',
+          formatAmount(selectedOrder.deliveryCharge),
+          '0%',
+          '-',
+          '0.00',
+          formatAmount(selectedOrder.deliveryCharge)
+        ]);
+      }
+      
+      // Calculate totals
+      const totalTax = selectedOrder.taxAmount;
+      
+      autoTable(doc, {
+        startY: yPos,
+        head: [['S.No', 'Description', 'Unit Price (Rs)', 'Qty', 'Net Amt (Rs)', 'Tax Rate', 'Tax Type', 'Tax Amt (Rs)', 'Total (Rs)']],
+        body: tableData,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [240, 240, 240],
+          textColor: [0, 0, 0],
+          fontSize: 7,
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        bodyStyles: {
+          fontSize: 7,
+          textColor: [50, 50, 50]
+        },
+        columnStyles: {
+          0: { halign: 'center', cellWidth: 10 },
+          1: { cellWidth: 42 },
+          2: { halign: 'right', cellWidth: 22 },
+          3: { halign: 'center', cellWidth: 10 },
+          4: { halign: 'right', cellWidth: 22 },
+          5: { halign: 'center', cellWidth: 14 },
+          6: { halign: 'center', cellWidth: 14 },
+          7: { halign: 'right', cellWidth: 20 },
+          8: { halign: 'right', cellWidth: 22 }
+        },
+        margin: { left: margin, right: margin },
+        didDrawPage: (data) => {
+          yPos = data.cursor?.y || yPos + 50;
+        }
+      });
+      
+      yPos = (doc as any).lastAutoTable?.finalY || yPos + 50;
+      yPos += 5;
+      
+      // TOTAL row
+      doc.setFillColor(240, 240, 240);
+      doc.rect(margin, yPos, pageWidth - (2 * margin), 8, 'F');
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('TOTAL:', margin + 5, yPos + 5.5);
+      doc.text(totalTax.toFixed(2), pageWidth - margin - 45, yPos + 5.5, { align: 'right' });
+      doc.text('Rs. ' + selectedOrder.total.toFixed(2), pageWidth - margin - 5, yPos + 5.5, { align: 'right' });
+      
+      yPos += 15;
+      
+      // Amount in Words
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.text('Amount in Words:', margin, yPos);
+      yPos += 5;
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.text(numberToWords(selectedOrder.total), margin, yPos);
+      
+      yPos += 15;
+      
+      // Authorized Signatory box
+      const sigBoxWidth = 70;
+      const sigBoxHeight = 25;
+      const sigBoxX = pageWidth - margin - sigBoxWidth;
+      
+      doc.setDrawColor(150, 150, 150);
+      doc.rect(sigBoxX, yPos, sigBoxWidth, sigBoxHeight);
+      
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text('For Sree Rasthu Silvers:', sigBoxX + 5, yPos + 6);
+      
+      doc.setFont('helvetica', 'bold');
+      doc.text('Authorized Signatory', sigBoxX + sigBoxWidth / 2, yPos + 20, { align: 'center' });
+      
+      yPos += sigBoxHeight + 10;
+      
+      // Tax note
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(100, 100, 100);
+      doc.text('Whether tax is payable under reverse charge - No', margin, yPos);
+      
+      yPos += 10;
+      
+      // Footer
+      doc.setDrawColor(200, 200, 200);
+      doc.line(margin, yPos, pageWidth - margin, yPos);
+      yPos += 5;
+      
+      doc.setFontSize(6);
+      doc.setTextColor(120, 120, 120);
+      const footerText = 'This is a computer generated invoice and does not require a physical signature. For any queries, contact us at +91 98198 73745 or support@sreerasthusilvers.com';
+      doc.text(footerText, pageWidth / 2, yPos, { align: 'center', maxWidth: pageWidth - (2 * margin) });
+      
+      // Save the PDF
+      doc.save(`Invoice-${selectedOrder.orderId}.pdf`);
+      
+    } catch (error) {
+      console.error('Error generating invoice PDF:', error);
+      alert('Failed to generate invoice. Please try again.');
+    } finally {
+      setIsDownloadingInvoice(false);
     }
   };
 
@@ -598,68 +917,38 @@ const MobileOrders = () => {
               </div>
 
               {/* Share Order Details */}
-              <div className="bg-white mt-2 px-4 py-4 border-t border-b border-gray-100">
+              <div className="bg-white mt-2 px-4 py-3 border-t border-gray-100">
                 <button 
-                  onClick={async () => {
-                    const orderReceipt = `
-🛍️ *SREE RASTHU SILVERS - ORDER RECEIPT*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📦 *Order ID:* ORD-${selectedOrder.orderId}
-📅 *Date:* ${formatDate(selectedOrder.createdAt)}
-📌 *Status:* ${getStatusLabel(selectedOrder.status)}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🛒 *ITEMS ORDERED*
-
-${selectedOrder.items.map((item, idx) => `${idx + 1}. ${item.name}
-   Qty: ${item.quantity} × ₹${item.price.toLocaleString('en-IN')}
-   Subtotal: ₹${(item.quantity * item.price).toLocaleString('en-IN')}`).join('\n\n')}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 *PRICE DETAILS*
-
-Selling Price: ₹${selectedOrder.subtotal.toLocaleString('en-IN')}${selectedOrder.discount > 0 ? `\nDiscount: -₹${selectedOrder.discount.toLocaleString('en-IN')}` : ''}
-Total Fees: ₹${(selectedOrder.deliveryCharge + selectedOrder.taxAmount).toLocaleString('en-IN')}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-*TOTAL AMOUNT: ₹${selectedOrder.total.toLocaleString('en-IN')}*
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-💳 *Payment:* ${formatPaymentMethod(selectedOrder.paymentMethod)}
-
-📍 *Delivery Address:*
-${selectedOrder.shippingAddress.fullName}
-${selectedOrder.shippingAddress.address}
-${selectedOrder.shippingAddress.city}, ${selectedOrder.shippingAddress.state}
-PIN: ${selectedOrder.shippingAddress.pincode}
-Mobile: ${selectedOrder.shippingAddress.mobile}
-${selectedOrder.trackingId ? `\n🚚 *Tracking ID:* ${selectedOrder.trackingId}` : ''}${selectedOrder.carrier ? `\n🚛 *Carrier:* ${selectedOrder.carrier}` : ''}${selectedOrder.trackingUrl ? `\n📦 *Track Package:* ${selectedOrder.trackingUrl}` : ''}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Thank you for shopping with us! 🎉
-
-For support: +91 98198 73745
-`;
-
-                    try {
-                      if (navigator.share) {
-                        await navigator.share({
-                          title: 'Order Receipt - Sree Rasthu Silvers',
-                          text: orderReceipt,
-                        });
-                      } else {
-                        // Fallback: Copy to clipboard
-                        await navigator.clipboard.writeText(orderReceipt);
-                        alert('Order details copied to clipboard!');
-                      }
-                    } catch (error) {
-                      console.error('Error sharing:', error);
-                    }
-                  }}
-                  className="w-full flex items-center justify-center gap-2 text-sm text-gray-700 font-medium"
+                  onClick={() => setShowShareMenu(true)}
+                  className="w-full flex items-center justify-between text-sm text-gray-700 font-medium py-2"
                 >
-                  <Share2 className="w-4 h-4" />
-                  Send Order Details
+                  <div className="flex items-center gap-3">
+                    <Share2 className="w-5 h-5 text-gray-500" />
+                    <span>Share Order Details</span>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                </button>
+              </div>
+
+              {/* Download Invoice */}
+              <div className="bg-white px-4 py-3 border-b border-gray-100">
+                <button 
+                  onClick={() => downloadInvoice()}
+                  disabled={isDownloadingInvoice}
+                  className="w-full flex items-center justify-between text-sm text-gray-700 font-medium py-2 disabled:opacity-50"
+                >
+                  <div className="flex items-center gap-3">
+                    <Download className="w-5 h-5 text-gray-500" />
+                    <div className="text-left">
+                      <span className="block">Download Invoice</span>
+                      <span className="text-xs text-gray-400">Order ID: {selectedOrder.orderId}</span>
+                    </div>
+                  </div>
+                  {isDownloadingInvoice ? (
+                    <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4 text-gray-400" />
+                  )}
                 </button>
               </div>
 
