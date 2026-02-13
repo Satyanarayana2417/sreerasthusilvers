@@ -164,15 +164,37 @@ const MobileOrders = () => {
 
   // Generate receipt image and share
   const generateReceiptImage = async (order: Order): Promise<Blob | null> => {
-    if (!receiptRef.current) return null;
+    if (!receiptRef.current) {
+      console.error('Receipt ref is null');
+      return null;
+    }
     
     try {
+      // Get the parent container and temporarily make it visible for capture
+      const parentContainer = receiptRef.current.parentElement;
+      if (parentContainer) {
+        parentContainer.style.opacity = '1';
+        parentContainer.style.zIndex = '99999';
+      }
+      
+      // Wait a moment for DOM to update
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       const canvas = await html2canvas(receiptRef.current, {
         backgroundColor: '#ffffff',
         scale: 2,
         useCORS: true,
-        logging: false,
+        logging: true,
+        allowTaint: true,
+        width: 380,
+        height: receiptRef.current.scrollHeight,
       });
+      
+      // Hide the container again
+      if (parentContainer) {
+        parentContainer.style.opacity = '0';
+        parentContainer.style.zIndex = '-9999';
+      }
       
       return new Promise((resolve) => {
         canvas.toBlob((blob) => {
@@ -181,6 +203,12 @@ const MobileOrders = () => {
       });
     } catch (error) {
       console.error('Error generating receipt image:', error);
+      // Make sure to hide even on error
+      const parentContainer = receiptRef.current?.parentElement;
+      if (parentContainer) {
+        parentContainer.style.opacity = '0';
+        parentContainer.style.zIndex = '-9999';
+      }
       return null;
     }
   };
@@ -635,7 +663,15 @@ For support: +91 98198 73745
 
       {/* Hidden Receipt Component for Image Generation */}
       {selectedOrder && (
-        <div style={{ position: 'absolute', left: '-9999px', top: '-9999px' }}>
+        <div style={{ 
+          position: 'fixed', 
+          left: 0, 
+          top: 0, 
+          zIndex: -9999,
+          opacity: 0,
+          pointerEvents: 'none',
+          overflow: 'hidden',
+        }}>
           <div
             ref={receiptRef}
             style={{
