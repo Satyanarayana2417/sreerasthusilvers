@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Heart, ShoppingBag, Check, X, Package, ChevronDown } from "lucide-react";
+import { Star, Heart, ShoppingBag, Check, X, Package, ChevronDown, ArrowLeft } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -20,8 +20,8 @@ const SilverSwingJhoola = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [products, setProducts] = useState<UIProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
+  const [localPriceRange, setLocalPriceRange] = useState<[number, number]>([0, 100000]);
 
   useEffect(() => {
     setLoading(true);
@@ -29,13 +29,6 @@ const SilverSwingJhoola = () => {
       const uiProducts = adaptFirebaseArrayToUI(fbProducts);
       setProducts(uiProducts);
       setLoading(false);
-      
-      if (uiProducts.length > 0) {
-        const prices = uiProducts.map(p => p.price);
-        const min = Math.min(...prices);
-        const max = Math.max(...prices);
-        setPriceRange([min, max]);
-      }
     });
     return () => unsubscribe();
   }, []);
@@ -46,15 +39,17 @@ const SilverSwingJhoola = () => {
     setTimeout(() => setToasts((prev) => prev.filter((t) => t.id !== id)), 3000);
   };
 
-  const minPrice = useMemo(() => {
-    if (products.length === 0) return 0;
-    return Math.min(...products.map(p => p.price));
+  const { minPrice, maxPrice, priceRange } = useMemo(() => {
+    if (products.length === 0) return { minPrice: 0, maxPrice: 100000, priceRange: [0, 100000] as [number, number] };
+    const prices = products.map(p => p.price);
+    const min = Math.floor(Math.min(...prices));
+    const max = Math.ceil(Math.max(...prices));
+    return { minPrice: min, maxPrice: max, priceRange: [min, max] as [number, number] };
   }, [products]);
 
-  const maxPrice = useMemo(() => {
-    if (products.length === 0) return 100000;
-    return Math.max(...products.map(p => p.price));
-  }, [products]);
+  useEffect(() => {
+    setLocalPriceRange(priceRange);
+  }, [priceRange]);
 
   const categoryCounts = useMemo(() => {
     return products.reduce((acc, product) => {
@@ -65,11 +60,11 @@ const SilverSwingJhoola = () => {
 
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
+      const matchesPrice = product.price >= localPriceRange[0] && product.price <= localPriceRange[1];
       const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
       return matchesPrice && matchesCategory;
     });
-  }, [products, priceRange, selectedCategories]);
+  }, [products, localPriceRange, selectedCategories]);
 
   const sortedProducts = useMemo(() => {
     const productsCopy = [...filteredProducts];
@@ -110,17 +105,66 @@ const SilverSwingJhoola = () => {
 
   return (
     <div className="min-h-screen w-full overflow-x-clip">
-      <Header />
+      <div className="hidden md:block">
+        <Header />
+      </div>
       <main>
-        <section className="bg-secondary/30 py-8 md:py-10">
+        <section className="bg-secondary/30 py-3 md:py-10">
           <div className="container-custom">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center">
+            {/* Mobile Layout - Compact */}
+            <div className="md:hidden">
+              {/* Row 1: Back Arrow + Title + Breadcrumb */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="text-foreground hover:text-primary transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <h1 className="text-xl font-semibold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Silver Swing Jhoola
+                  </h1>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <a href="/" className="hover:text-primary transition-colors">Home</a>
+                  <span className="mx-1">/</span>
+                  <a href="#" className="hover:text-primary transition-colors">Furniture</a>
+                  <span className="mx-1">/</span>
+                  <span className="text-foreground">Silver Swing Jhoola</span>
+                </div>
+              </div>
+              
+              {/* Row 2: Results Count + Sort Dropdown */}
+              <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Showing <span className="text-foreground font-medium">{sortedProducts.length}</span> results
+              </p>
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="px-3 py-1.5 border border-border rounded-lg text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+              >
+                <option value="default">Default Sorting</option>
+                <option value="price-low-high">Price: Low to High</option>
+                <option value="price-high-low">Price: High to Low</option>
+                <option value="newest">Newest First</option>
+                <option value="best-rating">Best Rating</option>
+              </select>
+            </div>
+          </div>
+            
+            {/* Desktop Title */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="hidden md:block text-center"
+            >
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Silver Swing (Jhoola)
               </h1>
-              <p className="text-muted-foreground max-w-2xl mx-auto" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Discover our exquisite collection of silver swings
-              </p>
+              {/* Breadcrumb - Desktop */}
               <div className="mt-3 text-sm text-muted-foreground">
                 <a href="/" className="hover:text-primary transition-colors">Home</a>
                 <span className="mx-2">/</span>
@@ -132,9 +176,9 @@ const SilverSwingJhoola = () => {
           </div>
         </section>
 
-        <section className="py-8 md:py-10">
+        <section className="py-3 md:py-10">
           <div className="container-custom">
-            <div className="flex items-center justify-between mb-8">
+            <div className="hidden md:flex items-center justify-between mb-8">
               <p className="text-sm text-muted-foreground">
                 Showing <span className="text-foreground font-medium">{sortedProducts.length}</span> results
               </p>
@@ -206,7 +250,9 @@ const SilverSwingJhoola = () => {
           </div>
         </section>
       </main>
-      <Footer />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
 
       <AnimatePresence>
         {toasts.length > 0 && (

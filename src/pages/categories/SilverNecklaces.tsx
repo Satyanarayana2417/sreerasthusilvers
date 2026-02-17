@@ -187,8 +187,8 @@ const SilverNecklaces = () => {
                     </div>
                   </div>
 
-                  <div className="border border-border rounded-lg p-4">
-                    <h3 className="font-semibold text-base mb-4">Price Filter</h3>
+                  <div className="p-2">
+                    <h3 className="font-['Poppins'] font-semibold text-base mb-4">Price Filter</h3>
                     <div className="space-y-4">
                       <div className="pt-2 pb-4">
                         <Slider

@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { subscribeToUserOrders, Order } from '@/services/orderService';
+import { subscribeToUserOrders, Order, cancelOrder, requestReturn } from '@/services/orderService';
+import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -27,6 +28,8 @@ import {
   Copy,
   X,
   Download,
+  RotateCcw as ReturnIcon,
+  AlertCircle,
 } from 'lucide-react';
 
 const MobileOrders = () => {
@@ -41,6 +44,14 @@ const MobileOrders = () => {
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
+
+  // Cancel/Return modal states
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [returnReason, setReturnReason] = useState('');
+  const [customReturnReason, setCustomReturnReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Subscribe to user orders
   useEffect(() => {
@@ -128,6 +139,9 @@ const MobileOrders = () => {
       case 'outForDelivery': return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
       case 'delivered': return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
       case 'cancelled': return 'bg-red-50 text-red-700 border border-red-200';
+      case 'returnRequested': return 'bg-amber-50 text-amber-700 border border-amber-200';
+      case 'returnScheduled': return 'bg-purple-50 text-purple-700 border border-purple-200';
+      case 'returned': return 'bg-gray-50 text-gray-700 border border-gray-200';
       default: return 'bg-gray-50 text-gray-700 border border-gray-200';
     }
   };
@@ -141,6 +155,9 @@ const MobileOrders = () => {
       case 'outForDelivery': return <MapPin className="w-3.5 h-3.5" />;
       case 'delivered': return <CheckCircle2 className="w-3.5 h-3.5" />;
       case 'cancelled': return <XCircle className="w-3.5 h-3.5" />;
+      case 'returnRequested': return <ReturnIcon className="w-3.5 h-3.5" />;
+      case 'returnScheduled': return <ReturnIcon className="w-3.5 h-3.5" />;
+      case 'returned': return <ReturnIcon className="w-3.5 h-3.5" />;
       default: return <Package className="w-3.5 h-3.5" />;
     }
   };
@@ -154,7 +171,73 @@ const MobileOrders = () => {
       case 'outForDelivery': return 'Out for Delivery';
       case 'delivered': return 'Delivered';
       case 'cancelled': return 'Cancelled';
+      case 'returnRequested': return 'Return Requested';
+      case 'returnScheduled': return 'Return Scheduled';
+      case 'returned': return 'Returned';
       default: return status.charAt(0).toUpperCase() + status.slice(1);
+    }
+  };
+
+  // Check if order can be returned (within 7 days of delivery)
+  const canReturnOrder = (order: Order) => {
+    if (order.status !== 'delivered' || !order.deliveredAt) return false;
+
+    const deliveredDate = order.deliveredAt instanceof Date 
+      ? order.deliveredAt 
+      : new Date(order.deliveredAt.seconds * 1000);
+    
+    const hoursSinceDelivery = (new Date().getTime() - deliveredDate.getTime()) / (1000 * 60 * 60);
+    return hoursSinceDelivery <= 168; // 7 days = 168 hours
+  };
+
+  // Handle order cancellation
+  const handleCancelOrder = async () => {
+    if (!selectedOrder || !user || !cancelReason) {
+      toast.error('Please select a cancellation reason');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      await cancelOrder(selectedOrder.id, user.uid, cancelReason);
+      toast.success('Order cancelled successfully');
+      setShowCancelModal(false);
+      setCancelReason('');
+    } catch (error: any) {
+      console.error('Error cancelling order:', error);
+      toast.error(error.message || 'Failed to cancel order');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle return request
+  const handleRequestReturn = async () => {
+    if (!selectedOrder || !user || !returnReason) {
+      toast.error('Please select a return reason');
+      return;
+    }
+
+    // If "Other reason" is selected, check if custom text is provided
+    if (returnReason === 'Other reason' && !customReturnReason.trim()) {
+      toast.error('Please provide your reason for return');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // Use custom reason if "Other reason" is selected, otherwise use the predefined reason
+      const finalReason = returnReason === 'Other reason' ? customReturnReason : returnReason;
+      await requestReturn(selectedOrder.id, user.uid, finalReason);
+      toast.success('Return request submitted successfully. Our team will review it shortly.');
+      setShowReturnModal(false);
+      setReturnReason('');
+      setCustomReturnReason('');
+    } catch (error: any) {
+      console.error('Error requesting return:', error);
+      toast.error(error.message || 'Failed to request return');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -691,6 +774,15 @@ const MobileOrders = () => {
                   </div>
                 ))}
               </div>
+
+              {/* OTP Display for Out for Delivery Orders */}
+              {order.status === 'outForDelivery' && order.delivery_otp && (
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <p className="text-xs font-semibold text-gray-900">Delivery OTP</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Share this OTP with your delivery partner</p>
+                  <p className="text-sm font-bold text-gray-900 mt-1">{order.delivery_otp}</p>
+                </div>
+              )}
             </div>
           ))
         )}
@@ -763,12 +855,21 @@ const MobileOrders = () => {
                   <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
                     selectedOrder.status === 'delivered' ? 'bg-emerald-100' :
                     selectedOrder.status === 'cancelled' ? 'bg-red-100' :
+                    selectedOrder.status === 'returnRequested' ? 'bg-amber-100' :
+                    selectedOrder.status === 'returnScheduled' ? 'bg-emerald-100' :
+                    selectedOrder.status === 'returned' ? 'bg-gray-100' :
                     'bg-blue-100'
                   }`}>
                     {selectedOrder.status === 'delivered' ? (
                       <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                     ) : selectedOrder.status === 'cancelled' ? (
                       <XCircle className="w-5 h-5 text-red-600" />
+                    ) : selectedOrder.status === 'returnRequested' ? (
+                      <ReturnIcon className="w-5 h-5 text-amber-600" />
+                    ) : selectedOrder.status === 'returnScheduled' ? (
+                      <ReturnIcon className="w-5 h-5 text-emerald-600" />
+                    ) : selectedOrder.status === 'returned' ? (
+                      <CheckCircle2 className="w-5 h-5 text-gray-600" />
                     ) : (
                       <Package className="w-5 h-5 text-blue-600" />
                     )}
@@ -788,6 +889,9 @@ const MobileOrders = () => {
                       {selectedOrder.status === 'outForDelivery' && 'Package is out for delivery'}
                       {selectedOrder.status === 'delivered' && 'Package has been delivered'}
                       {selectedOrder.status === 'cancelled' && 'Order has been cancelled'}
+                      {selectedOrder.status === 'returnRequested' && 'Return request submitted. Waiting for approval.'}
+                      {selectedOrder.status === 'returnScheduled' && 'Return approved! Pickup will be scheduled soon.'}
+                      {selectedOrder.status === 'returned' && 'Item has been picked up and returned successfully.'}
                     </p>
                     <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
                       <Clock className="w-3 h-3" />
@@ -797,8 +901,19 @@ const MobileOrders = () => {
                 </div>
               </div>
 
+              {/* OTP Delivery Verification - Shown when out for delivery */}
+              {selectedOrder.status === 'outForDelivery' && selectedOrder.delivery_otp && (
+                <div className="bg-white px-4 py-3 border-b border-gray-100">
+                  <p className="text-xs font-semibold text-gray-900">Delivery OTP</p>
+                  <p className="text-xs text-gray-600 mt-0.5">Share this OTP with your delivery partner</p>
+                  <p className="text-sm font-bold text-gray-900 mt-1">{selectedOrder.delivery_otp}</p>
+                </div>
+              )}
+
               {/* Delivery Message */}
-              {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
+              {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && 
+               selectedOrder.status !== 'returnRequested' && selectedOrder.status !== 'returnScheduled' && 
+               selectedOrder.status !== 'returned' && (
                 <div className="bg-amber-50 px-4 py-3 border-b border-amber-100">
                   <p className="text-sm text-amber-800">
                     {selectedOrder.status === 'shipped' || selectedOrder.status === 'outForDelivery'
@@ -819,27 +934,44 @@ const MobileOrders = () => {
               )}
 
               {/* Action Buttons */}
-              {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
-                <div className="bg-white px-4 py-4 flex gap-3 border-b border-gray-100">
-                  <button className="flex-1 py-2.5 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
-                    <Ban className="w-4 h-4" />
-                    Cancel
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const phoneNumber = '919819873745';
-                      const message = encodeURIComponent(
-                        `Hello! I need assistance regarding my order:\n\nOrder ID: ORD-${selectedOrder.orderId}\nProduct: ${selectedOrder.items[0]?.name}${selectedOrder.items.length > 1 ? ` +${selectedOrder.items.length - 1} more items` : ''}\nStatus: ${getStatusLabel(selectedOrder.status)}\n\nPlease help me with my product enquiry.`
-                      );
-                      window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
-                    }}
-                    className="flex-1 py-2.5 px-4 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+              <div className="bg-white px-4 py-4 flex gap-3 border-b border-gray-100">
+                {/* Cancel Button - Only for pending/processing orders */}
+                {(selectedOrder.status === 'pending' || selectedOrder.status === 'processing') && (
+                  <button
+                    onClick={() => setShowCancelModal(true)}
+                    className="flex-1 py-2.5 px-4 bg-red-50 border border-red-200 rounded-lg text-sm font-medium text-red-700 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
                   >
-                    <MessageCircle className="w-4 h-4" />
-                    Chat with us
+                    <Ban className="w-4 h-4" />
+                    Cancel Order
                   </button>
-                </div>
-              )}
+                )}
+
+                {/* Return Button - Only for delivered orders within 7 days */}
+                {canReturnOrder(selectedOrder) && (
+                  <button
+                    onClick={() => setShowReturnModal(true)}
+                    className="flex-1 py-2.5 px-4 bg-emerald-50 border border-emerald-200 rounded-lg text-sm font-medium text-emerald-700 flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors"
+                  >
+                    <ReturnIcon className="w-4 h-4" />
+                    Return Items
+                  </button>
+                )}
+
+                {/* Chat Button - Always show */}
+                <button 
+                  onClick={() => {
+                    const phoneNumber = '919819873745';
+                    const message = encodeURIComponent(
+                      `Hello! I need assistance regarding my order:\n\nOrder ID: ORD-${selectedOrder.orderId}\nProduct: ${selectedOrder.items[0]?.name}${selectedOrder.items.length > 1 ? ` +${selectedOrder.items.length - 1} more items` : ''}\nStatus: ${getStatusLabel(selectedOrder.status)}\n\nPlease help me with my product enquiry.`
+                    );
+                    window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                  }}
+                  className="flex-1 py-2.5 px-4 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                >
+                  <MessageCircle className="w-4 h-4" />
+                  Chat with us
+                </button>
+              </div>
 
               {/* Track Package Button */}
               {selectedOrder.trackingUrl && (
@@ -1225,19 +1357,281 @@ const MobileOrders = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Cancel Order Modal */}
+      <AnimatePresence>
+        {showCancelModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 z-[99999] flex items-end sm:items-center sm:justify-center p-4"
+            onClick={() => setShowCancelModal(false)}
+          >
+            <motion.div
+              initial={{ y: '100%', opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: '100%', opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                    <Ban className="w-5 h-5 text-red-600" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">Cancel Order</h3>
+                </div>
+                <button
+                  onClick={() => setShowCancelModal(false)}
+                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6">
+                <p className="text-sm text-gray-600 mb-4">
+                  Please select a reason for cancelling this order:
+                </p>
+
+                <div className="space-y-2">
+                  {[
+                    'Changed my mind',
+                    'Ordered by mistake',
+                    'Found a better price',
+                    'Need to change delivery address',
+                    'Other reason'
+                  ].map((reason) => (
+                    <button
+                      key={reason}
+                      onClick={() => setCancelReason(reason)}
+                      className={`w-full p-4 text-left rounded-xl border-2 transition-all ${
+                        cancelReason === reason
+                          ? 'border-red-400 bg-red-50 text-red-700'
+                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
+                      }`}
+                    >
+                      <span className="text-sm font-medium">{reason}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  onClick={handleCancelOrder}
+                  disabled={!cancelReason || isSubmitting}
+                  className={`w-full mt-6 py-3 rounded-xl font-semibold transition-all ${
+                    !cancelReason || isSubmitting
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-red-600 text-white hover:bg-red-700'
+                  }`}
+                >
+                  {isSubmitting ? 'Cancelling...' : 'Cancel Order'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Return Request Modal - Full Page */}
+      <AnimatePresence>
+        {showReturnModal && selectedOrder && (
+          <motion.div
+            initial={{ x: '100%' }}
+            animate={{ x: 0 }}
+            exit={{ x: '100%' }}
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className="fixed inset-0 bg-white z-[99999] flex flex-col"
+          >
+            {/* Header */}
+            <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
+              <button
+                onClick={() => {
+                  setShowReturnModal(false);
+                  setReturnReason('');
+                  setCustomReturnReason('');
+                }}
+                className="w-8 h-8 flex items-center justify-center"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-700" />
+              </button>
+              <h3 className="text-lg font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Request Return</h3>
+            </div>
+
+            {/* Product Info */}
+            <div className="px-4 py-4 border-b border-gray-100">
+              <div className="flex gap-3">
+                <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                  <img 
+                    src={selectedOrder.items[0]?.image} 
+                    alt={selectedOrder.items[0]?.name}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-gray-900 line-clamp-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    {selectedOrder.items[0]?.name}
+                  </h4>
+                  <p className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Quantity: {selectedOrder.items[0]?.quantity}
+                  </p>
+                  <p className="text-base font-bold text-gray-900 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    ₹{selectedOrder.items[0]?.price?.toLocaleString()}
+                  </p>
+                </div>
+              </div>
+              {selectedOrder.items.length > 1 && (
+                <p className="text-xs text-gray-500 mt-2 text-center" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  +{selectedOrder.items.length - 1} more items will be included in this return
+                </p>
+              )}
+            </div>
+
+            {/* Return Reasons Grid */}
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              <h4 className="text-base font-semibold text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>Reason for return</h4>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { 
+                    reason: 'Quality not as expected', 
+                    icon: '😞',
+                    description: 'Quality of the product not as expected'
+                  },
+                  { 
+                    reason: 'Received wrong item', 
+                    icon: '📦',
+                    description: 'Received wrong item'
+                  },
+                  { 
+                    reason: "Don't want anymore", 
+                    icon: '🤔',
+                    description: "Don't want the product anymore"
+                  },
+                  { 
+                    reason: 'Missing in package', 
+                    icon: '📭',
+                    description: 'Product is missing in the package'
+                  },
+                  { 
+                    reason: 'Damaged/Broken item', 
+                    icon: '💔',
+                    description: 'Received a broken/damaged item'
+                  },
+                  { 
+                    reason: "Size/Fit issue", 
+                    icon: '👎',
+                    description: "Don't like the size/fit of the product"
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.reason}
+                    onClick={() => {
+                      setReturnReason(item.reason);
+                      setCustomReturnReason('');
+                    }}
+                    className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${
+                      returnReason === item.reason
+                        ? 'border-amber-400 bg-amber-50'
+                        : 'border-gray-200 bg-white hover:border-gray-300'
+                    }`}
+                  >
+                    <span className="text-3xl mb-2">{item.icon}</span>
+                    <span className={`text-xs text-center leading-tight ${
+                      returnReason === item.reason ? 'text-amber-700 font-medium' : 'text-gray-600'
+                    }`} style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      {item.description}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Other Reason Option */}
+              <button
+                onClick={() => setReturnReason('Other reason')}
+                className={`w-full mt-3 p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
+                  returnReason === 'Other reason'
+                    ? 'border-amber-400 bg-amber-50'
+                    : 'border-gray-200 bg-white hover:border-gray-300'
+                }`}
+              >
+                <span className="text-2xl">✏️</span>
+                <span className={`text-sm ${
+                  returnReason === 'Other reason' ? 'text-amber-700 font-medium' : 'text-gray-600'
+                }`} style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  Other reason
+                </span>
+              </button>
+
+              {/* Custom Reason Input - Shows when "Other reason" is selected */}
+              {returnReason === 'Other reason' && (
+                <div className="mt-3">
+                  <textarea
+                    value={customReturnReason}
+                    onChange={(e) => setCustomReturnReason(e.target.value)}
+                    placeholder="Please describe your reason for return..."
+                    rows={4}
+                    maxLength={200}
+                    className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl focus:outline-none focus:border-amber-400 bg-amber-50 text-gray-900 placeholder-gray-500 resize-none"
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
+                    autoFocus
+                  />
+                  <p className="text-xs text-amber-700 mt-1 ml-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    {customReturnReason.length}/200 characters
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Button */}
+            <div className="px-4 py-4 border-t border-gray-100 bg-white">
+              <button
+                onClick={handleRequestReturn}
+                disabled={!returnReason || (returnReason === 'Other reason' && !customReturnReason.trim()) || isSubmitting}
+                className={`w-full py-4 rounded-full font-semibold text-base transition-all ${
+                  !returnReason || (returnReason === 'Other reason' && !customReturnReason.trim()) || isSubmitting
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                }`}
+                style={{ fontFamily: "'Poppins', sans-serif" }}
+              >
+                {isSubmitting ? 'Submitting...' : 'Continue'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
 
 // Order Status Stepper Component
 const OrderStatusStepper = ({ status }: { status: string }) => {
-  const steps = [
+  // Check if this is a return flow
+  const isReturnFlow = ['returnRequested', 'returnScheduled', 'returned'].includes(status);
+  
+  // Normal order steps
+  const orderSteps = [
     { key: 'pending', label: 'Order\nPlaced' },
     { key: 'processing', label: 'Processing' },
     { key: 'shipped', label: 'Shipped' },
     { key: 'outForDelivery', label: 'Out for\nDelivery' },
     { key: 'delivered', label: 'Delivered' },
   ];
+
+  // Return flow steps
+  const returnSteps = [
+    { key: 'returnRequested', label: 'Return\nRequested' },
+    { key: 'returnScheduled', label: 'Return\nScheduled' },
+    { key: 'returned', label: 'Picked Up' },
+  ];
+
+  const steps = isReturnFlow ? returnSteps : orderSteps;
 
   const getStepIndex = (currentStatus: string) => {
     const index = steps.findIndex(s => s.key === currentStatus);
@@ -1247,6 +1641,12 @@ const OrderStatusStepper = ({ status }: { status: string }) => {
   const currentIndex = getStepIndex(status);
   const isCancelled = status === 'cancelled';
 
+  // For return flow, use emerald color scheme
+  const activeColor = isReturnFlow ? 'bg-emerald-500' : 'bg-blue-500';
+  const activeBorder = isReturnFlow ? 'border-emerald-500' : 'border-blue-500';
+  const activeText = isReturnFlow ? 'text-emerald-600' : 'text-blue-600';
+  const activeDot = isReturnFlow ? 'bg-emerald-500' : 'bg-blue-500';
+
   return (
     <div className="flex items-start justify-between relative" style={{ fontFamily: "'Poppins', sans-serif" }}>
       {/* Progress Line Background */}
@@ -1254,7 +1654,7 @@ const OrderStatusStepper = ({ status }: { status: string }) => {
       
       {/* Progress Line Active */}
       <div 
-        className={`absolute top-4 left-6 h-0.5 z-0 transition-all duration-500 ${isCancelled ? 'bg-red-500' : 'bg-blue-500'}`}
+        className={`absolute top-4 left-6 h-0.5 z-0 transition-all duration-500 ${isCancelled ? 'bg-red-500' : activeColor}`}
         style={{ 
           width: isCancelled ? '0%' : `calc(${(currentIndex / (steps.length - 1)) * 100}% - 12px)`,
         }}
@@ -1265,25 +1665,25 @@ const OrderStatusStepper = ({ status }: { status: string }) => {
         const isCurrent = !isCancelled && index === currentIndex;
         
         return (
-          <div key={step.key} className="flex flex-col items-center relative z-10" style={{ width: '20%', fontFamily: "'Poppins', sans-serif" }}>
+          <div key={step.key} className="flex flex-col items-center relative z-10" style={{ width: `${100 / steps.length}%`, fontFamily: "'Poppins', sans-serif" }}>
             {/* Step Circle */}
             <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 transition-all duration-300 ${
               isCancelled 
                 ? 'bg-gray-100 border-gray-300'
                 : isCompleted 
-                  ? 'bg-blue-500 border-blue-500' 
+                  ? `${activeColor} ${activeBorder}` 
                   : 'bg-white border-gray-300'
             }`}>
               {isCompleted ? (
                 <CheckCircle2 className="w-5 h-5 text-white" />
               ) : (
-                <div className={`w-2 h-2 rounded-full ${isCurrent ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                <div className={`w-2 h-2 rounded-full ${isCurrent ? activeDot : 'bg-gray-300'}`} />
               )}
             </div>
             
             {/* Step Label */}
             <p className={`text-[10px] text-center mt-2 leading-tight whitespace-pre-line ${
-              isCompleted ? 'text-blue-600 font-medium' : 'text-gray-400'
+              isCompleted ? `${activeText} font-medium` : 'text-gray-400'
             }`}>
               {step.label}
             </p>

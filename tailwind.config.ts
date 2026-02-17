@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         heading: ['Playfair Display', 'Georgia', 'serif'],
         body: ['Montserrat', 'system-ui', 'sans-serif'],
+        poppins: ['Poppins', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",

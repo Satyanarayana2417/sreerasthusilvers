@@ -1,8 +1,12 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Home } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowRight, Home, ArrowLeft } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import ProductCard from "@/components/ProductCard";
+import { subscribeToProducts } from "@/services/productService";
+import { UIProduct, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
 
 // Import furniture images (using available images as placeholders)
 import setImg from "@/assets/products/set-1.jpg";
@@ -46,13 +50,59 @@ const furnitureCategories = [
 ];
 
 const FurnitureCollections = () => {
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<UIProduct[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch all products from Firebase and filter by furniture-related categories
+  useEffect(() => {
+    setLoading(true);
+    const unsubscribe = subscribeToProducts(
+      (fbProducts) => {
+        const uiProducts = adaptFirebaseArrayToUI(fbProducts);
+        // Filter only furniture-related products
+        const furnitureProducts = uiProducts.filter(product => {
+          // Check if category contains furniture-related keywords
+          const categoryLower = (product.category || '').toLowerCase();
+          return categoryLower.includes('furniture') || 
+                 categoryLower.includes('chair') || 
+                 categoryLower.includes('table') || 
+                 categoryLower.includes('sofa') || 
+                 categoryLower.includes('swing') || 
+                 categoryLower.includes('jhoola') ||
+                 categoryLower.includes('décor') ||
+                 categoryLower.includes('decor');
+        });
+        setProducts(furnitureProducts);
+        setLoading(false);
+      },
+      true // activeOnly
+    );
+    return () => unsubscribe();
+  }, []);
+
   return (
     <div className="min-h-screen w-full overflow-x-clip bg-white">
-      <Header />
+      <div className="hidden md:block">
+        <Header />
+      </div>
       
       <main>
+        {/* Mobile Header with Back Button */}
+        <div className="md:hidden sticky top-0 z-50 bg-white border-b border-gray-200">
+          <div className="flex items-center gap-3 px-4 py-3">
+            <button
+              onClick={() => navigate(-1)}
+              className="p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5 text-gray-700" />
+            </button>
+            <h1 className="text-lg font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Furniture Collections</h1>
+          </div>
+        </div>
+
         {/* Breadcrumb */}
-        <div className="bg-gray-50 border-b border-gray-200">
+        <div className="bg-gray-50 border-b border-gray-200 hidden md:block">
           <div className="container-custom py-4">
             <div className="flex items-center gap-2 text-sm text-gray-600">
               <Link to="/" className="flex items-center gap-1 hover:text-primary transition-colors">
@@ -66,9 +116,54 @@ const FurnitureCollections = () => {
         </div>
 
         {/* Category Grid */}
-        <section className="py-12 md:py-20 bg-white">
+        <section className="py-4 md:py-20 bg-white">
           <div className="container-custom">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
+            {/* Mobile: Horizontal Scroll */}
+            <div className="md:hidden flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide">
+              {furnitureCategories.map((category, index) => (
+                <motion.div
+                  key={category.id}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ 
+                    duration: 0.5, 
+                    delay: index * 0.1,
+                    ease: "easeOut"
+                  }}
+                  className="flex-shrink-0"
+                >
+                  <Link 
+                    to={category.href}
+                    className="group block"
+                  >
+                    <div className="relative overflow-hidden flex flex-col items-center">
+                      {/* Small Circular Image for Mobile */}
+                      <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 mb-2 relative">
+                        <img
+                          src={category.image}
+                          alt={category.title}
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+
+                      {/* Category Info */}
+                      <div className="text-center max-w-[96px]">
+                        <h3 
+                          className="text-sm font-serif font-light text-foreground"
+                          style={{ fontFamily: "'Playfair Display', serif" }}
+                        >
+                          {category.title}
+                        </h3>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+            
+            {/* Desktop: Grid */}
+            <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
               {furnitureCategories.map((category, index) => (
                 <motion.div
                   key={category.id}
@@ -123,8 +218,8 @@ const FurnitureCollections = () => {
           </div>
         </section>
 
-        {/* Decorative Divider */}
-        <section className="py-12 bg-gray-50">
+        {/* Decorative Divider - Hidden on Mobile */}
+        <section className="hidden md:block py-12 bg-gray-50">
           <div className="container-custom">
             <div className="max-w-4xl mx-auto text-center">
               <motion.div
@@ -149,9 +244,34 @@ const FurnitureCollections = () => {
             </div>
           </div>
         </section>
+
+        {/* All Products Grid - Mobile Only */}
+        <section className="md:hidden py-4 bg-white">
+          <div className="container-custom px-4">
+            {loading ? (
+              <div className="grid grid-cols-2 gap-4">
+                {[...Array(6)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-gray-200 aspect-square rounded-lg mb-2"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 gap-4">
+                {products.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
       </main>
 
-      <Footer />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
     </div>
   );
 };

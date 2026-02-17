@@ -18,8 +18,12 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
+// Initialize a secondary app for creating users without affecting current session
+const secondaryApp = initializeApp(firebaseConfig, 'secondary');
+
 // Initialize services
 export const auth = getAuth(app);
+export const secondaryAuth = getAuth(secondaryApp); // For creating users without signing out admin
 export const db = getFirestore(app);
 export const storage = getStorage(app);
 export const analytics = typeof window !== 'undefined' ? getAnalytics(app) : null;

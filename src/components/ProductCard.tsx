@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { Star, Heart, Eye, ShoppingBag } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useNavigate } from "react-router-dom";
 
 interface Product {
   id: string;
@@ -26,14 +28,22 @@ interface ProductCardProps {
 const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const navigate = useNavigate();
 
   const handleCardClick = () => {
-    onQuickView?.(product);
+    // Navigate to product detail page
+    navigate(`/product/${product.id}`);
   };
 
   const handleQuickViewClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     onQuickView?.(product);
+  };
+
+  const handleWishlistClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    toggleWishlist(product.id, product.title);
   };
 
   const handleAddToCart = async (e: React.MouseEvent) => {
@@ -76,7 +86,7 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
       onClick={handleCardClick}
     >
       {/* Image Container */}
-      <div className="product-card-image relative bg-muted rounded-xl overflow-hidden aspect-square mb-4">
+      <div className="product-card-image relative bg-muted rounded-2xl overflow-hidden aspect-square mb-3">
         <img
           src={product.image}
           alt={product.alt || product.title}
@@ -84,89 +94,62 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
           loading="lazy"
         />
 
-        {/* Badges */}
-        {product.discount && (
-          <div className="absolute top-3 left-3 bg-destructive text-destructive-foreground text-xs font-bold px-3 py-1 rounded-full">
-            {product.discount}% OFF
-          </div>
-        )}
-        {product.badge && (
-          <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full gold-shimmer">
-            {product.badge}
-          </div>
-        )}
-
-        {/* Quick Actions */}
-        <div className="product-card-actions">
-          <button
-            onClick={(e) => e.stopPropagation()}
-            className="p-3 bg-background rounded-full shadow-luxury-md hover:bg-primary hover:text-primary-foreground transition-all transform hover:scale-110 focus-gold"
-            aria-label="Add to wishlist"
-          >
-            <Heart className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleQuickViewClick}
-            className="p-3 bg-background rounded-full shadow-luxury-md hover:bg-primary hover:text-primary-foreground transition-all transform hover:scale-110 focus-gold"
-            aria-label="Quick view"
-          >
-            <Eye className="w-4 h-4" />
-          </button>
-          <button
-            onClick={handleAddToCart}
-            className="p-3 bg-background rounded-full shadow-luxury-md hover:bg-primary hover:text-primary-foreground transition-all transform hover:scale-110 focus-gold"
-            aria-label="Add to cart"
-          >
-            <ShoppingBag className="w-4 h-4" />
-          </button>
-        </div>
+        {/* Wishlist Heart - Top Right */}
+        <button
+          onClick={handleWishlistClick}
+          className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all"
+          aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart 
+            className={`w-5 h-5 transition-colors ${
+              isInWishlist(product.id) 
+                ? "text-red-500 fill-red-500" 
+                : "text-gray-700 hover:text-red-500"
+            }`}
+          />
+        </button>
       </div>
 
       {/* Product Info */}
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {/* Category */}
-        <span className="text-xs uppercase tracking-wider text-primary font-medium">
+        <span className="text-xs uppercase tracking-wider font-medium" style={{ color: '#D4AF37' }}>
           {product.category}
         </span>
 
-        {/* Title */}
-        <h4 className="font-heading text-lg font-medium leading-snug group-hover:text-primary transition-colors">
+        {/* Title - Single Line with Ellipsis */}
+        <h4 className="font-medium text-base leading-snug text-gray-900 truncate" style={{ fontFamily: "'Poppins', sans-serif" }}>
           {product.title}
         </h4>
 
-        {/* Rating */}
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-0.5">
-            {[...Array(5)].map((_, i) => (
-              <Star
-                key={i}
-                className={`w-3.5 h-3.5 ${
-                  i < Math.floor(product.rating)
-                    ? "fill-primary text-primary"
-                    : "fill-muted text-muted"
-                }`}
-              />
-            ))}
-          </div>
-          <span className="text-xs text-muted-foreground">
-            ({product.reviews} Reviews)
-          </span>
+        {/* Rating - Without Review Count */}
+        <div className="flex items-center gap-0.5">
+          {[...Array(5)].map((_, i) => (
+            <Star
+              key={i}
+              className={`w-4 h-4 ${
+                i < Math.floor(product.rating)
+                  ? "fill-yellow-400 text-yellow-400"
+                  : "fill-gray-200 text-gray-200"
+              }`}
+            />
+          ))}
         </div>
 
         {/* Price */}
-        <div className="flex items-center gap-2">
-          <span className="text-lg font-semibold">₹{product.price.toLocaleString('en-IN')}</span>
+        <div className="flex items-center gap-2 pt-1">
+          <span className="text-xl font-bold text-gray-900">₹{product.price.toLocaleString('en-IN')}</span>
           {product.oldPrice && (
-            <span className="text-sm text-muted-foreground line-through">
+            <span className="text-sm text-gray-400 line-through">
               ₹{product.oldPrice.toLocaleString('en-IN')}
             </span>
           )}
         </div>
 
-        {/* Always-visible Add to Cart button */}
+        {/* Add to Cart Button - Black Transparent Pill */}
         <button
           onClick={handleAddToCart}
-          className="w-full mt-2 py-2.5 px-4 bg-foreground text-background text-sm font-medium rounded-full hover:bg-foreground/90 active:scale-[0.97] transition-all duration-200 flex items-center justify-center gap-2"
+          className="w-full mt-2 py-2.5 px-4 bg-black/5 text-gray-900 text-sm font-medium rounded-full hover:bg-black/10 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 border border-gray-200"
         >
           <ShoppingBag className="w-4 h-4" />
           Add to Cart

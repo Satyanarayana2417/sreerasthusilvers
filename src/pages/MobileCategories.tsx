@@ -13,14 +13,14 @@ const mainCategories = [
     icon: '💎',
     image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=100&h=100&fit=crop',
     subcategories: [
-      { name: 'Silver Rings', image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=200&h=200&fit=crop', path: '/jewelry' },
-      { name: 'Silver Chains', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&h=200&fit=crop', path: '/jewelry' },
-      { name: 'Silver Earrings', image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop', path: '/jewelry' },
-      { name: 'Silver Bangles', image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&h=200&fit=crop', path: '/jewelry' },
-      { name: 'Silver Necklaces', image: 'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=200&h=200&fit=crop', path: '/jewelry' },
-      { name: 'Silver Pendants', image: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=200&h=200&fit=crop', path: '/jewelry' },
-      { name: 'Silver Anklets', image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=200&h=200&fit=crop', path: '/jewelry' },
-      { name: 'Silver Bracelets', image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&h=200&fit=crop', path: '/jewelry' },
+      { name: 'Silver Rings', image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=200&h=200&fit=crop', path: '/shop/rings' },
+      { name: 'Silver Chains', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&h=200&fit=crop', path: '/shop/necklaces' },
+      { name: 'Silver Earrings', image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop', path: '/shop/earrings' },
+      { name: 'Silver Bangles', image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&h=200&fit=crop', path: '/shop/bracelets' },
+      { name: 'Silver Necklaces', image: 'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=200&h=200&fit=crop', path: '/shop/necklaces' },
+      { name: 'Silver Pendants', image: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=200&h=200&fit=crop', path: '/shop/pendants' },
+      { name: 'Silver Anklets', image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=200&h=200&fit=crop', path: '/shop/anklets' },
+      { name: 'Silver Bracelets', image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&h=200&fit=crop', path: '/shop/bracelets' },
       { name: 'Temple Jewelry', image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop', path: '/jewelry' },
     ]
   },
@@ -30,12 +30,12 @@ const mainCategories = [
     icon: '🪑',
     image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=100&h=100&fit=crop',
     subcategories: [
-      { name: 'Silver Chairs', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture' },
-      { name: 'Silver Tables', image: 'https://images.unsplash.com/photo-1499933374294-4584851497cc?w=200&h=200&fit=crop', path: '/furniture' },
-      { name: 'Silver Swings', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop', path: '/furniture' },
+      { name: 'Silver Chairs', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture/royal-silver-chairs' },
+      { name: 'Silver Tables', image: 'https://images.unsplash.com/photo-1499933374294-4584851497cc?w=200&h=200&fit=crop', path: '/furniture/royal-silver-tables' },
+      { name: 'Silver Swings', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop', path: '/furniture/silver-swing-jhoola' },
       { name: 'Silver Cradles', image: 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?w=200&h=200&fit=crop', path: '/furniture' },
-      { name: 'Silver Thrones', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture' },
-      { name: 'Decorative Items', image: 'https://images.unsplash.com/photo-1499933374294-4584851497cc?w=200&h=200&fit=crop', path: '/furniture' },
+      { name: 'Silver Thrones', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture/royal-silver-chairs' },
+      { name: 'Decorative Items', image: 'https://images.unsplash.com/photo-1499933374294-4584851497cc?w=200&h=200&fit=crop', path: '/furniture/antique-silver-decor' },
     ]
   },
   {
@@ -44,11 +44,11 @@ const mainCategories = [
     icon: '🏺',
     image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=100&h=100&fit=crop',
     subcategories: [
-      { name: 'Pooja Items', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/articles' },
-      { name: 'Gift Articles', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/articles' },
+      { name: 'Pooja Items', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/products/silver-pooja-items' },
+      { name: 'Gift Articles', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/products/silver-gift-articles' },
       { name: 'Silver Lamps', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', path: '/articles' },
       { name: 'Silver Plates', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/articles' },
-      { name: 'Silver Idols', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/articles' },
+      { name: 'Silver Idols', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/products/silver-idols' },
       { name: 'Silver Vessels', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', path: '/articles' },
     ]
   },
@@ -58,12 +58,12 @@ const mainCategories = [
     icon: '✨',
     image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=100&h=100&fit=crop',
     subcategories: [
-      { name: 'Silver Coins', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Silver Bars', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products' },
+      { name: 'Silver Coins', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products/silver-coins' },
+      { name: 'Silver Bars', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products/silver-coins' },
       { name: 'Silver Utensils', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/products' },
       { name: 'Baby Items', image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Antique Silver', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Custom Orders', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/products' },
+      { name: 'Antique Silver', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products/limited-edition-pieces' },
+      { name: 'Custom Orders', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/products/custom-engraved-items' },
     ]
   },
   {

@@ -1,7 +1,7 @@
 ﻿import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Heart, ShoppingBag, Check, X, Package, ChevronDown } from "lucide-react";
+import { Star, Heart, ShoppingBag, Check, X, Package, ChevronDown, ArrowLeft } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { subscribeToProductsBySubcategory } from "@/services/productService";
@@ -30,7 +30,7 @@ const SilverGiftArticles = () => {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [products, setProducts] = useState<UIProduct[]>([]);
   const [loading, setLoading] = useState(true);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+  const [localPriceRange, setLocalPriceRange] = useState<[number, number]>([0, 100000]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
 
   useEffect(() => {
@@ -38,14 +38,6 @@ const SilverGiftArticles = () => {
     const unsubscribe = subscribeToProductsBySubcategory('Silver Gift Articles', (fbProducts) => {
       const uiProducts = adaptFirebaseArrayToUI(fbProducts);
       setProducts(uiProducts);
-      
-      if (uiProducts.length > 0) {
-        const prices = uiProducts.map(p => p.price);
-        const minPrice = Math.floor(Math.min(...prices));
-        const maxPrice = Math.ceil(Math.max(...prices));
-        setPriceRange([minPrice, maxPrice]);
-      }
-      
       setLoading(false);
     });
     return () => unsubscribe();
@@ -77,13 +69,22 @@ const SilverGiftArticles = () => {
     return counts;
   }, [products]);
 
+  const priceRange = useMemo<[number, number]>(() => {
+    if (products.length === 0) return [0, 100000];
+    return [minPrice, maxPrice];
+  }, [products, minPrice, maxPrice]);
+
+  useEffect(() => {
+    setLocalPriceRange(priceRange);
+  }, [priceRange]);
+
   const filteredProducts = useMemo(() => {
     return products.filter(product => {
-      const priceInRange = product.price >= priceRange[0] && product.price <= priceRange[1];
+      const priceInRange = product.price >= localPriceRange[0] && product.price <= localPriceRange[1];
       const categoryMatch = selectedCategories.length === 0 || selectedCategories.includes(product.category);
       return priceInRange && categoryMatch;
     });
-  }, [products, priceRange, selectedCategories]);
+  }, [products, localPriceRange, selectedCategories]);
 
   const sortedProducts = useMemo(() => {
     const productsCopy = [...filteredProducts];
@@ -132,17 +133,66 @@ const SilverGiftArticles = () => {
 
   return (
     <div className="min-h-screen w-full overflow-x-clip">
-      <Header />
+      <div className="hidden md:block">
+        <Header />
+      </div>
       <main>
-        <section className="bg-secondary/30 py-8 md:py-10">
+        <section className="bg-secondary/30 py-3 md:py-10">
           <div className="container-custom">
-            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="text-center">
+            {/* Mobile Layout - Compact */}
+            <div className="md:hidden">
+              {/* Row 1: Back Arrow + Title + Breadcrumb */}
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="text-foreground hover:text-primary transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  <h1 className="text-xl font-semibold text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Silver Gift Articles
+                  </h1>
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <a href="/" className="hover:text-primary transition-colors">Home</a>
+                  <span className="mx-1">/</span>
+                  <a href="#" className="hover:text-primary transition-colors">Other Products</a>
+                  <span className="mx-1">/</span>
+                  <span className="text-foreground">Silver Gift Articles</span>
+                </div>
+              </div>
+              
+              {/* Row 2: Results Count + Sort Dropdown */}
+              <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Showing <span className="text-foreground font-medium">{sortedProducts.length}</span> results
+              </p>
+              <select 
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="px-3 py-1.5 border border-border rounded-lg text-xs bg-background focus:outline-none focus:ring-2 focus:ring-primary/20 cursor-pointer"
+              >
+                <option value="default">Default Sorting</option>
+                <option value="price-low-high">Price: Low to High</option>
+                <option value="price-high-low">Price: High to Low</option>
+                <option value="newest">Newest First</option>
+                <option value="best-rating">Best Rating</option>
+              </select>
+            </div>
+          </div>
+            
+            {/* Desktop Title */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="hidden md:block text-center"
+            >
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-semibold text-foreground mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
                 Silver Gift Articles
               </h1>
-              <p className="text-muted-foreground max-w-2xl mx-auto" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Discover our exquisite collection of Silver Gift Articles
-              </p>
+              {/* Breadcrumb - Desktop */}
               <div className="mt-3 text-sm text-muted-foreground">
                 <a href="/" className="hover:text-primary transition-colors">Home</a>
                 <span className="mx-2">/</span>
@@ -154,56 +204,38 @@ const SilverGiftArticles = () => {
           </div>
         </section>
 
-        <section className="py-8 md:py-10">
+        <section className="py-3 md:py-10">
           <div className="container-custom">
             <div className="flex flex-col lg:flex-row gap-8">
-              <aside className="lg:w-64 flex-shrink-0">
-                <div className="space-y-6">
-                  <div className="border border-border rounded-lg p-4">
-                    <h3 className="font-semibold text-base mb-4">Categories</h3>
-                    <div className="space-y-2">
-                      {Object.entries(categoryCounts).map(([category, count]) => (
-                        <label key={category} className="flex items-center justify-between cursor-pointer group">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={selectedCategories.includes(category)}
-                              onChange={() => toggleCategory(category)}
-                              className="rounded border-border text-primary focus:ring-primary"
-                            />
-                            <span className="text-sm group-hover:text-primary transition-colors">{category}</span>
-                          </div>
-                          <span className="text-xs text-muted-foreground">({count})</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="border border-border rounded-lg p-4">
-                    <h3 className="font-semibold text-base mb-4">Price Filter</h3>
-                    <div className="space-y-4">
-                      <div className="pt-2 pb-4">
-                        <Slider
-                          min={minPrice}
-                          max={maxPrice}
-                          step={100}
-                          value={priceRange}
-                          onValueChange={(value) => setPriceRange(value as [number, number])}
-                          className="w-full"
-                          minStepsBetweenThumbs={1}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">₹{priceRange[0].toLocaleString('en-IN')}</span>
-                        <span className="text-muted-foreground">₹{priceRange[1].toLocaleString('en-IN')}</span>
+              {products.length > 0 && (
+                <aside className="lg:w-64 flex-shrink-0">
+                  <div className="space-y-6">
+                  <div className="p-2">
+                    <h3 className="font-['Poppins'] font-semibold text-base mb-4">Price Filter</h3>
+                      <div className="space-y-4">
+                        <div className="pt-2 pb-4">
+                          <Slider
+                            min={minPrice}
+                            max={maxPrice}
+                            step={100}
+                            value={localPriceRange}
+                            onValueChange={(value) => setLocalPriceRange(value as [number, number])}
+                            className="w-full"
+                            minStepsBetweenThumbs={1}
+                          />
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="text-muted-foreground">₹{localPriceRange[0].toLocaleString('en-IN')}</span>
+                          <span className="text-muted-foreground">₹{localPriceRange[1].toLocaleString('en-IN')}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </aside>
+                </aside>
+              )}
 
               <div className="flex-1">
-            <div className="flex items-center justify-between mb-8">
+            <div className="hidden md:flex items-center justify-between mb-8">
               <p className="text-sm text-muted-foreground">
                 Showing <span className="text-foreground font-medium">{sortedProducts.length}</span> results
               </p>
@@ -281,7 +313,9 @@ const SilverGiftArticles = () => {
           </div>
         </section>
       </main>
-      <Footer />
+      <div className="hidden md:block">
+        <Footer />
+      </div>
 
       <AnimatePresence>
         {toasts.length > 0 && (

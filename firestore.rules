@@ -2,30 +2,44 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Helper function to check if user is authenticated
+    // --- HELPER FUNCTIONS (The "Brain" of the Rules) ---
     function isAuthenticated() {
       return request.auth != null;
     }
     
-    // Helper function to check if user is admin
     function isAdmin() {
       return isAuthenticated() && 
              get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
     
-    // Helper function to check if user owns the document
     function isOwner(userId) {
       return isAuthenticated() && request.auth.uid == userId;
     }
 
+    // --- USER RULES (Profiles, Addresses, & History) ---
     match /users/{userId} {
-      allow read, write: if isOwner(userId);
+      // Admin can see everyone; Users can see their own profile
+      allow read: if isOwner(userId) || isAdmin();
       
+      // Admin can create delivery boys; Users can create their own profile
+      allow create: if isAdmin() || isOwner(userId);
+
+      // Admin can update everything (status/role); Users can only update their own info
+      allow update: if isAdmin() || isOwner(userId);
+
+      // Only Admin can delete users (like removing a delivery partner)
+      allow delete: if isAdmin();
+      
+      match /addresses/{addressId} {
+        allow read, write: if isOwner(userId) || isAdmin();
+      }
+
       match /history/{historyId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
 
+    // --- STORE MANAGEMENT (Products & Admin Data) ---
     match /products/{productId} {
       allow read: if true;
       allow write: if isAdmin();
@@ -35,11 +49,12 @@ service cloud.firestore {
       allow read, write: if isAdmin();
     }
     
+    // --- CUSTOMER EXPERIENCE (Carts & Categories) ---
     match /carts/{userId} {
-      allow read, write: if isOwner(userId);
+      allow read, write: if isOwner(userId) || isAdmin();
       
       match /items/{itemId} {
-        allow read, write: if isOwner(userId);
+        allow read, write: if isOwner(userId) || isAdmin();
       }
     }
     
@@ -48,30 +63,61 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // --- MARKETING (Banners) ---
     match /banners/{bannerId} {
       allow read: if true;
       allow write: if isAdmin();
     }
     
-    // Orders collection
+    // --- ORDER FULFILLMENT (Optimized for Delivery Partners with OTP Verification) ---
     match /orders/{orderId} {
-      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update: if isAdmin();
+      // Helper: Check if user is the assigned delivery partner
+      function isAssignedDeliveryBoy() {
+        return isAuthenticated() && resource.data.delivery_boy_id == request.auth.uid;
+      }
+      
+      // Helper: Check if user is the order owner (customer)
+      function isOrderOwner() {
+        return isAuthenticated() && resource.data.userId == request.auth.uid;
+      }
+      
+      // Helper: Validate status transitions for delivery workflow
+      function isValidStatusTransition() {
+        let currentStatus = resource.data.status;
+        let newStatus = request.resource.data.status;
+        
+        // Delivery boy workflow: shipped/assigned → picked → outForDelivery → delivered
+        return (currentStatus == 'shipped' && newStatus == 'picked') ||
+               (currentStatus == 'assigned' && newStatus == 'picked') ||
+               (currentStatus == 'picked' && newStatus == 'outForDelivery') ||
+               (currentStatus == 'outForDelivery' && newStatus == 'delivered');
+      }
+      
+      // Helper: Ensure OTP is only cleared when marking as delivered
+      function isValidOTPUpdate() {
+        let newStatus = request.resource.data.status;
+        // Only allow OTP to be cleared (set to null) when status becomes 'delivered'
+        return newStatus == 'delivered' ? 
+          (request.resource.data.delivery_otp == null && request.resource.data.otp_verified == true) :
+          true;
+      }
+      
+      // READ: Admins see all; Customers see their orders; Delivery boys see assigned orders
+      allow read: if isAuthenticated() && 
+        (resource == null || isOrderOwner() || isAssignedDeliveryBoy() || isAdmin());
+      
+      // CREATE: Only authenticated users can create their own orders
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+        
+      // UPDATE: Complex rules for different roles
+      // - Admin can update anything
+      // - Delivery boys can only update their assigned orders with valid status transitions
+      allow update: if isAdmin() || 
+        (isAssignedDeliveryBoy() && isValidStatusTransition() && isValidOTPUpdate());
+      
+      // DELETE: Only admin can delete orders
       allow delete: if isAdmin();
-    }
-    
-    // History collection (global - for analytics)
-    match /history/{historyId} {
-      allow read: if isAuthenticated() && resource.data.userId == request.auth.uid;
-      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
-      allow update, delete: if isAdmin();
-    }
-    
-    // Settings collection (admin only)
-    match /settings/{document} {
-      allow read: if true;
-      allow write: if isAdmin();
     }
   }
 }

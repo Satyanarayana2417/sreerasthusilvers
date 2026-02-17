@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from 'framer-motion';
-import { ArrowLeft, MoreVertical, Clock, Star, Plus, Minus, Trash2, ChevronRight } from 'lucide-react';
+import { ArrowLeft, MoreVertical, Star, Plus, Minus, Trash2, ChevronRight } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -134,8 +134,29 @@ const MobileCart = () => {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, x: -100, height: 0 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="flex gap-4 py-4 border-b border-gray-100 last:border-0"
+              className="flex gap-4 py-4 border-b border-gray-100 last:border-0 relative"
             >
+              {/* Delete Icon - Positioned Absolutely */}
+              <button
+                type="button"
+                onClick={() => {
+                  console.log('🗑️ Delete clicked for:', item.id);
+                  removeFromCart(item.id);
+                }}
+                onTouchEnd={(e) => {
+                  e.preventDefault();
+                  console.log('🗑️ Touch delete for:', item.id);
+                  removeFromCart(item.id);
+                }}
+                className="absolute top-4 right-0 w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-full transition-colors z-50 cursor-pointer"
+                style={{ touchAction: 'manipulation' }}
+                aria-label="Remove from cart"
+              >
+                <div className="w-8 h-8 rounded-full border border-red-200 flex items-center justify-center bg-white">
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </div>
+              </button>
+
               {/* Product Image */}
               <div className="relative w-20 h-20 bg-white rounded-2xl overflow-hidden flex-shrink-0 shadow-md">
                 <img
@@ -146,22 +167,16 @@ const MobileCart = () => {
               </div>
 
               {/* Product Details */}
-              <div className="flex-1 min-w-0">
-                <h3 className="text-base font-semibold text-gray-900 mb-2 line-clamp-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              <div className="flex-1 min-w-0 pr-8">{/* Added padding-right for delete button space */}
+                <h3 className="text-base font-semibold text-gray-900 line-clamp-1 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
                   {item.name}
                 </h3>
 
-                {/* Delivery & Rating Info */}
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="flex items-center gap-1 text-gray-500">
-                    <Clock className="w-3.5 h-3.5" />
-                    <span className="text-xs">15-20 min</span>
-                  </div>
-                  <div className="flex items-center gap-1 text-gray-500">
-                    <Star className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
-                    <span className="text-xs font-medium">4.9</span>
-                    <span className="text-xs text-gray-400">(125)</span>
-                  </div>
+                {/* Rating Info */}
+                <div className="flex items-center gap-1 mb-3 text-gray-500">
+                  <Star className="w-3.5 h-3.5 fill-orange-400 text-orange-400" />
+                  <span className="text-xs font-medium">4.9</span>
+                  <span className="text-xs text-gray-400">(125)</span>
                 </div>
 
                 {/* Price */}
@@ -271,6 +286,16 @@ const MobileCart = () => {
               <h3 className="text-base font-bold text-gray-900 mb-3">Order Summary</h3>
               
               <div className="space-y-2.5">
+                {/* Individual Product Prices */}
+                {items.map((item) => (
+                  <div key={item.id} className="flex justify-between text-sm">
+                    <span className="text-gray-600 flex-1 truncate pr-2">{item.name} (x{item.quantity})</span>
+                    <span className="text-gray-900 font-medium">{formatPrice(item.price * item.quantity)}</span>
+                  </div>
+                ))}
+                
+                <div className="h-px bg-gray-200 my-2" />
+                
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Order Amount</span>
                   <span className="text-gray-900 font-medium">{formatPrice(subtotal)}</span>

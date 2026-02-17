@@ -9,6 +9,7 @@ import {
   updateProfile,
   GoogleAuthProvider,
   signInWithPopup,
+  sendEmailVerification,
 } from 'firebase/auth';
 import {
   doc,
@@ -23,11 +24,16 @@ export interface UserProfile {
   uid: string;
   email: string | null;
   username: string;
-  role: 'user' | 'admin';
+  role: 'user' | 'admin' | 'delivery';
   createdAt: Date;
   updatedAt: Date;
   phone?: string;
   avatar?: string;
+  // Delivery boy specific fields
+  name?: string;
+  vehicleType?: 'bike' | 'cycle' | 'van';
+  address?: string;
+  isActive?: boolean;
 }
 
 interface AuthContextType {
@@ -35,6 +41,7 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   isAdmin: boolean;
+  isDelivery: boolean;
   signup: (email: string, password: string, username: string) => Promise<void>;
   login: (email: string, password: string) => Promise<UserProfile>;
   loginWithGoogle: () => Promise<UserProfile>;
@@ -63,7 +70,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
       if (userDoc.exists()) {
-        return userDoc.data() as UserProfile;
+        const data = userDoc.data();
+        // Handle delivery boy profiles that might use 'name' instead of 'username'
+        return {
+          ...data,
+          uid: data.uid || uid,
+          username: data.username || data.name || data.email?.split('@')[0] || 'User',
+        } as UserProfile;
       }
       return null;
     } catch (error) {
@@ -75,12 +88,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Listen to auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser);
-      
       if (firebaseUser) {
-        const profile = await fetchUserProfile(firebaseUser.uid);
-        setUserProfile(profile);
+        // Reload user to get fresh emailVerified status
+        try {
+          await firebaseUser.reload();
+          // Get the updated user after reload
+          const updatedUser = auth.currentUser;
+          setUser(updatedUser);
+          
+          if (updatedUser) {
+            const profile = await fetchUserProfile(updatedUser.uid);
+            setUserProfile(profile);
+          }
+        } catch (error) {
+          console.error('Error reloading user:', error);
+          setUser(firebaseUser);
+          const profile = await fetchUserProfile(firebaseUser.uid);
+          setUserProfile(profile);
+        }
       } else {
+        setUser(null);
         setUserProfile(null);
       }
       
@@ -97,6 +124,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Update display name
     await updateProfile(userCredential.user, { displayName: username });
+
+    // Send email verification (non-blocking - don't fail signup if this fails)
+    try {
+      await sendEmailVerification(userCredential.user);
+    } catch (verificationError) {
+      console.error('Failed to send verification email:', verificationError);
+      // Continue with signup even if verification email fails
+    }
 
     // Create user document in Firestore
     const userProfileData: UserProfile = {
@@ -210,6 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userProfile,
     loading,
     isAdmin: userProfile?.role === 'admin',
+    isDelivery: userProfile?.role === 'delivery',
     signup,
     login,
     loginWithGoogle,

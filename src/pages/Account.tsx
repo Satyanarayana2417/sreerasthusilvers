@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
+import { auth } from '@/config/firebase';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
-import LoadingScreen from '@/components/LoadingScreen';
-import { subscribeToUserOrders, Order, updateOrderStatus } from '@/services/orderService';
+import { subscribeToUserOrders, Order, updateOrderStatus, cancelOrder, requestReturn } from '@/services/orderService';
 import {
   Loader2,
   User,
@@ -39,6 +39,9 @@ import {
   XCircle,
   ArrowLeft,
   Ban,
+  RotateCcw as ReturnIcon,
+  AlertCircle,
+  X,
 } from 'lucide-react';
 
 const Account = () => {
@@ -46,7 +49,11 @@ const Account = () => {
 
   // Loading state
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   // If user is not authenticated, show login form
@@ -59,7 +66,12 @@ const Account = () => {
 };
 
 // Login Form Component
+type LoginTab = 'user' | 'delivery';
+
 const LoginForm = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get('tab') as LoginTab | null;
+  const [activeTab, setActiveTab] = useState<LoginTab>(tabFromUrl === 'delivery' ? 'delivery' : 'user');
   const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,17 +86,56 @@ const LoginForm = () => {
   const { loginWithGoogle, login, signup, resetPassword } = useAuth();
   const navigate = useNavigate();
 
+  // Handle tab change
+  const handleTabChange = (tab: LoginTab) => {
+    setActiveTab(tab);
+    setIsSignUp(false);
+    setEmail('');
+    setPassword('');
+    setFullName('');
+    setError('');
+    setResetSent(false);
+    // Update URL to reflect tab change
+    if (tab === 'delivery') {
+      setSearchParams({ tab: 'delivery' });
+    } else {
+      setSearchParams({});
+    }
+  };
+
   const handleGoogleSignIn = async () => {
+    if (activeTab === 'delivery') {
+      setError('Google Sign-In is not available for delivery partners.');
+      return;
+    }
+    
     setError('');
     setGoogleLoading(true);
 
     try {
       const userProfile = await loginWithGoogle();
+      
+      // Check email verification for regular users
+      const currentUser = auth.currentUser;
+      if (currentUser && !currentUser.emailVerified && userProfile.role === 'user') {
+        sessionStorage.setItem('pendingVerificationEmail', currentUser.email || '');
+        navigate('/verify-email', { state: { email: currentUser.email }, replace: true });
+        // Don't reset loading - navigating away
+        return;
+      }
+      
       if (userProfile.role === 'admin') {
         navigate('/admin/dashboard');
+        // Don't reset loading - navigating away
+        return;
       }
+      
+      // For regular verified users, reset loading (will redirect via useEffect)
+      setGoogleLoading(false);
     } catch (err: any) {
       console.error('Google login error:', err);
+      setGoogleLoading(false);
+      
       if (err.code === 'auth/popup-closed-by-user') {
         setError('Sign-in popup was closed. Please try again.');
       } else if (err.code === 'auth/popup-blocked') {
@@ -100,8 +151,6 @@ const LoginForm = () => {
       } else {
         setError(`Failed to sign in with Google: ${err.message || 'Please try again.'}`);
       }
-    } finally {
-      setGoogleLoading(false);
     }
   };
 
@@ -129,15 +178,56 @@ const LoginForm = () => {
     try {
       if (isSignUp) {
         await signup(email, password, fullName);
-        navigate('/account');
+        // Navigate immediately to email verification page
+        sessionStorage.setItem('pendingVerificationEmail', email);
+        // Keep loading state active during navigation to prevent flash
+        navigate('/verify-email', { state: { email }, replace: true });
+        // Don't reset emailLoading - we're navigating away
+        return;
       } else {
         const userProfile = await login(email, password);
+        
+        // Handle delivery login
+        if (activeTab === 'delivery') {
+          if (userProfile.role !== 'delivery') {
+            setError('This login is for delivery partners only. Please use the User tab.');
+            setEmailLoading(false);
+            return;
+          }
+          navigate('/delivery/dashboard');
+          // Don't reset loading - navigating away
+          return;
+        }
+        
+        // Handle user login - check they're not delivery
+        if (userProfile.role === 'delivery') {
+          setError('Delivery partners should use the Delivery tab to login.');
+          setEmailLoading(false);
+          return;
+        }
+        
+        // Check email verification for regular users
+        const currentUser = auth.currentUser;
+        if (currentUser && !currentUser.emailVerified && userProfile.role === 'user') {
+          sessionStorage.setItem('pendingVerificationEmail', email);
+          navigate('/verify-email', { state: { email }, replace: true });
+          // Don't reset loading - navigating away
+          return;
+        }
+        
         if (userProfile.role === 'admin') {
           navigate('/admin/dashboard');
+          // Don't reset loading - navigating away
+          return;
         }
+        
+        // For regular verified users, reset loading and stay on page (will redirect via useEffect)
+        setEmailLoading(false);
       }
     } catch (err: any) {
       console.error('Email auth error:', err);
+      setEmailLoading(false);
+      
       if (err.code === 'auth/user-not-found') {
         setError('No account found with this email.');
       } else if (err.code === 'auth/wrong-password') {
@@ -153,8 +243,6 @@ const LoginForm = () => {
       } else {
         setError(err.message || 'Authentication failed. Please try again.');
       }
-    } finally {
-      setEmailLoading(false);
     }
   };
 
@@ -173,22 +261,77 @@ const LoginForm = () => {
   };
 
   return (
-    <>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 flex items-center justify-center">
-        <div className="w-full max-w-md mx-auto px-5 py-6">
+    <div className="min-h-screen flex flex-col lg:flex-row">
+      {/* Left Side - Blue Gradient (Hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 relative overflow-hidden" style={{ clipPath: 'polygon(0 0, 100% 0, 95% 20%, 100% 40%, 95% 60%, 100% 80%, 90% 100%, 0 100%)' }}>
+        {/* Decorative circles */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-white/10 rounded-full blur-xl" />
+        <div className="absolute bottom-40 right-10 w-48 h-48 bg-white/10 rounded-full blur-xl" />
+        <div className="absolute top-1/2 left-1/4 w-24 h-24 bg-white/5 rounded-full blur-lg" />
+        
+        {/* Content - Centered Image */}
+        <div className="relative z-10 flex flex-col items-center justify-center w-full p-8">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="bg-white rounded-3xl shadow-lg border border-gray-100 p-6 sm:p-8"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6 }}
+            className="w-full max-w-md"
           >
+            <img 
+              src="/login-image.png" 
+              alt="Login illustration" 
+              className="w-full h-auto object-contain"
+            />
+          </motion.div>
+        </div>
+      </div>
+
+      {/* Right Side - Login Form */}
+      <div className="w-full lg:w-1/2 flex items-start justify-center bg-gradient-to-br from-slate-50 to-gray-100 px-4 pt-6 pb-2 sm:py-8 lg:pt-8 lg:pb-12">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="w-full max-w-md"
+        >
+          {/* Form */}
+          <div className="p-6 sm:p-8 lg:pt-0">{/* Tabs */}
+            <div className="flex mb-6 bg-gray-100 rounded-full p-1">
+              <button
+                onClick={() => handleTabChange('user')}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full text-sm font-medium transition-all ${
+                  activeTab === 'user'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <User className="h-4 w-4" />
+                User
+              </button>
+              <button
+                onClick={() => handleTabChange('delivery')}
+                className={`flex-1 flex items-center justify-center gap-2 py-3 px-4 rounded-full text-sm font-medium transition-all ${
+                  activeTab === 'delivery'
+                    ? 'bg-white text-blue-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                <Truck className="h-4 w-4" />
+                Delivery
+              </button>
+            </div>
+
             {/* Header */}
             <div className="text-center mb-6">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-1">
-                {isSignUp ? 'Create Account' : 'Welcome Back'}
+              <h1 className="text-2xl font-semibold text-gray-900 mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                {activeTab === 'delivery' 
+                  ? 'Delivery Partner Login' 
+                  : (isSignUp ? 'Create Account' : 'Welcome Back')}
               </h1>
               <p className="text-gray-500 text-sm">
-                {isSignUp ? 'Sign up to get started' : 'Sign in to access your account'}
+                {activeTab === 'delivery'
+                  ? 'Please login to your account'
+                  : (isSignUp ? 'Sign up to get started' : 'Please login to your account')}
               </p>
             </div>
 
@@ -216,8 +359,8 @@ const LoginForm = () => {
 
             {/* Form */}
             <form onSubmit={handleEmailSignIn} className="space-y-4">
-              {/* Full Name - only for Sign Up */}
-              {isSignUp && (
+              {/* Full Name - only for Sign Up (User tab only) */}
+              {activeTab === 'user' && isSignUp && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
@@ -225,13 +368,13 @@ const LoginForm = () => {
                 >
                   <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                     <input
                       type="text"
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       placeholder="Full Name"
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                      className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50"
                     />
                   </div>
                 </motion.div>
@@ -239,43 +382,54 @@ const LoginForm = () => {
 
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50"
                   />
                 </div>
               </div>
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="block text-sm font-medium text-gray-700">Password</label>
+                  {!isSignUp && (
+                    <button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      className="text-xs text-blue-600 font-medium hover:underline"
+                    >
+                      Forgot password?
+                    </button>
+                  )}
+                </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
-                    className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all"
+                    className="w-full pl-11 pr-12 py-3 border border-gray-200 rounded-full text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all bg-gray-50"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
               </div>
 
-              {/* Terms Agreement */}
-              {isSignUp && (
+              {/* Terms Agreement - User tab sign up only */}
+              {activeTab === 'user' && isSignUp && (
                 <div className="flex items-start gap-2">
                   <input
                     type="checkbox"
@@ -293,82 +447,82 @@ const LoginForm = () => {
               <Button
                 type="submit"
                 disabled={emailLoading}
-                className="w-full py-3 h-12 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl text-sm transition-all"
+                className="w-full py-3 h-12 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-full text-sm transition-all shadow-lg shadow-blue-500/25"
               >
                 {emailLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                    {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                    {isSignUp ? 'Creating Account...' : 'Logging in...'}
                   </>
                 ) : (
-                  isSignUp ? 'Sign Up' : 'Sign In'
+                  isSignUp ? 'Sign Up' : 'Login'
                 )}
               </Button>
             </form>
 
-            {/* Forgot Password */}
-            {!isSignUp && (
-              <div className="text-center mt-3">
-                <span className="text-xs text-gray-500">Forgot Login Detail? </span>
+            {/* Divider - User tab only */}
+            {activeTab === 'user' && (
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-gray-200" />
+                <span className="text-xs text-gray-400 font-medium">Or Login with</span>
+                <div className="flex-1 h-px bg-gray-200" />
+              </div>
+            )}
+
+            {/* Social Sign In - User tab only */}
+            {activeTab === 'user' && (
+              <div className="grid grid-cols-1 gap-3">
+                {/* Google */}
                 <button
-                  onClick={handleForgotPassword}
-                  className="text-xs text-blue-600 font-medium hover:underline"
+                  type="button"
+                  onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
+                  className="flex items-center justify-center gap-3 py-3 border border-gray-200 rounded-full text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50 bg-white"
                 >
-                  Reset
+                  {googleLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+                      <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                      <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                      <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                    </svg>
+                  )}
+                  {googleLoading ? 'Signing In...' : 'Google'}
                 </button>
               </div>
             )}
 
-            {/* Divider */}
-            <div className="flex items-center gap-3 my-5">
-              <div className="flex-1 h-px bg-gray-200" />
-              <span className="text-xs text-gray-400 font-medium">OR</span>
-              <div className="flex-1 h-px bg-gray-200" />
-            </div>
+            {/* Toggle Sign In / Sign Up - User tab only */}
+            {activeTab === 'user' && (
+              <div className="text-center mt-6">
+                <span className="text-sm text-gray-500">
+                  {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
+                </span>
+                <button
+                  onClick={() => {
+                    setIsSignUp(!isSignUp);
+                    setError('');
+                    setResetSent(false);
+                  }}
+                  className="text-sm text-blue-600 font-semibold hover:underline"
+                >
+                  {isSignUp ? 'Sign In' : 'Sign up'}
+                </button>
+              </div>
+            )}
 
-            {/* Social Sign In */}
-            <div className="space-y-3">
-              {/* Google */}
-              <button
-                type="button"
-                onClick={handleGoogleSignIn}
-                disabled={googleLoading}
-                className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 transition-all disabled:opacity-50"
-              >
-                {googleLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                  </svg>
-                )}
-                {googleLoading ? 'Signing In...' : 'Sign in with Google'}
-              </button>
-            </div>
-
-            {/* Toggle Sign In / Sign Up */}
-            <div className="text-center mt-6">
-              <span className="text-sm text-gray-500">
-                {isSignUp ? 'Already have an account? ' : "Don't have an account? "}
-              </span>
-              <button
-                onClick={() => {
-                  setIsSignUp(!isSignUp);
-                  setError('');
-                  setResetSent(false);
-                }}
-                className="text-sm text-blue-600 font-semibold hover:underline"
-              >
-                {isSignUp ? 'Sign In' : 'Sign Up Now'}
-              </button>
-            </div>
-          </motion.div>
-        </div>
+            {/* Delivery Help Text */}
+            {activeTab === 'delivery' && (
+              <p className="text-center text-sm text-gray-500 mt-6">
+                Contact admin if you need your delivery account credentials.
+              </p>
+            )}
+          </div>
+        </motion.div>
       </div>
-    </>
+    </div>
   );
 };
 
@@ -383,6 +537,11 @@ const AccountPage = () => {
   const [ordersLoading, setOrdersLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [cancelReason, setCancelReason] = useState('');
+  const [returnReason, setReturnReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Subscribe to user orders
   useEffect(() => {
@@ -535,6 +694,12 @@ const AccountPage = () => {
         return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
       case 'cancelled':
         return 'bg-red-50 text-red-700 border border-red-200';
+      case 'returnRequested':
+        return 'bg-amber-50 text-amber-700 border border-amber-200';
+      case 'returnScheduled':
+        return 'bg-purple-50 text-purple-700 border border-purple-200';
+      case 'returned':
+        return 'bg-gray-50 text-gray-700 border border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border border-gray-200';
     }
@@ -555,6 +720,12 @@ const AccountPage = () => {
         return <CheckCircle2 className="w-4 h-4" />;
       case 'cancelled':
         return <XCircle className="w-4 h-4" />;
+      case 'returnRequested':
+        return <ReturnIcon className="w-4 h-4" />;
+      case 'returnScheduled':
+        return <ReturnIcon className="w-4 h-4" />;
+      case 'returned':
+        return <ReturnIcon className="w-4 h-4" />;
       default:
         return <Package className="w-4 h-4" />;
     }
@@ -575,6 +746,12 @@ const AccountPage = () => {
         return 'Delivered';
       case 'cancelled':
         return 'Cancelled';
+      case 'returnRequested':
+        return 'Return Requested';
+      case 'returnScheduled':
+        return 'Return Scheduled';
+      case 'returned':
+        return 'Returned';
       default:
         return status;
     }
@@ -602,6 +779,53 @@ const AccountPage = () => {
     if (method === 'card') return 'Card Payment';
     // Capitalize first letter of each word
     return method.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
+  };
+
+  // Check if order can be returned (within 7 days of delivery)
+  const canReturnOrder = (order: Order): boolean => {
+    if (order.status !== 'delivered' || !order.deliveredAt) return false;
+    
+    const deliveredDate = order.deliveredAt.toDate();
+    const now = new Date();
+    const hoursSinceDelivery = (now.getTime() - deliveredDate.getTime()) / (1000 * 60 * 60);
+    
+    return hoursSinceDelivery <= 168; // Within 7 days (168 hours)
+  };
+
+  // Handle cancel order
+  const handleCancelOrder = async () => {
+    if (!selectedOrder || !user || !cancelReason) return;
+    
+    setIsSubmitting(true);
+    try {
+      await cancelOrder(selectedOrder.id, user.uid, cancelReason);
+      setShowCancelModal(false);
+      setCancelReason('');
+      // Order will update via real-time subscription
+      alert('Order cancelled successfully');
+    } catch (error: any) {
+      alert(error.message || 'Failed to cancel order');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle request return
+  const handleRequestReturn = async () => {
+    if (!selectedOrder || !user || !returnReason) return;
+    
+    setIsSubmitting(true);
+    try {
+      await requestReturn(selectedOrder.id, user.uid, returnReason);
+      setShowReturnModal(false);
+      setReturnReason('');
+      // Order will update via real-time subscription
+      alert('Return request submitted successfully. Our team will review your request.');
+    } catch (error: any) {
+      alert(error.message || 'Failed to submit return request');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleMenuClick = (menu: any) => {
@@ -769,6 +993,16 @@ const AccountPage = () => {
                     {getStatusIcon(selectedOrder.status)}
                     {getStatusLabel(selectedOrder.status)}
                   </span>
+                  {/* Status message for return flow */}
+                  {selectedOrder.status === 'returnRequested' && (
+                    <p className="text-sm text-amber-700 mt-2">Return request submitted. Waiting for approval.</p>
+                  )}
+                  {selectedOrder.status === 'returnScheduled' && (
+                    <p className="text-sm text-emerald-700 mt-2">Return approved! Pickup will be scheduled soon.</p>
+                  )}
+                  {selectedOrder.status === 'returned' && (
+                    <p className="text-sm text-gray-600 mt-2">Item has been picked up and returned successfully.</p>
+                  )}
                 </div>
 
                 {/* Items Section */}
@@ -1040,6 +1274,15 @@ const AccountPage = () => {
                               </div>
                             </div>
                           )}
+
+                          {/* OTP Display for Out for Delivery Orders */}
+                          {order.status === 'outForDelivery' && order.delivery_otp && (
+                            <div className="mt-4 pt-4 border-t border-gray-200">
+                              <p className="text-sm font-semibold text-gray-900">Delivery OTP</p>
+                              <p className="text-xs text-gray-600 mt-1">Share this OTP with your delivery partner</p>
+                              <p className="text-base font-bold text-gray-900 mt-2">{order.delivery_otp}</p>
+                            </div>
+                          )}
                         </div>
                       ))
                     )}
@@ -1122,6 +1365,52 @@ const AccountPage = () => {
                     {getStatusLabel(selectedOrder.status)}
                   </span>
                 </div>
+
+                {/* Return Status Message */}
+                {(selectedOrder.status === 'returnRequested' || selectedOrder.status === 'returnScheduled' || selectedOrder.status === 'returned') && (
+                  <div className={`p-4 rounded-xl border ${
+                    selectedOrder.status === 'returnRequested' ? 'bg-amber-50 border-amber-200' :
+                    selectedOrder.status === 'returnScheduled' ? 'bg-emerald-50 border-emerald-200' :
+                    'bg-gray-50 border-gray-200'
+                  }`}>
+                    <div className="flex items-start gap-3">
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
+                        selectedOrder.status === 'returnRequested' ? 'bg-amber-100' :
+                        selectedOrder.status === 'returnScheduled' ? 'bg-emerald-100' :
+                        'bg-gray-100'
+                      }`}>
+                        <ReturnIcon className={`w-5 h-5 ${
+                          selectedOrder.status === 'returnRequested' ? 'text-amber-600' :
+                          selectedOrder.status === 'returnScheduled' ? 'text-emerald-600' :
+                          'text-gray-600'
+                        }`} />
+                      </div>
+                      <div>
+                        <h5 className={`font-semibold ${
+                          selectedOrder.status === 'returnRequested' ? 'text-amber-800' :
+                          selectedOrder.status === 'returnScheduled' ? 'text-emerald-800' :
+                          'text-gray-800'
+                        }`}>
+                          {selectedOrder.status === 'returnRequested' && 'Return Request Pending'}
+                          {selectedOrder.status === 'returnScheduled' && 'Return Approved'}
+                          {selectedOrder.status === 'returned' && 'Return Complete'}
+                        </h5>
+                        <p className={`text-sm mt-1 ${
+                          selectedOrder.status === 'returnRequested' ? 'text-amber-700' :
+                          selectedOrder.status === 'returnScheduled' ? 'text-emerald-700' :
+                          'text-gray-600'
+                        }`}>
+                          {selectedOrder.status === 'returnRequested' && 'Your return request is being reviewed by our team.'}
+                          {selectedOrder.status === 'returnScheduled' && 'Your return has been approved! Pickup will be scheduled soon.'}
+                          {selectedOrder.status === 'returned' && 'Your item has been picked up and returned successfully.'}
+                        </p>
+                        {selectedOrder.returnReason && (
+                          <p className="text-xs text-gray-500 mt-2">Reason: {selectedOrder.returnReason}</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 
                 {/* Tracking Information Section - Real-time updated */}
                 {(selectedOrder.trackingId || selectedOrder.carrier) && (
@@ -1165,6 +1454,15 @@ const AccountPage = () => {
                     </div>
                   </div>
                 )}
+
+                {/* OTP Delivery Verification - Shown when out for delivery */}
+                {selectedOrder.status === 'outForDelivery' && selectedOrder.delivery_otp && (
+                  <div className="py-3 border-b border-gray-200">
+                    <p className="text-sm font-semibold text-gray-900">Delivery OTP</p>
+                    <p className="text-xs text-gray-600 mt-1">Share this OTP with your delivery partner</p>
+                    <p className="text-base font-bold text-gray-900 mt-2">{selectedOrder.delivery_otp}</p>
+                  </div>
+                )}
                 
                 <div className="flex justify-between py-3 border-b border-gray-200">
                   <span className="text-gray-600 font-medium">Payment:</span>
@@ -1189,12 +1487,64 @@ const AccountPage = () => {
               </div>
 
               {/* Action Buttons */}
-              {selectedOrder.status !== 'delivered' && selectedOrder.status !== 'cancelled' && (
-                <div className="flex gap-3 pt-4 border-t border-gray-200">
-                  <button className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 flex items-center justify-center gap-2 hover:bg-gray-50 transition-colors">
-                    <Ban className="w-4 h-4" />
-                    Cancel Order
-                  </button>
+              <div className="pt-4 border-t border-gray-200">
+                {/* Cancel Order Button - Only for pending/processing orders */}
+                {(selectedOrder.status === 'pending' || selectedOrder.status === 'processing') && (
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setShowCancelModal(true)}
+                      className="flex-1 py-3 px-4 border-2 border-red-200 bg-red-50 rounded-lg text-sm font-semibold text-red-700 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
+                    >
+                      <Ban className="w-4 h-4" />
+                      Cancel Order
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const phoneNumber = '919819873745';
+                        const message = encodeURIComponent(
+                          `Hello! I need assistance regarding my order:\n\nOrder ID: ORD-${selectedOrder.orderId}\nProduct: ${selectedOrder.items[0]?.name}${selectedOrder.items.length > 1 ? ` +${selectedOrder.items.length - 1} more items` : ''}\nStatus: ${getStatusLabel(selectedOrder.status)}\n\nPlease help me with my product enquiry.`
+                        );
+                        window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                      }}
+                      className="flex-1 py-3 px-4 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Chat with us
+                    </button>
+                  </div>
+                )}
+
+                {/* Return Items Button - Only for delivered orders within 7 days */}
+                {canReturnOrder(selectedOrder) && (
+                  <div className="flex gap-3">
+                    <button 
+                      onClick={() => setShowReturnModal(true)}
+                      className="flex-1 py-3 px-4 border-2 border-emerald-200 bg-emerald-50 rounded-lg text-sm font-semibold text-emerald-700 flex items-center justify-center gap-2 hover:bg-emerald-100 transition-colors"
+                    >
+                      <ReturnIcon className="w-4 h-4" />
+                      Return Items
+                    </button>
+                    <button 
+                      onClick={() => {
+                        const phoneNumber = '919819873745';
+                        const message = encodeURIComponent(
+                          `Hello! I need assistance regarding my order:\n\nOrder ID: ORD-${selectedOrder.orderId}\nProduct: ${selectedOrder.items[0]?.name}${selectedOrder.items.length > 1 ? ` +${selectedOrder.items.length - 1} more items` : ''}\nStatus: ${getStatusLabel(selectedOrder.status)}\n\nPlease help me with my product enquiry.`
+                        );
+                        window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
+                      }}
+                      className="flex-1 py-3 px-4 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Chat with us
+                    </button>
+                  </div>
+                )}
+
+                {/* Chat Button - For other statuses where cancel/return not applicable */}
+                {selectedOrder.status !== 'pending' && 
+                 selectedOrder.status !== 'processing' && 
+                 !canReturnOrder(selectedOrder) &&
+                 selectedOrder.status !== 'cancelled' && (
                   <button 
                     onClick={() => {
                       const phoneNumber = '919819873745';
@@ -1203,13 +1553,13 @@ const AccountPage = () => {
                       );
                       window.open(`https://wa.me/${phoneNumber}?text=${message}`, '_blank');
                     }}
-                    className="flex-1 py-3 px-4 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
+                    className="w-full py-3 px-4 bg-blue-50 border border-blue-200 rounded-lg text-sm font-medium text-blue-700 flex items-center justify-center gap-2 hover:bg-blue-100 transition-colors"
                   >
                     <MessageCircle className="w-4 h-4" />
                     Chat with us
                   </button>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Track Package Button */}
               {selectedOrder.trackingUrl && (
@@ -1228,6 +1578,161 @@ const AccountPage = () => {
               )}
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Cancel Order</h3>
+              <button
+                onClick={() => setShowCancelModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">Order ID: <span className="font-semibold">ORD-{selectedOrder.orderId}</span></p>
+              <p className="text-sm text-gray-600 mb-4">Please select a reason for cancellation:</p>
+              
+              <div className="space-y-2">
+                {[
+                  'Changed my mind',
+                  'Ordered by mistake',
+                  'Found a better price',
+                  'Need to change delivery address',
+                  'Other reason'
+                ].map((reason) => (
+                  <button
+                    key={reason}
+                    onClick={() => setCancelReason(reason)}
+                    className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-colors ${
+                      cancelReason === reason
+                        ? 'border-red-500 bg-red-50 text-red-700'
+                        : 'border-gray-200 hover:border-red-200 hover:bg-red-50/50'
+                    }`}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowCancelModal(false);
+                  setCancelReason('');
+                }}
+                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleCancelOrder}
+                disabled={!cancelReason || isSubmitting}
+                className="flex-1 py-3 px-4 bg-red-600 text-white rounded-lg text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                ) : (
+                  'Confirm Cancellation'
+                )}
+              </button>
+            </div>
+
+            <p className="text-xs text-gray-500 mt-4 text-center">
+              <AlertCircle className="w-4 h-4 inline mr-1" />
+              This action cannot be undone
+            </p>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Return Request Modal */}
+      {showReturnModal && selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Request Return</h3>
+              <button
+                onClick={() => setShowReturnModal(false)}
+                className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-2">Order ID: <span className="font-semibold">ORD-{selectedOrder.orderId}</span></p>
+              <p className="text-sm text-gray-600 mb-4">Please select a reason for return:</p>
+              
+              <div className="space-y-2">
+                {[
+                  'Defective item',
+                  'Wrong size or fit',
+                  'Quality not as expected',
+                  'Received wrong product',
+                  'Product damaged during delivery',
+                  'Other reason'
+                ].map((reason) => (
+                  <button
+                    key={reason}
+                    onClick={() => setReturnReason(reason)}
+                    className={`w-full text-left px-4 py-3 rounded-lg border-2 transition-colors ${
+                      returnReason === reason
+                        ? 'border-emerald-500 bg-emerald-50 text-emerald-700'
+                        : 'border-gray-200 hover:border-emerald-200 hover:bg-emerald-50/50'
+                    }`}
+                  >
+                    {reason}
+                  </button>
+                ))}
+              </div>
+
+              <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="text-xs text-amber-800">
+                  <Clock className="w-4 h-4 inline mr-1" />
+                  Returns are accepted within 7 days of delivery. Our team will review your request within 24-48 hours.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowReturnModal(false);
+                  setReturnReason('');
+                }}
+                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Go Back
+              </button>
+              <button
+                onClick={handleRequestReturn}
+                disabled={!returnReason || isSubmitting}
+                className="flex-1 py-3 px-4 bg-emerald-600 text-white rounded-lg text-sm font-semibold hover:bg-emerald-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting ? (
+                  <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                ) : (
+                  'Submit Request'
+                )}
+              </button>
+            </div>
+          </motion.div>
         </div>
       )}
     </>

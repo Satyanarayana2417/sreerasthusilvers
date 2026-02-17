@@ -15,7 +15,12 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  ExternalLink
+  ExternalLink,
+  UserPlus,
+  Phone,
+  User,
+  RotateCcw as ReturnIcon,
+  AlertCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -27,8 +32,10 @@ import {
   updateOrderTracking,
   TrackingUpdate,
   deleteOrder,
-  getOrderStats
+  getOrderStats,
+  assignOrderToDeliveryBoy
 } from '@/services/orderService';
+import { subscribeToDeliveryBoys, DeliveryBoy } from '@/services/deliveryBoyService';
 import { toast } from 'sonner';
 
 const AdminOrders = () => {
@@ -58,6 +65,12 @@ const AdminOrders = () => {
     totalRevenue: 0,
   });
 
+  // Delivery Partner Assignment States
+  const [deliveryBoys, setDeliveryBoys] = useState<DeliveryBoy[]>([]);
+  const [showAssignDrawer, setShowAssignDrawer] = useState(false);
+  const [selectedDeliveryBoyId, setSelectedDeliveryBoyId] = useState('');
+  const [assigning, setAssigning] = useState(false);
+
   useEffect(() => {
     // Check if user is admin
     if (!user) {
@@ -83,6 +96,21 @@ const AdminOrders = () => {
 
     return () => unsubscribe();
   }, [user, navigate]);
+
+  // Subscribe to delivery boys
+  useEffect(() => {
+    const unsubscribe = subscribeToDeliveryBoys(
+      (boys) => {
+        // Only show active delivery boys
+        setDeliveryBoys(boys.filter(b => b.isActive));
+      },
+      (error) => {
+        console.error('Error fetching delivery boys:', error);
+      }
+    );
+
+    return () => unsubscribe();
+  }, []);
 
   const loadStats = async () => {
     try {
@@ -173,6 +201,60 @@ const AdminOrders = () => {
     }
   };
 
+  // Open assign partner drawer
+  const openAssignDrawer = (order: Order) => {
+    setSelectedOrder(order);
+    setSelectedDeliveryBoyId(order.delivery_boy_id || '');
+    setShowAssignDrawer(true);
+  };
+
+  // Handle assign partner
+  const handleAssignPartner = async () => {
+    if (!selectedOrder || !selectedDeliveryBoyId) {
+      toast.error('Please select a delivery partner');
+      return;
+    }
+
+    const selectedPartner = deliveryBoys.find(b => b.id === selectedDeliveryBoyId);
+    if (!selectedPartner) {
+      toast.error('Invalid delivery partner selected');
+      return;
+    }
+
+    setAssigning(true);
+    try {
+      await assignOrderToDeliveryBoy(
+        selectedOrder.id,
+        selectedDeliveryBoyId,
+        selectedPartner.name
+      );
+      
+      // Update order status to processing if it's pending
+      if (selectedOrder.status === 'pending') {
+        await updateOrderStatus(selectedOrder.id, 'processing');
+      }
+
+      toast.success(
+        <div className="flex items-center gap-2">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+          <div>
+            <p className="font-semibold">Partner Assigned Successfully</p>
+            <p className="text-sm text-gray-500">Order #{selectedOrder.orderId} → {selectedPartner.name}</p>
+          </div>
+        </div>,
+        { duration: 4000 }
+      );
+      
+      setShowAssignDrawer(false);
+      await loadStats();
+    } catch (error) {
+      console.error('Error assigning partner:', error);
+      toast.error('Failed to assign delivery partner');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
   const formatPrice = (price: number) => {
     return `₹${price.toFixed(2)}`;
   };
@@ -200,6 +282,12 @@ const AdminOrders = () => {
         return 'bg-emerald-50 text-emerald-700 border border-emerald-200';
       case 'cancelled':
         return 'bg-red-50 text-red-700 border border-red-200';
+      case 'returnRequested':
+        return 'bg-amber-50 text-amber-700 border border-amber-200';
+      case 'returnScheduled':
+        return 'bg-purple-50 text-purple-700 border border-purple-200';
+      case 'returned':
+        return 'bg-gray-50 text-gray-700 border border-gray-200';
       default:
         return 'bg-gray-50 text-gray-700 border border-gray-200';
     }
@@ -219,6 +307,12 @@ const AdminOrders = () => {
         return <CheckCircle2 className="w-4 h-4" />;
       case 'cancelled':
         return <XCircle className="w-4 h-4" />;
+      case 'returnRequested':
+        return <ReturnIcon className="w-4 h-4" />;
+      case 'returnScheduled':
+        return <ReturnIcon className="w-4 h-4" />;
+      case 'returned':
+        return <ReturnIcon className="w-4 h-4" />;
       default:
         return <Package className="w-4 h-4" />;
     }
@@ -238,6 +332,12 @@ const AdminOrders = () => {
         return 'Delivered';
       case 'cancelled':
         return 'Cancelled';
+      case 'returnRequested':
+        return 'Return Requested';
+      case 'returnScheduled':
+        return 'Return Scheduled';
+      case 'returned':
+        return 'Returned';
       default:
         return status;
     }
@@ -294,6 +394,9 @@ const AdminOrders = () => {
                 <option value="shipped">Shipped</option>
                 <option value="delivered">Delivered</option>
                 <option value="cancelled">Cancelled</option>
+                <option value="returnRequested">Return Requested</option>
+                <option value="returnScheduled">Return Scheduled</option>
+                <option value="returned">Returned</option>
               </select>
               <Filter className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               <ChevronDown className="absolute right-8 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -331,6 +434,9 @@ const AdminOrders = () => {
                     Status
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
+                    Delivery Partner
+                  </th>
+                  <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
                     Date
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-600">
@@ -344,7 +450,7 @@ const AdminOrders = () => {
               <tbody className="bg-white">
                 {filteredOrders.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-6 py-16 text-center">
+                    <td colSpan={8} className="px-6 py-16 text-center">
                       <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                       <p className="text-gray-500 text-lg">No orders found</p>
                     </td>
@@ -380,7 +486,22 @@ const AdminOrders = () => {
                           <option value="outForDelivery">Out for Delivery</option>
                           <option value="delivered">Delivered</option>
                           <option value="cancelled">Cancelled</option>
+                          <option value="returnRequested">Return Requested</option>
+                          <option value="returnScheduled">Return Scheduled</option>
+                          <option value="returned">Returned</option>
                         </select>
+                      </td>
+                      <td className="px-6 py-4">
+                        {order.delivery_boy_name ? (
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center text-purple-700 font-semibold text-xs">
+                              {order.delivery_boy_name.charAt(0).toUpperCase()}
+                            </div>
+                            <span className="text-sm font-medium text-gray-900">{order.delivery_boy_name}</span>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400 italic">Not assigned</span>
+                        )}
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-gray-600 whitespace-pre-line">
@@ -392,6 +513,20 @@ const AdminOrders = () => {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-2">
+                          <Button
+                            onClick={() => openAssignDrawer(order)}
+                            variant="outline"
+                            size="sm"
+                            disabled={order.status === 'delivered' || order.status === 'cancelled'}
+                            className={`text-sm ${
+                              order.delivery_boy_id 
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-700 hover:bg-emerald-100' 
+                                : 'bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100'
+                            } ${(order.status === 'delivered' || order.status === 'cancelled') ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            <UserPlus className="w-4 h-4 mr-1" />
+                            {order.delivery_boy_id ? 'Reassign' : 'Assign'}
+                          </Button>
                           <Button
                             onClick={() => openTrackingDrawer(order)}
                             variant="outline"
@@ -494,6 +629,87 @@ const AdminOrders = () => {
                   </div>
                 </div>
 
+                {/* Return Request Information - Show when return is requested */}
+                {(selectedOrder.status === 'returnRequested' || selectedOrder.returnReason) && (
+                  <div className="mb-6 bg-amber-50 border border-amber-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <ReturnIcon className="w-5 h-5 text-amber-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-amber-800 mb-1">Return Request</h3>
+                        <p className="text-sm text-amber-700 mb-2">
+                          <span className="font-medium">Reason:</span> {selectedOrder.returnReason || 'Not specified'}
+                        </p>
+                        {selectedOrder.returnRequestedAt && (
+                          <p className="text-xs text-amber-600">
+                            Requested on: {new Date(selectedOrder.returnRequestedAt.seconds * 1000).toLocaleDateString('en-IN', { 
+                              day: 'numeric', 
+                              month: 'short', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        )}
+                        {selectedOrder.status === 'returnRequested' && (
+                          <div className="mt-3 flex gap-2">
+                            <button
+                              onClick={() => {
+                                handleStatusChange(selectedOrder.id, 'returnScheduled');
+                                toast.success('Return request approved. Schedule pickup.');
+                              }}
+                              className="px-4 py-2 bg-emerald-600 text-white text-sm font-medium rounded-lg hover:bg-emerald-700 transition-colors"
+                            >
+                              Approve Return
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleStatusChange(selectedOrder.id, 'delivered');
+                                toast.info('Return request rejected. Order reverted to delivered.');
+                              }}
+                              className="px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded-lg border border-red-200 hover:bg-red-100 transition-colors"
+                            >
+                              Reject Return
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Cancellation Information - Show when order is cancelled */}
+                {selectedOrder.status === 'cancelled' && selectedOrder.cancellationReason && (
+                  <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <XCircle className="w-5 h-5 text-red-600" />
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-sm font-semibold text-red-800 mb-1">Order Cancelled</h3>
+                        <p className="text-sm text-red-700 mb-2">
+                          <span className="font-medium">Reason:</span> {selectedOrder.cancellationReason}
+                        </p>
+                        {selectedOrder.cancelledAt && (
+                          <p className="text-xs text-red-600">
+                            Cancelled on: {new Date(selectedOrder.cancelledAt.seconds * 1000).toLocaleDateString('en-IN', { 
+                              day: 'numeric', 
+                              month: 'short', 
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit'
+                            })}
+                          </p>
+                        )}
+                        <p className="text-xs text-red-600 mt-1">
+                          Cancelled by: {selectedOrder.cancelledBy === 'user' ? 'Customer' : 'Admin'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Status Update Section */}
                 <div className="space-y-5">
                   <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Update Tracking</h3>
@@ -513,6 +729,9 @@ const AdminOrders = () => {
                         <option value="outForDelivery">📍 Out for Delivery</option>
                         <option value="delivered">✅ Delivered</option>
                         <option value="cancelled">❌ Cancelled</option>
+                        <option value="returnRequested">🔄 Return Requested</option>
+                        <option value="returnScheduled">📦 Return Scheduled</option>
+                        <option value="returned">✔️ Returned</option>
                       </select>
                       <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
                     </div>
@@ -591,6 +810,184 @@ const AdminOrders = () => {
                       <>
                         <CheckCircle2 className="w-4 h-4 mr-2" />
                         Update Status
+                      </>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Assign Partner Slide-Over Drawer */}
+      <AnimatePresence>
+        {showAssignDrawer && selectedOrder && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={() => setShowAssignDrawer(false)}
+            />
+            
+            {/* Slide-over Drawer */}
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 30, stiffness: 300 }}
+              className="fixed right-0 top-0 h-full w-full max-w-lg bg-white shadow-2xl z-50 overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-purple-600 to-purple-500 px-6 py-5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                      <UserPlus className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h2 className="text-xl font-bold text-white">Assign Delivery Partner</h2>
+                      <p className="text-purple-100 text-sm">Order #{selectedOrder.orderId}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setShowAssignDrawer(false)}
+                    className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white hover:bg-white/30 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 overflow-y-auto h-[calc(100%-180px)]">
+                {/* Order Info Card */}
+                <div className="bg-gray-50 rounded-xl p-4 mb-6">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">Order Information</h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Customer</span>
+                      <span className="text-sm font-semibold text-gray-900">{selectedOrder.userName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Total Amount</span>
+                      <span className="text-sm font-semibold text-amber-600">₹{selectedOrder.total.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-sm text-gray-600">Items</span>
+                      <span className="text-sm font-semibold text-gray-900">{selectedOrder.items.length} items</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Shipping Address */}
+                <div className="bg-blue-50 rounded-xl p-4 mb-6">
+                  <h3 className="text-sm font-semibold text-blue-700 uppercase tracking-wider mb-2 flex items-center gap-2">
+                    <MapPin className="w-4 h-4" />
+                    Delivery Address
+                  </h3>
+                  <p className="text-sm text-blue-800 font-medium">{selectedOrder.shippingAddress.fullName}</p>
+                  <p className="text-sm text-blue-700">{selectedOrder.shippingAddress.address}</p>
+                  {selectedOrder.shippingAddress.locality && (
+                    <p className="text-sm text-blue-700">{selectedOrder.shippingAddress.locality}</p>
+                  )}
+                  <p className="text-sm text-blue-700">
+                    {selectedOrder.shippingAddress.city}, {selectedOrder.shippingAddress.state} - {selectedOrder.shippingAddress.pincode}
+                  </p>
+                  <p className="text-sm text-blue-700 mt-2 flex items-center gap-1">
+                    <Phone className="w-3 h-3" /> {selectedOrder.shippingAddress.mobile}
+                  </p>
+                </div>
+
+                {/* Current Assignment */}
+                {selectedOrder.delivery_boy_id && (
+                  <div className="bg-emerald-50 rounded-xl p-4 mb-6 border border-emerald-200">
+                    <h3 className="text-sm font-semibold text-emerald-700 uppercase tracking-wider mb-2">Currently Assigned</h3>
+                    <p className="text-sm font-semibold text-emerald-800">{selectedOrder.delivery_boy_name}</p>
+                  </div>
+                )}
+
+                {/* Delivery Partner Selection */}
+                <div className="mb-6">
+                  <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                    Select Delivery Partner
+                  </h3>
+                  
+                  {deliveryBoys.length === 0 ? (
+                    <div className="text-center py-8 bg-gray-50 rounded-xl">
+                      <User className="w-12 h-12 text-gray-300 mx-auto mb-2" />
+                      <p className="text-gray-500">No active delivery partners available</p>
+                      <p className="text-sm text-gray-400 mt-1">Add partners in Delivery Boys section</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      {deliveryBoys.map((partner) => (
+                        <div
+                          key={partner.id}
+                          onClick={() => setSelectedDeliveryBoyId(partner.id)}
+                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                            selectedDeliveryBoyId === partner.id
+                              ? 'border-purple-500 bg-purple-50'
+                              : 'border-gray-200 hover:border-purple-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-semibold ${
+                              selectedDeliveryBoyId === partner.id ? 'bg-purple-500' : 'bg-gray-400'
+                            }`}>
+                              {partner.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">{partner.name}</p>
+                              <div className="flex items-center gap-3 text-sm text-gray-500">
+                                <span className="flex items-center gap-1">
+                                  <Phone className="w-3 h-3" /> {partner.phone}
+                                </span>
+                                <span className="capitalize">🏍️ {partner.vehicleType}</span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-400">Current Orders</p>
+                              <p className="font-semibold text-gray-700">{partner.currentOrdersCount}</p>
+                            </div>
+                            {selectedDeliveryBoyId === partner.id && (
+                              <CheckCircle2 className="w-6 h-6 text-purple-500" />
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-4">
+                <div className="flex gap-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowAssignDrawer(false)}
+                    className="flex-1 h-12 border-gray-200"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleAssignPartner}
+                    disabled={assigning || !selectedDeliveryBoyId || deliveryBoys.length === 0}
+                    className="flex-1 h-12 bg-gradient-to-r from-purple-600 to-purple-500 hover:from-purple-700 hover:to-purple-600 text-white disabled:opacity-50"
+                  >
+                    {assigning ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Assigning...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-4 h-4 mr-2" />
+                        Confirm Assignment
                       </>
                     )}
                   </Button>

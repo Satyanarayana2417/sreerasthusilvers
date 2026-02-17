@@ -8,6 +8,7 @@ import { subscribeToProductsBySubcategory } from "@/services/productService";
 import { UIProduct, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
 import { Slider } from "@/components/ui/slider";
 import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/hooks/useWishlist";
 
 type SortOption = 'default' | 'price-low-high' | 'price-high-low' | 'newest' | 'best-rating';
 
@@ -20,8 +21,8 @@ interface Toast {
 
 const GoldRings = () => {
   const navigate = useNavigate();
-  const [wishlist, setWishlist] = useState<string[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const { toggleWishlist: toggleWishlistHook, isInWishlist } = useWishlist();
+  const { addToCart: addToCartContext } = useCart();
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [products, setProducts] = useState<UIProduct[]>([]);
@@ -110,24 +111,24 @@ const GoldRings = () => {
   const handleProductClick = (productId: string) => navigate(`/product/${productId}`);
 
   const toggleWishlist = (productId: string, productTitle: string) => {
-    setWishlist((prev) => {
-      const isInWishlist = prev.includes(productId);
-      showToast(isInWishlist ? 'Removed from wishlist' : 'Added to wishlist', isInWishlist ? 'info' : 'success', productTitle);
-      return isInWishlist ? prev.filter((id) => id !== productId) : [...prev, productId];
-    });
+    toggleWishlistHook(productId, productTitle);
+    const wasInWishlist = isInWishlist(productId);
+    showToast(wasInWishlist ? 'Removed from wishlist' : 'Added to wishlist', wasInWishlist ? 'info' : 'success', productTitle);
   };
 
-  const addToCart = (product: UIProduct) => {
-    setCart((prev) => {
-      const existingItem = prev.find((item) => item.product.id === product.id);
-      if (existingItem) {
-        showToast('Quantity updated in cart', 'success', product.title);
-        return prev.map((item) => item.product.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
-      } else {
-        showToast('Added to cart', 'success', product.title);
-        return [...prev, { product, quantity: 1 }];
-      }
-    });
+  const addToCart = async (product: UIProduct) => {
+    try {
+      await addToCartContext({
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        image: product.image,
+        category: 'Rings',
+      });
+      showToast('Added to cart', 'success', product.title);
+    } catch (error) {
+      showToast('Failed to add to cart', 'error', product.title);
+    }
   };
 
   return (
@@ -182,8 +183,8 @@ const GoldRings = () => {
                     </div>
                   </div>
 
-                  <div className="border border-border rounded-lg p-4">
-                    <h3 className="font-semibold text-base mb-4">Price Filter</h3>
+                  <div className="p-2">
+                    <h3 className="font-['Poppins'] font-semibold text-base mb-4">Price Filter</h3>
                     <div className="space-y-4">
                       <div className="pt-2 pb-4">
                         <Slider
@@ -238,8 +239,8 @@ const GoldRings = () => {
                   <div className="relative bg-muted rounded-xl overflow-hidden aspect-square mb-4">
                     <img src={product.image} alt={product.alt} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
                     <div className="absolute top-3 right-3 md:opacity-0 md:translate-y-2 md:group-hover:opacity-100 md:group-hover:translate-y-0 transition-all duration-300">
-                      <motion.button onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id, product.title); }} whileTap={{ scale: 0.9 }} className={`p-2 rounded-full transition-all duration-300 ${wishlist.includes(product.id) ? "text-red-500" : "text-white/90 hover:text-red-500"}`} style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
-                        <Heart className="w-5 h-5" fill={wishlist.includes(product.id) ? "currentColor" : "none"} strokeWidth={2} />
+                      <motion.button onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id, product.title); }} whileTap={{ scale: 0.9 }} className={`p-2 rounded-full transition-all duration-300 ${isInWishlist(product.id) ? "text-red-500" : "text-white/90 hover:text-red-500"}`} style={{ textShadow: '0 1px 3px rgba(0,0,0,0.3)', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.3))' }}>
+                        <Heart className="w-5 h-5" fill={isInWishlist(product.id) ? "currentColor" : "none"} strokeWidth={2} />
                       </motion.button>
                     </div>
                     <div className="hidden md:block absolute bottom-3 left-3 right-3 opacity-0 translate-y-4 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300">

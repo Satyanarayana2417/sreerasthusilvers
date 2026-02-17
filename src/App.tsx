@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 // Auth Provider
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -13,6 +13,7 @@ import ShoppingCart from "@/components/ShoppingCart";
 // Route Guards
 import ProtectedRoute from "@/guards/ProtectedRoute";
 import AdminRoute from "@/guards/AdminRoute";
+import DeliveryRoute from "@/guards/DeliveryRoute";
 
 // Public Pages
 import Index from "./pages/Index";
@@ -99,6 +100,7 @@ import LimitedEditionPieces from "./pages/LimitedEditionPieces";
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
+import VerifyEmail from "./pages/auth/VerifyEmail";
 
 // Admin Pages
 import AdminLogin from "./pages/admin/AdminLogin";
@@ -110,11 +112,24 @@ import Media from "./pages/admin/Media";
 import Settings from "./pages/admin/Settings";
 import AdminBanners from "./pages/AdminBanners";
 import AdminOrders from "./pages/AdminOrders";
+import AdminDeliveryBoys from "./pages/admin/AdminDeliveryBoys";
+
+// Delivery Partner Pages
+import DeliveryLogin from "./pages/delivery/DeliveryLogin";
+import DeliveryDashboard from "./pages/delivery/DeliveryDashboard";
 
 const queryClient = new QueryClient();
 
 const App = () => {
-  const [isLoaded, setIsLoaded] = useState(false);
+  // Check if the app has been loaded before in this session
+  const [isLoaded, setIsLoaded] = useState(() => {
+    return sessionStorage.getItem('appLoaded') === 'true';
+  });
+
+  const handleLoadingComplete = () => {
+    setIsLoaded(true);
+    sessionStorage.setItem('appLoaded', 'true');
+  };
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -123,7 +138,7 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
-            <LoadingScreen onComplete={() => setIsLoaded(true)} />
+            {!isLoaded && <LoadingScreen onComplete={handleLoadingComplete} />}
             <BrowserRouter>
               <ShoppingCart />
             <Routes>
@@ -229,8 +244,10 @@ const App = () => {
               <Route path="/login" element={<Account />} />
               <Route path="/auth/login" element={<Account />} />
               <Route path="/signup" element={<Signup />} />
+              <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/auth/signup" element={<Signup />} />
+              <Route path="/auth/verify-email" element={<VerifyEmail />} />
               <Route path="/auth/forgot-password" element={<ForgotPassword />} />
 
               {/* Admin Login (separate from admin panel) */}
@@ -250,10 +267,22 @@ const App = () => {
                 <Route path="products/new" element={<ProductForm />} />
                 <Route path="products/:productId" element={<ProductForm />} />
                 <Route path="orders" element={<AdminOrders />} />
+                <Route path="delivery-boys" element={<AdminDeliveryBoys />} />
                 <Route path="media" element={<Media />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="banners" element={<AdminBanners />} />
               </Route>
+
+              {/* Delivery Partner Routes */}
+              <Route path="/delivery" element={<Navigate to="/account?tab=delivery" replace />} />
+              <Route
+                path="/delivery/dashboard"
+                element={
+                  <DeliveryRoute>
+                    <DeliveryDashboard />
+                  </DeliveryRoute>
+                }
+              />
 
               {/* 404 Catch-all */}
               <Route path="*" element={<NotFound />} />

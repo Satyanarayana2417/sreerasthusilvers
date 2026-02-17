@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Eye, EyeOff, Loader2, Mail, Lock, User } from 'lucide-react';
+import { toast } from 'sonner';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -52,7 +53,11 @@ const Signup = () => {
 
     try {
       await signup(email, password, username);
-      navigate('/');
+      toast.success('Account created! Please verify your email.');
+      // Store email in sessionStorage for verification page
+      sessionStorage.setItem('pendingVerificationEmail', email);
+      // Navigate to verification page with email in state
+      navigate('/verify-email', { state: { email }, replace: true });
     } catch (err: any) {
       console.error('Signup error:', err);
       if (err.code === 'auth/email-already-in-use') {
@@ -222,6 +227,7 @@ const Signup = () => {
           </div>
         </div>
       </div>
+
       <Footer />
     </div>
   );
