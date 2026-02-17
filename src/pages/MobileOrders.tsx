@@ -51,6 +51,13 @@ const MobileOrders = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [returnReason, setReturnReason] = useState('');
   const [customReturnReason, setCustomReturnReason] = useState('');
+  const [returnStep, setReturnStep] = useState<'reason' | 'details'>('reason');
+  const [returnType, setReturnType] = useState<'refund' | 'replacement'>('refund');
+  const [paymentMethod, setPaymentMethod] = useState('original');
+  const [refundMode, setRefundMode] = useState<'upi' | 'bank'>('upi');
+  const [upiId, setUpiId] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [ifscCode, setIfscCode] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Subscribe to user orders
@@ -1452,9 +1459,20 @@ const MobileOrders = () => {
             <div className="flex items-center gap-3 px-4 py-4 border-b border-gray-100">
               <button
                 onClick={() => {
-                  setShowReturnModal(false);
-                  setReturnReason('');
-                  setCustomReturnReason('');
+                  if (returnStep === 'details') {
+                    setReturnStep('reason');
+                  } else {
+                    setShowReturnModal(false);
+                    setReturnReason('');
+                    setCustomReturnReason('');
+                    setReturnStep('reason');
+                    setReturnType('refund');
+                    setPaymentMethod('original');
+                    setRefundMode('upi');
+                    setUpiId('');
+                    setAccountNumber('');
+                    setIfscCode('');
+                  }
                 }}
                 className="w-8 h-8 flex items-center justify-center"
               >
@@ -1463,69 +1481,72 @@ const MobileOrders = () => {
               <h3 className="text-lg font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Request Return</h3>
             </div>
 
-            {/* Product Info */}
-            <div className="px-4 py-4 border-b border-gray-100">
-              <div className="flex gap-3">
-                <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                  <img 
-                    src={selectedOrder.items[0]?.image} 
-                    alt={selectedOrder.items[0]?.name}
-                    className="w-full h-full object-cover"
-                  />
+            {/* Return Reasons Grid - Step 1 */}
+            {returnStep === 'reason' && (
+              <>
+                <div className="flex-1 overflow-y-auto px-4 py-4">
+              
+              {/* Product Info */}
+              <div className="mb-4">
+                <div className="flex gap-3">
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                    <img 
+                      src={selectedOrder.items[0]?.image} 
+                      alt={selectedOrder.items[0]?.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-semibold text-gray-900 line-clamp-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      {selectedOrder.items[0]?.name}
+                    </h4>
+                    <p className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      Quantity: {selectedOrder.items[0]?.quantity}
+                    </p>
+                    <p className="text-base font-bold text-gray-900 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      ₹{selectedOrder.items[0]?.price?.toLocaleString()}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-semibold text-gray-900 line-clamp-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    {selectedOrder.items[0]?.name}
-                  </h4>
-                  <p className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    Quantity: {selectedOrder.items[0]?.quantity}
+                {selectedOrder.items.length > 1 && (
+                  <p className="text-xs text-gray-500 mt-2 text-center" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    +{selectedOrder.items.length - 1} more items will be included in this return
                   </p>
-                  <p className="text-base font-bold text-gray-900 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    ₹{selectedOrder.items[0]?.price?.toLocaleString()}
-                  </p>
-                </div>
+                )}
               </div>
-              {selectedOrder.items.length > 1 && (
-                <p className="text-xs text-gray-500 mt-2 text-center" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  +{selectedOrder.items.length - 1} more items will be included in this return
-                </p>
-              )}
-            </div>
 
-            {/* Return Reasons Grid */}
-            <div className="flex-1 overflow-y-auto px-4 py-4">
               <h4 className="text-base font-semibold text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>Reason for return</h4>
               
               <div className="grid grid-cols-2 gap-3">
                 {[
                   { 
                     reason: 'Quality not as expected', 
-                    icon: '😞',
+                    image: 'https://i.ibb.co/j9Yw9yfr/quality.png',
                     description: 'Quality of the product not as expected'
                   },
                   { 
                     reason: 'Received wrong item', 
-                    icon: '📦',
+                    image: 'https://i.ibb.co/fY5sWW7d/wrong-item.png',
                     description: 'Received wrong item'
                   },
                   { 
                     reason: "Don't want anymore", 
-                    icon: '🤔',
+                    image: 'https://i.ibb.co/yctV3krs/dont-want.png',
                     description: "Don't want the product anymore"
                   },
                   { 
                     reason: 'Missing in package', 
-                    icon: '📭',
+                    image: 'https://i.ibb.co/nMs7LwR6/missing.png',
                     description: 'Product is missing in the package'
                   },
                   { 
                     reason: 'Damaged/Broken item', 
-                    icon: '💔',
+                    image: 'https://i.ibb.co/zTgcmkVQ/damaged.png',
                     description: 'Received a broken/damaged item'
                   },
                   { 
                     reason: "Size/Fit issue", 
-                    icon: '👎',
+                    image: 'https://i.ibb.co/8njZJ7rv/size.png',
                     description: "Don't like the size/fit of the product"
                   },
                 ].map((item) => (
@@ -1537,13 +1558,13 @@ const MobileOrders = () => {
                     }}
                     className={`flex flex-col items-center p-4 rounded-xl border-2 transition-all ${
                       returnReason === item.reason
-                        ? 'border-amber-400 bg-amber-50'
+                        ? 'border-gray-900 bg-gray-50'
                         : 'border-gray-200 bg-white hover:border-gray-300'
                     }`}
                   >
-                    <span className="text-3xl mb-2">{item.icon}</span>
+                    <img src={item.image} alt={item.description} className="w-16 h-16 mb-2 object-contain" />
                     <span className={`text-xs text-center leading-tight ${
-                      returnReason === item.reason ? 'text-amber-700 font-medium' : 'text-gray-600'
+                      returnReason === item.reason ? 'text-gray-900 font-medium' : 'text-gray-600'
                     }`} style={{ fontFamily: "'Poppins', sans-serif" }}>
                       {item.description}
                     </span>
@@ -1556,13 +1577,13 @@ const MobileOrders = () => {
                 onClick={() => setReturnReason('Other reason')}
                 className={`w-full mt-3 p-4 rounded-xl border-2 transition-all flex items-center gap-3 ${
                   returnReason === 'Other reason'
-                    ? 'border-amber-400 bg-amber-50'
+                    ? 'border-gray-900 bg-gray-50'
                     : 'border-gray-200 bg-white hover:border-gray-300'
                 }`}
               >
                 <span className="text-2xl">✏️</span>
                 <span className={`text-sm ${
-                  returnReason === 'Other reason' ? 'text-amber-700 font-medium' : 'text-gray-600'
+                  returnReason === 'Other reason' ? 'text-gray-900 font-medium' : 'text-gray-600'
                 }`} style={{ fontFamily: "'Poppins', sans-serif" }}>
                   Other reason
                 </span>
@@ -1577,32 +1598,305 @@ const MobileOrders = () => {
                     placeholder="Please describe your reason for return..."
                     rows={4}
                     maxLength={200}
-                    className="w-full px-4 py-3 border-2 border-amber-300 rounded-xl focus:outline-none focus:border-amber-400 bg-amber-50 text-gray-900 placeholder-gray-500 resize-none"
+                    className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-gray-900 bg-gray-50 text-gray-900 placeholder-gray-500 resize-none"
                     style={{ fontFamily: "'Poppins', sans-serif" }}
                     autoFocus
                   />
-                  <p className="text-xs text-amber-700 mt-1 ml-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                  <p className="text-xs text-gray-700 mt-1 ml-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
                     {customReturnReason.length}/200 characters
                   </p>
                 </div>
               )}
             </div>
 
-            {/* Bottom Button */}
+            {/* Bottom Button - Step 1 */}
             <div className="px-4 py-4 border-t border-gray-100 bg-white">
               <button
-                onClick={handleRequestReturn}
-                disabled={!returnReason || (returnReason === 'Other reason' && !customReturnReason.trim()) || isSubmitting}
+                onClick={() => setReturnStep('details')}
+                disabled={!returnReason || (returnReason === 'Other reason' && !customReturnReason.trim())}
                 className={`w-full py-4 rounded-full font-semibold text-base transition-all ${
-                  !returnReason || (returnReason === 'Other reason' && !customReturnReason.trim()) || isSubmitting
+                  !returnReason || (returnReason === 'Other reason' && !customReturnReason.trim())
                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                     : 'bg-gray-900 text-white hover:bg-gray-800'
                 }`}
                 style={{ fontFamily: "'Poppins', sans-serif" }}
               >
-                {isSubmitting ? 'Submitting...' : 'Continue'}
+                Continue
               </button>
             </div>
+              </>
+            )}
+
+            {/* Return Details - Step 2 */}
+            {returnStep === 'details' && (
+              <>
+                {/* Scrollable Content */}
+                <div className="flex-1 overflow-y-auto">
+                  <div className="px-4 py-6 space-y-6">
+                    {/* Product Info */}
+                    <div>
+                      <div className="flex gap-3">
+                        <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                          <img 
+                            src={selectedOrder.items[0]?.image} 
+                            alt={selectedOrder.items[0]?.name}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-semibold text-gray-900 line-clamp-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            {selectedOrder.items[0]?.name}
+                          </h4>
+                          <p className="text-xs text-gray-500 mt-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            Quantity: {selectedOrder.items[0]?.quantity}
+                          </p>
+                          <p className="text-base font-bold text-gray-900 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            ₹{selectedOrder.items[0]?.price?.toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                      {selectedOrder.items.length > 1 && (
+                        <p className="text-xs text-gray-500 mt-2 text-center" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          +{selectedOrder.items.length - 1} more items will be included in this return
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="h-px bg-gray-200" />
+
+                    {/* What do you want in return? */}
+                    <div>
+                      <h4 className="text-base font-medium text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                        What do you want in return?
+                      </h4>
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="returnType"
+                            value="refund"
+                            checked={returnType === 'refund'}
+                            onChange={(e) => setReturnType(e.target.value as 'refund')}
+                            className="w-5 h-5 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            Refund
+                          </span>
+                        </label>
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="radio"
+                            name="returnType"
+                            value="replacement"
+                            checked={returnType === 'replacement'}
+                            onChange={(e) => setReturnType(e.target.value as 'replacement')}
+                            className="w-5 h-5 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            Replacement
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+
+                    <div className="h-px bg-gray-200" />
+
+                    {/* Refund Amount */}
+                    {returnType === 'refund' && (
+                      <>
+                        <div>
+                          <p className="text-sm text-gray-500 mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            Refund Amount:
+                          </p>
+                          <p className="text-xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            ₹{selectedOrder.total.toLocaleString()}
+                          </p>
+                        </div>
+
+                        <div className="h-px bg-gray-200" />
+
+                        {/* Payment Method */}
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            Refund Method
+                          </h4>
+                          <div className="space-y-3">
+                            <label
+                              className="flex items-start gap-3 p-4 rounded-lg border-2 border-blue-500 bg-blue-50"
+                            >
+                              <input
+                                type="radio"
+                                name="paymentMethod"
+                                value="original"
+                                checked={true}
+                                readOnly
+                                className="w-5 h-5 mt-0.5 text-blue-600 focus:ring-blue-500"
+                              />
+                              <div className="flex-1">
+                                <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                  Original Payment Mode
+                                </p>
+                                <p className="text-xs text-gray-600 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                  ⏰ Refund within 5-7 days of pick-up
+                                </p>
+                              </div>
+                            </label>
+                          </div>
+                        </div>
+
+                        <div className="h-px bg-gray-200" />
+
+                        {/* Payment Details */}
+                        <div>
+                          <h4 className="text-sm font-medium text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            Payment Details for Refund
+                          </h4>
+                          
+                          {/* Refund Mode Selection */}
+                          <div className="space-y-3 mb-4">
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="refundMode"
+                                value="upi"
+                                checked={refundMode === 'upi'}
+                                onChange={(e) => setRefundMode(e.target.value as 'upi')}
+                                className="w-5 h-5 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                UPI ID
+                              </span>
+                            </label>
+                            <label className="flex items-center gap-3 cursor-pointer">
+                              <input
+                                type="radio"
+                                name="refundMode"
+                                value="bank"
+                                checked={refundMode === 'bank'}
+                                onChange={(e) => setRefundMode(e.target.value as 'bank')}
+                                className="w-5 h-5 text-blue-600 focus:ring-blue-500"
+                              />
+                              <span className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                Bank Account
+                              </span>
+                            </label>
+                          </div>
+
+                          {/* UPI ID Field */}
+                          {refundMode === 'upi' && (
+                            <div className="space-y-2">
+                              <label className="text-xs font-medium text-gray-700" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                Enter UPI ID
+                              </label>
+                              <input
+                                type="text"
+                                value={upiId}
+                                onChange={(e) => setUpiId(e.target.value)}
+                                placeholder="example@upi"
+                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
+                                style={{ fontFamily: "'Poppins', sans-serif" }}
+                              />
+                            </div>
+                          )}
+
+                          {/* Bank Account Fields */}
+                          {refundMode === 'bank' && (
+                            <div className="space-y-3">
+                              <div>
+                                <label className="text-xs font-medium text-gray-700" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                  Bank Account Number
+                                </label>
+                                <input
+                                  type="text"
+                                  value={accountNumber}
+                                  onChange={(e) => setAccountNumber(e.target.value)}
+                                  placeholder="Enter account number"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm mt-2"
+                                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                                />
+                              </div>
+                              <div>
+                                <label className="text-xs font-medium text-gray-700" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                                  IFSC Code
+                                </label>
+                                <input
+                                  type="text"
+                                  value={ifscCode}
+                                  onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
+                                  placeholder="Enter IFSC code"
+                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm mt-2"
+                                  style={{ fontFamily: "'Poppins', sans-serif" }}
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Verify Button */}
+                          <button
+                            onClick={() => {
+                              if (refundMode === 'upi' && !upiId.trim()) {
+                                toast.error('Please enter UPI ID');
+                                return;
+                              }
+                              if (refundMode === 'bank' && (!accountNumber.trim() || !ifscCode.trim())) {
+                                toast.error('Please enter both account number and IFSC code');
+                                return;
+                              }
+                              toast.success('Payment details verified successfully!');
+                            }}
+                            className="w-full mt-4 py-3 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors"
+                            style={{ fontFamily: "'Poppins', sans-serif" }}
+                          >
+                            Verify
+                          </button>
+                        </div>
+
+                        <div className="h-px bg-gray-200" />
+                      </>
+                    )}
+
+                    {/* Pick up and delivery */}
+                    <div>
+                      <h4 className="text-sm font-medium text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                        Pick up and delivery
+                      </h4>
+                      <div className="p-4 bg-gray-50 rounded-lg">
+                        <p className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          {selectedOrder.shippingAddress?.fullName || 'N/A'}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          📱 {selectedOrder.shippingAddress?.mobile || 'N/A'}
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          {selectedOrder.shippingAddress?.address}, {selectedOrder.shippingAddress?.locality && `${selectedOrder.shippingAddress.locality}, `}{selectedOrder.shippingAddress?.city}, {selectedOrder.shippingAddress?.state} - {selectedOrder.shippingAddress?.pincode}
+                        </p>
+                        {selectedOrder.shippingAddress?.landmark && (
+                          <p className="text-xs text-gray-600 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            Landmark: {selectedOrder.shippingAddress.landmark}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Bottom Button - Step 2 */}
+                <div className="px-4 py-4 border-t border-gray-100 bg-white">
+                  <button
+                    onClick={handleRequestReturn}
+                    disabled={isSubmitting}
+                    className={`w-full py-4 rounded-full font-semibold text-base transition-all ${
+                      isSubmitting
+                        ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                        : 'bg-gray-900 text-white hover:bg-gray-800'
+                    }`}
+                    style={{ fontFamily: "'Poppins', sans-serif" }}
+                  >
+                    {isSubmitting ? 'Submitting...' : 'Continue'}
+                  </button>
+                </div>
+              </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
