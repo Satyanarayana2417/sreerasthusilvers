@@ -1,4 +1,5 @@
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
+import { Link } from "react-router-dom";
 import logo from "../assets/logo-new.png";
 
 const Footer = () => {
@@ -13,33 +14,81 @@ const Footer = () => {
               Timeless jewelry, ethically sourced. We believe in the power of jewelry — to tell a story, celebrate a moment.
             </p>
             <div className="flex gap-3">
-              {[Facebook, Instagram, Twitter].map((Icon, i) => (
-                <a key={i} href="#" className="p-2 rounded-full bg-foreground/10 hover:bg-primary hover:text-white transition-colors">
-                  <Icon className="w-4 h-4" />
-                </a>
-              ))}
+              <a 
+                href="https://www.facebook.com/sreerasthusilvers" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-foreground/10 hover:bg-primary hover:text-white transition-colors"
+              >
+                <Facebook className="w-4 h-4" />
+              </a>
+              <a 
+                href="https://www.instagram.com/sreerasthu_silvers/" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="p-2 rounded-full bg-foreground/10 hover:bg-primary hover:text-white transition-colors"
+              >
+                <Instagram className="w-4 h-4" />
+              </a>
             </div>
           </div>
 
-          {/* Links */}
-          {[
-            { title: "Shop Online", links: ["Rings", "Earrings", "Necklaces", "Bracelets"] },
-            { title: "Categories", links: ["Rings", "Accessories", "Earrings", "Gold Buckle", "Bracelets"] },
-            { title: "Information", links: ["Order Tracking", "Terms & Conditions", "Privacy Policy", "Tutorials", "FAQ"] },
-          ].map((col) => (
-            <div key={col.title}>
-              <h4 className="font-heading font-medium mb-4 text-foreground">{col.title}</h4>
-              <ul className="space-y-2">
-                {col.links.map((link) => (
-                  <li key={link}>
-                    <a href="#" className="text-sm text-muted-foreground hover:text-primary transition-colors">
-                      {link}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          {/* Shop Online */}
+          <div>
+            <h4 className="font-heading font-medium mb-4 text-foreground">Shop Online</h4>
+            <ul className="space-y-2">
+              {[
+                { name: "Rings", path: "/shop/rings" },
+                { name: "Earrings", path: "/shop/earrings" },
+                { name: "Necklaces", path: "/shop/necklaces" },
+                { name: "Bracelets", path: "/shop/bracelets" }
+              ].map((link) => (
+                <li key={link.name}>
+                  <Link to={link.path} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Categories */}
+          <div>
+            <h4 className="font-heading font-medium mb-4 text-foreground">Categories</h4>
+            <ul className="space-y-2">
+              {[
+                { name: "Jewelry", path: "/jewelry" },
+                { name: "Furniture", path: "/furniture" },
+                { name: "Articles", path: "/articles" },
+                { name: "Other Products", path: "/products" }
+              ].map((link) => (
+                <li key={link.name}>
+                  <Link to={link.path} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Information */}
+          <div>
+            <h4 className="font-heading font-medium mb-4 text-foreground">Information</h4>
+            <ul className="space-y-2">
+              {[
+                { name: "Privacy Policy", path: "/privacy-policy" },
+                { name: "Terms & Conditions", path: "/terms-conditions" },
+                { name: "Shipping Policy", path: "/shipping-policy" },
+                { name: "Cancellation & Refund", path: "/cancellation-refund-policy" }
+              ].map((link) => (
+                <li key={link.name}>
+                  <Link to={link.path} className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                    {link.name}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Contact */}
           <div>

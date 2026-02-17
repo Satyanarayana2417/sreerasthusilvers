@@ -27,6 +27,10 @@ import ShopEarrings from "./pages/ShopEarrings";
 import ProductDetail from "./pages/ProductDetail";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsConditions from "./pages/TermsConditions";
+import ShippingPolicy from "./pages/ShippingPolicy";
+import CancellationRefundPolicy from "./pages/CancellationRefundPolicy";
 import Wishlist from "./pages/Wishlist";
 import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
@@ -239,6 +243,12 @@ const App = () => {
               <Route path="/account/addresses" element={<SavedAddresses />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
+              
+              {/* Policy Pages */}
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/terms-conditions" element={<TermsConditions />} />
+              <Route path="/shipping-policy" element={<ShippingPolicy />} />
+              <Route path="/cancellation-refund-policy" element={<CancellationRefundPolicy />} />
               
               {/* Auth Routes - all point to Account page */}
               <Route path="/login" element={<Account />} />
