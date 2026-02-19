@@ -27,6 +27,7 @@ import ShopEarrings from "./pages/ShopEarrings";
 import ProductDetail from "./pages/ProductDetail";
 import Contact from "./pages/Contact";
 import About from "./pages/About";
+import CustomerSupport from "./pages/CustomerSupport";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsConditions from "./pages/TermsConditions";
 import ShippingPolicy from "./pages/ShippingPolicy";
@@ -243,6 +244,7 @@ const App = () => {
               <Route path="/account/addresses" element={<SavedAddresses />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
+              <Route path="/customer-support" element={<CustomerSupport />} />
               
               {/* Policy Pages */}
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />

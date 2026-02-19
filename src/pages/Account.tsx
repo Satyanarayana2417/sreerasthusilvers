@@ -295,7 +295,17 @@ const LoginForm = () => {
           className="w-full max-w-md"
         >
           {/* Form */}
-          <div className="p-6 sm:p-8 lg:pt-0">{/* Tabs */}
+          <div className="p-6 sm:p-8 lg:pt-0">
+            {/* Mobile Back Arrow */}
+            <button
+              onClick={() => navigate(-1)}
+              className="lg:hidden mb-4 flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+
+            {/* Tabs */}
             <div className="flex mb-6 bg-gray-100 rounded-full p-1">
               <button
                 onClick={() => handleTabChange('user')}
@@ -618,7 +628,7 @@ const AccountPage = () => {
     { id: 'payments', label: 'Payments', icon: CreditCard, path: null },
     { id: 'archived', label: 'Archived orders', icon: Package, path: null },
     { id: 'saved', label: 'Saved items', icon: Heart, path: '/wishlist' },
-    { id: 'support', label: 'Customer support', icon: MessageCircle, path: null },
+    { id: 'support', label: 'Customer support', icon: MessageCircle, path: '/customer-support' },
     { id: 'logout', label: 'Log out', icon: LogOut, path: null, action: 'logout' },
   ];
 
@@ -850,21 +860,24 @@ const AccountPage = () => {
               <div className="flex items-center justify-between mb-4">
                 {/* User Avatar and Name */}
                 <div className="flex items-center gap-3">
-                  {user?.photoURL ? (
+                  {user?.photoURL || userProfile?.avatar ? (
                     <img 
-                      src={user.photoURL} 
+                      key={user?.photoURL || userProfile?.avatar}
+                      src={user.photoURL || userProfile?.avatar} 
                       alt="Profile" 
                       className="w-10 h-10 rounded-full object-cover border border-black"
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-r from-teal-400 to-teal-600 flex items-center justify-center">
-                      <User className="w-5 h-5 text-white" />
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black">
+                      <span className="text-white font-semibold text-sm">
+                        {(userProfile?.name || userProfile?.username || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
+                      </span>
                     </div>
                   )}
                   <div className="flex items-center gap-1">
                     <span className="text-sm font-medium text-gray-900">
-                      Hello, {(userProfile?.username || user?.email?.split('@')[0] || 'User').slice(0, 12)}...
+                      Hello, {(userProfile?.name || userProfile?.username || user?.email?.split('@')[0] || 'User').slice(0, 12)}...
                     </span>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
                   </div>

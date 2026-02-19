@@ -6,7 +6,7 @@ import logo from "../assets/logo-new.png";
 
 const MobileHeader = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -47,18 +47,22 @@ const MobileHeader = () => {
         <button 
           className="p-1 hover:bg-gray-100 rounded-full transition-colors"
           onClick={() => navigate('/account')}
-        >
-          {user?.photoURL ? (
-            <img 
-              src={user.photoURL} 
-              alt="Profile" 
-              className="w-9 h-9 rounded-full object-cover border border-black"
-              referrerPolicy="no-referrer"
-            />
-          ) : user ? (
-            <div className="w-9 h-9 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-              <User className="w-5 h-5 text-white" />
-            </div>
+        >          {user ? (
+            user.photoURL || userProfile?.avatar ? (
+              <img 
+                key={user.photoURL || userProfile?.avatar}
+                src={user.photoURL || userProfile?.avatar} 
+                alt="Profile" 
+                className="w-9 h-9 rounded-full object-cover border border-black"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black">
+                <span className="text-white font-semibold text-sm">
+                  {(userProfile?.name || userProfile?.username || 'U').charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )
           ) : (
             <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
               <User className="w-5 h-5 text-gray-600" />

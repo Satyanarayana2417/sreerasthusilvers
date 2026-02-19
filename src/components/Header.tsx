@@ -372,13 +372,22 @@ const Header = () => {
                 className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors group"
                 aria-label="Account"
               >
-                {user?.photoURL ? (
-                  <img 
-                    src={user.photoURL} 
-                    alt="Profile" 
-                    className="w-6 h-6 rounded-full object-cover border border-black"
-                    referrerPolicy="no-referrer"
-                  />
+                {user ? (
+                  user.photoURL || userProfile?.avatar ? (
+                    <img 
+                      key={user.photoURL || userProfile?.avatar}
+                      src={user.photoURL || userProfile?.avatar} 
+                      alt="Profile" 
+                      className="w-6 h-6 rounded-full object-cover border border-black"
+                      referrerPolicy="no-referrer"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black">
+                      <span className="text-white font-semibold text-xs">
+                        {(userProfile?.name || userProfile?.username || 'U').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  )
                 ) : (
                   <User className="w-5 h-5 text-gray-700 group-hover:text-blue-600" />
                 )}

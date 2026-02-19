@@ -53,7 +53,7 @@ const CategoryShowcase = () => {
             transition={{ duration: 0.5, delay: index * 0.1 }}
           >
             {/* Background Image */}
-            <div className="aspect-[3/4] relative">
+            <div className="aspect-[4/5] relative">
               <img
                 src={category.image}
                 alt={category.title}
@@ -64,29 +64,29 @@ const CategoryShowcase = () => {
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/20 to-transparent transition-all duration-300 group-hover:from-black/70 group-hover:via-black/40" />
               
               {/* Content */}
-              <div className="absolute inset-0 flex flex-col justify-end items-center p-6 text-white text-center">
+              <div className="absolute inset-0 flex flex-col justify-end items-center p-4 text-white text-center">
                 {/* Title - always visible at bottom */}
                 <h3 
-                  className="text-xl md:text-2xl font-medium mb-1 transition-all duration-300"
+                  className="text-base md:text-xl font-medium mb-1 transition-all duration-300"
                   style={{ fontFamily: "'Poppins', sans-serif" }}
                 >
                   {category.title}
                 </h3>
                 
                 {/* Subtitle/Product name - always visible */}
-                <p className="text-xs uppercase tracking-[0.2em] text-white/80 mb-0 transition-all duration-300 group-hover:mb-3">
+                <p className="text-xs uppercase tracking-[0.2em] text-white/80 mb-0 transition-all duration-300 group-hover:mb-2">
                   {category.subtitle}
                 </p>
                 
                 {/* Description - hidden by default, visible on hover */}
-                <p className="text-sm text-white/80 leading-relaxed max-h-0 overflow-hidden opacity-0 transition-all duration-300 group-hover:max-h-20 group-hover:opacity-100 group-hover:mb-4">
+                <p className="text-xs text-white/80 leading-relaxed max-h-0 overflow-hidden opacity-0 transition-all duration-300 group-hover:max-h-16 group-hover:opacity-100 group-hover:mb-3">
                   {category.description}
                 </p>
                 
                 {/* CTA - hidden by default, visible on hover */}
                 <a 
                   href="#" 
-                  className="inline-block text-sm font-medium border-b border-white pb-1 hover:border-primary hover:text-primary max-h-0 overflow-hidden opacity-0 transition-all duration-300 group-hover:max-h-10 group-hover:opacity-100"
+                  className="inline-block text-xs font-medium border-b border-white pb-1 hover:border-primary hover:text-primary max-h-0 overflow-hidden opacity-0 transition-all duration-300 group-hover:max-h-10 group-hover:opacity-100"
                 >
                   {category.cta}
                 </a>

@@ -11,12 +11,11 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { Eye, EyeOff, Loader2, Mail, Lock, User, Truck, X, RefreshCw, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Loader2, Mail, Lock, User, Truck, X, RefreshCw, CheckCircle, ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import { sendEmailVerification } from 'firebase/auth';
 import { auth } from '@/config/firebase';
 import Header from '@/components/Header';
-import Footer from '@/components/Footer';
 
 type LoginTab = 'user' | 'delivery';
 
@@ -301,9 +300,18 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <Header />
-      <div className="flex items-center justify-center py-20 px-4">
+      <div className="flex items-center justify-center py-8 md:py-20 px-4">
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl p-8">
+          <div className="bg-white rounded-2xl shadow-xl p-8 relative">
+            {/* Mobile Back Arrow */}
+            <button
+              onClick={() => navigate(-1)}
+              className="mb-4 flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors lg:hidden"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+
             {/* Tabs */}
             <div className="flex mb-6 bg-gray-100 rounded-xl p-1">
               <button
@@ -574,8 +582,6 @@ const Login = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      <Footer />
     </div>
   );
 };

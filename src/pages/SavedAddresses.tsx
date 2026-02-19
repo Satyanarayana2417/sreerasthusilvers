@@ -28,6 +28,7 @@ import {
   X,
   Home,
   Loader2,
+  MoreVertical,
 } from 'lucide-react';
 
 const SavedAddresses = () => {
@@ -38,6 +39,7 @@ const SavedAddresses = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingAddress, setEditingAddress] = useState<Address | null>(null);
   const [formLoading, setFormLoading] = useState(false);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState<AddressFormData>({
@@ -57,6 +59,21 @@ const SavedAddresses = () => {
       loadAddresses();
     }
   }, [user]);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.menu-container')) {
+        setOpenMenuId(null);
+      }
+    };
+
+    if (openMenuId) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [openMenuId]);
 
   const loadAddresses = async () => {
     if (!user) return;
@@ -202,41 +219,38 @@ const SavedAddresses = () => {
 
   return (
     <>
-      <div className="min-h-screen pt-4 bg-gray-50" style={{ fontFamily: "'Poppins', sans-serif" }}>
-        <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="min-h-screen bg-gray-50" style={{ fontFamily: "'Poppins', sans-serif" }}>
+        <div className="container mx-auto px-4 py-4 max-w-4xl pb-24">
           {/* Header */}
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-6">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => navigate('/account')}
+                onClick={() => {
+                  if (showForm) {
+                    resetForm();
+                  } else {
+                    navigate('/account');
+                  }
+                }}
                 className="p-2 hover:bg-gray-200 rounded-full transition-colors"
               >
                 <ArrowLeft className="w-6 h-6 text-gray-700" />
               </button>
               <div>
-                <h1 className="text-lg font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Saved Addresses</h1>
-                <p className="text-xs text-gray-600 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>Manage your delivery addresses</p>
+                <h1 className="text-lg font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Addresses</h1>
               </div>
             </div>
-          </div>
-
-          {/* Add New Address Button */}
-          {!showForm && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-6"
-            >
-              <Button
+            {!showForm && (
+              <button
                 onClick={() => setShowForm(true)}
-                className="w-full md:w-auto bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-sm px-6 py-3 rounded-xl shadow-lg"
+                className="flex items-center gap-2 border-2 border-blue-600 bg-transparent hover:bg-blue-50 text-blue-600 text-sm px-4 py-2 rounded-full transition-colors font-medium"
                 style={{ fontFamily: "'Poppins', sans-serif" }}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Add New Address
-              </Button>
-            </motion.div>
-          )}
+                <Plus className="w-4 h-4" />
+                Add
+              </button>
+            )}
+          </div>
 
           {/* Address Form */}
           <AnimatePresence>
@@ -428,92 +442,108 @@ const SavedAddresses = () => {
           </AnimatePresence>
 
           {/* Address List */}
-          <div className="space-y-4">
-            {addresses.length === 0 ? (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-white rounded-2xl shadow-sm p-12 text-center"
-              >
-                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
-                  <MapPin className="w-10 h-10 text-gray-400" />
-                </div>
-                <h3 className="text-sm font-semibold text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>No addresses saved</h3>
-                <p className="text-xs text-gray-600" style={{ fontFamily: "'Poppins', sans-serif" }}>Add your first delivery address to get started</p>
-              </motion.div>
-            ) : (
-              addresses.map((address, index) => (
+          {!showForm && (
+            <div className="space-y-3">
+              {addresses.length === 0 ? (
                 <motion.div
-                  key={address.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className={`bg-white rounded-2xl shadow-sm p-6 ${
-                    address.isDefault ? 'ring-2 ring-blue-500' : ''
-                  }`}
+                  className="bg-white rounded-xl shadow-sm p-12 text-center"
                 >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Home className="w-4 h-4 text-blue-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900 text-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                            {address.fullName}
-                          </h3>
-                          {address.isDefault && (
-                            <span className="inline-block px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full font-medium" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                              Default
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      <div className="ml-13 space-y-1 text-gray-700 text-xs" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                        <p>{address.address}</p>
-                        {address.locality && <p>{address.locality}</p>}
-                        <p>
-                          {address.city}, {address.state} - {address.pinCode}
-                        </p>
-                        <div className="flex items-center space-x-2 pt-2">
-                          <Phone className="w-3 h-3 text-gray-500" />
-                          <span className="text-gray-600">{address.phoneNumber}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="flex flex-col space-y-2 ml-4">
-                      <button
-                        onClick={() => handleEdit(address)}
-                        className="p-2 hover:bg-blue-50 text-blue-600 rounded-lg transition-colors"
-                        title="Edit"
-                      >
-                        <Edit2 className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(address.id)}
-                        className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors"
-                        title="Delete"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                      {!address.isDefault && (
-                        <button
-                          onClick={() => handleSetDefault(address.id)}
-                          className="p-2 hover:bg-green-50 text-green-600 rounded-lg transition-colors"
-                          title="Set as default"
-                        >
-                          <Check className="w-5 h-5" />
-                        </button>
-                      )}
-                    </div>
+                  <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                    <MapPin className="w-10 h-10 text-gray-400" />
                   </div>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>No addresses saved</h3>
+                  <p className="text-xs text-gray-600" style={{ fontFamily: "'Poppins', sans-serif" }}>Add your first delivery address</p>
                 </motion.div>
-              ))
-            )}
-          </div>
+              ) : (
+                addresses.map((address, index) => (
+                  <motion.div
+                    key={address.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="bg-white rounded-xl shadow-sm p-4 relative"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 pr-8">
+                        <h3 className="font-semibold text-gray-900 text-base mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          {address.fullName}
+                        </h3>
+                        <div className="space-y-0.5 text-gray-600 text-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          <p>{address.address}</p>
+                          {address.locality && <p>{address.locality}</p>}
+                          <p>{address.city}, {address.state} - {address.pinCode}</p>
+                          <p className="pt-1">{address.phoneNumber}</p>
+                        </div>
+                        {address.isDefault && (
+                          <span className="inline-block mt-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded font-medium" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                            ✓ Default
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Three-dot Menu */}
+                      <div className="relative menu-container">
+                        <button
+                          onClick={() => setOpenMenuId(openMenuId === address.id ? null : address.id)}
+                          className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                        >
+                          <MoreVertical className="w-5 h-5 text-gray-600" />
+                        </button>
+
+                        {/* Dropdown Menu */}
+                        {openMenuId === address.id && (
+                          <motion.div
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="absolute right-0 top-10 bg-white rounded-lg shadow-lg border border-gray-200 py-1 w-40 z-10"
+                          >
+                            <button
+                              onClick={() => {
+                                handleEdit(address);
+                                setOpenMenuId(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                              style={{ fontFamily: "'Poppins', sans-serif" }}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => {
+                                handleDelete(address.id);
+                                setOpenMenuId(null);
+                              }}
+                              className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+                              style={{ fontFamily: "'Poppins', sans-serif" }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              Delete
+                            </button>
+                            {!address.isDefault && (
+                              <button
+                                onClick={() => {
+                                  handleSetDefault(address.id);
+                                  setOpenMenuId(null);
+                                }}
+                                className="w-full text-left px-4 py-2 text-sm text-green-600 hover:bg-green-50 flex items-center gap-2 border-t border-gray-100"
+                                style={{ fontFamily: "'Poppins', sans-serif" }}
+                              >
+                                <Check className="w-4 h-4" />
+                                Set as Default
+                              </button>
+                            )}
+                          </motion.div>
+                        )}
+                      </div>
+                    </div>
+                  </motion.div>
+                ))
+              )}
+            </div>
+          )}
         </div>
       </div>
       <MobileBottomNav />
