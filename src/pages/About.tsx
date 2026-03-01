@@ -297,32 +297,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <section className="py-20 px-4 bg-gray-50">
-        <div className="container mx-auto max-w-2xl text-center">
-          <h2 className="text-4xl font-light mb-4">Subscribe to Our Newsletter</h2>
-          <p className="text-gray-600 mb-8">
-            Sign up to our newsletter for information on sales, delightful content
-            and new additions to the collection.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
-            <Input
-              type="email"
-              placeholder="Enter your email..."
-              className="max-w-md bg-white"
-            />
-            <Button className="bg-black text-white hover:bg-gray-800 px-8">
-              Subscribe
-            </Button>
-          </div>
-          <div className="flex items-center justify-center gap-2 text-sm text-gray-600">
-            <Checkbox id="privacy" />
-            <label htmlFor="privacy" className="cursor-pointer">
-              I agree to the Privacy Policy.
-            </label>
-          </div>
-        </div>
-      </section>
       <Footer />
     </div>
   );

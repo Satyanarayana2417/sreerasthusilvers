@@ -12,7 +12,7 @@ const FreeShippingBand = () => {
   const duplicatedPhrases = [...phrases, ...phrases, ...phrases];
 
   return (
-    <section className="py-4 bg-white border-y border-border/30 overflow-hidden">
+    <section className="hidden md:block py-4 bg-white border-y border-border/30 overflow-hidden">
       <div className="relative">
         <motion.div
           className="flex items-center gap-12 whitespace-nowrap"

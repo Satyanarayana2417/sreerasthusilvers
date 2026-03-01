@@ -38,6 +38,7 @@ import Profile from "./pages/Profile";
 import Account from "./pages/Account";
 import SavedAddresses from "./pages/SavedAddresses";
 import LoadingScreen from "./components/LoadingScreen";
+import ScrollToTop from "./components/ScrollToTop";
 import MobileCart from "./pages/MobileCart";
 import MobileOrders from "./pages/MobileOrders";
 import MobileCategories from "./pages/MobileCategories";
@@ -116,6 +117,9 @@ import ProductForm from "./pages/admin/ProductForm";
 import Media from "./pages/admin/Media";
 import Settings from "./pages/admin/Settings";
 import AdminBanners from "./pages/AdminBanners";
+import AdminShowcases from "./pages/admin/AdminShowcases";
+import AdminTestimonials from "./pages/admin/AdminTestimonials";
+import AdminGallery from "./pages/admin/AdminGallery";
 import AdminOrders from "./pages/AdminOrders";
 import AdminDeliveryBoys from "./pages/admin/AdminDeliveryBoys";
 
@@ -145,6 +149,7 @@ const App = () => {
             <Sonner />
             {!isLoaded && <LoadingScreen onComplete={handleLoadingComplete} />}
             <BrowserRouter>
+              <ScrollToTop />
               <ShoppingCart />
             <Routes>
               {/* Public Routes */}
@@ -283,6 +288,9 @@ const App = () => {
                 <Route path="media" element={<Media />} />
                 <Route path="settings" element={<Settings />} />
                 <Route path="banners" element={<AdminBanners />} />
+                <Route path="showcases" element={<AdminShowcases />} />
+                <Route path="testimonials" element={<AdminTestimonials />} />
+                <Route path="gallery" element={<AdminGallery />} />
               </Route>
 
               {/* Delivery Partner Routes */}

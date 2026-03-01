@@ -1,22 +1,35 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Plus } from "lucide-react";
-import ring1 from "@/assets/products/ring-1.jpg";
-import ring2 from "@/assets/products/ring-2.jpg";
-import ring3 from "@/assets/products/ring-3.jpg";
-import necklace1 from "@/assets/products/necklace-1.jpg";
-import earrings1 from "@/assets/products/earrings-1.jpg";
-import band1 from "@/assets/products/band-1.jpg";
-
-const images = [
-  { id: 1, src: ring1, alt: "Heart pendant necklace" },
-  { id: 2, src: ring2, alt: "Gold chain bracelet" },
-  { id: 3, src: ring3, alt: "Wedding rings" },
-  { id: 4, src: necklace1, alt: "Flower pendant" },
-  { id: 5, src: earrings1, alt: "Gold earrings" },
-  { id: 6, src: band1, alt: "Designer earrings" },
-];
+import { Plus, Loader2 } from "lucide-react";
+import { subscribeToGalleryImages, GalleryImage } from "@/services/galleryService";
 
 const InstagramGallery = () => {
+  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToGalleryImages((galleryImages) => {
+      setImages(galleryImages);
+      setLoading(false);
+    }, true); // Only show active images
+
+    return () => unsubscribe();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="pt-4 pb-8 bg-white">
+        <div className="container-custom flex justify-center items-center py-12">
+          <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+        </div>
+      </section>
+    );
+  }
+
+  if (images.length === 0) {
+    return null; // Don't show the section if no images
+  }
+
   return (
     <section className="pt-4 pb-8 bg-white">
       <div className="container-custom">
@@ -31,7 +44,7 @@ const InstagramGallery = () => {
               className="group relative aspect-square rounded-xl overflow-hidden cursor-pointer"
             >
               <img
-                src={image.src}
+                src={image.imageUrl}
                 alt={image.alt}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
               />

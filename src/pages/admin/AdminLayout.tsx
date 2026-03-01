@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Layers,
   Truck,
+  MessageSquare,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -39,6 +40,9 @@ const AdminLayout = () => {
     { path: '/admin/orders', icon: ShoppingCart, label: 'Orders' },
     { path: '/admin/delivery-boys', icon: Truck, label: 'Delivery Boys' },
     { path: '/admin/banners', icon: Layers, label: 'Banners' },
+    { path: '/admin/showcases', icon: Layers, label: 'Showcases' },
+    { path: '/admin/testimonials', icon: MessageSquare, label: 'Testimonials' },
+    { path: '/admin/gallery', icon: Image, label: 'Gallery' },
     { path: '/admin/media', icon: Image, label: 'Media' },
     { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
@@ -61,12 +65,12 @@ const AdminLayout = () => {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 z-50 h-full w-64 bg-[#FFFBF5] border-r border-[#F5EFE6] transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`fixed top-0 left-0 z-50 h-full w-64 bg-[#FFFBF5] border-r border-[#F5EFE6] transform transition-transform duration-300 ease-in-out lg:translate-x-0 flex flex-col ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
-        <div className="h-16 flex items-center justify-between px-6 border-b border-[#F5EFE6]">
+        <div className="h-16 flex items-center justify-between px-6 border-b border-[#F5EFE6] flex-shrink-0">
           <div className="flex items-center gap-3">
             <img src={logo} alt="Sree Rasthu Silvers" className="h-8 w-auto" />
           </div>
@@ -78,8 +82,13 @@ const AdminLayout = () => {
           </button>
         </div>
 
-        {/* Navigation */}
-        <nav className="p-4 space-y-1">
+        {/* Navigation - Scrollable (hidden scrollbar) */}
+        <nav className="flex-1 overflow-y-auto p-4 space-y-1 scrollbar-hide" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <style>{`
+            .scrollbar-hide::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
           {navItems.map((item) => (
             <NavLink
               key={item.path}
@@ -97,18 +106,18 @@ const AdminLayout = () => {
               <span>{item.label}</span>
             </NavLink>
           ))}
+          
+          {/* Logout Button - Inside Scroll Area */}
+          <div className="pt-4 mt-4 border-t border-[#F5EFE6]">
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-[#FFF9E6]/50 hover:text-gray-900 rounded-lg transition-colors"
+            >
+              <LogOut className="h-5 w-5" />
+              <span>Logout</span>
+            </button>
+          </div>
         </nav>
-
-        {/* Logout Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-[#F5EFE6]">
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-4 py-3 w-full text-gray-700 hover:bg-[#FFF9E6]/50 hover:text-gray-900 rounded-lg transition-colors"
-          >
-            <LogOut className="h-5 w-5" />
-            <span>Logout</span>
-          </button>
-        </div>
       </aside>
 
       {/* Main Content */}

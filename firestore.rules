@@ -69,6 +69,24 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // --- HOMEPAGE SHOWCASES ---
+    match /showcases/{showcaseId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+
+    // --- HOMEPAGE TESTIMONIALS ---
+    match /testimonials/{testimonialId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // --- HOMEPAGE GALLERY ---
+    match /gallery/{imageId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
     // --- ORDER FULFILLMENT (Optimized for Delivery Partners with OTP Verification) ---
     match /orders/{orderId} {
       // Helper: Check if user is the assigned delivery partner

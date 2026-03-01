@@ -198,8 +198,8 @@ const TrendProducts = () => {
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
         >
-          <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>Trend Products of The Week</h2>
-          <p className="text-base text-muted-foreground max-w-2xl mx-auto" style={{ fontFamily: "'Poppins', sans-serif" }}>
+          <h2 className="text-lg md:text-4xl font-semibold mb-4 text-foreground whitespace-nowrap" style={{ fontFamily: "'Poppins', sans-serif" }}>Trend Products of The Week</h2>
+          <p className="hidden md:block text-base text-muted-foreground max-w-2xl mx-auto" style={{ fontFamily: "'Poppins', sans-serif" }}>
             Our jewelry is made by the finest artists and carefully selected to reflect your style and personality
           </p>
         </motion.div>

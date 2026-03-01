@@ -1,4 +1,5 @@
 import { useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import collectionBanner from "@/assets/collection-banner.jpg";
 
@@ -28,12 +29,12 @@ const CollectionBanner = () => {
               <p className="text-sm md:text-base text-white/80 mb-6">
                 Exceptional Handcrafted Design to Enhance the Magnificent Glow
               </p>
-              <a 
-                href="#" 
+              <Link 
+                to="/jewelry" 
                 className="inline-flex items-center px-8 py-3.5 bg-white text-foreground text-xs font-semibold tracking-wide rounded-full hover:bg-foreground hover:text-white transition-colors"
               >
                 Shop Now
-              </a>
+              </Link>
             </div>
           </div>
         </div>

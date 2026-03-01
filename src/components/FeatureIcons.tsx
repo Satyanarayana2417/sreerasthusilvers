@@ -34,7 +34,7 @@ const FeatureIcons = () => {
   const isInView = useInView(ref, { once: true, amount: 0.2 });
 
   return (
-    <section ref={ref} className="py-8 md:py-10 bg-white border-y border-border/20">
+    <section ref={ref} className="hidden md:block py-8 md:py-10 bg-white border-y border-border/20">
       <div className="container-custom">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
           {features.map((feature, index) => (

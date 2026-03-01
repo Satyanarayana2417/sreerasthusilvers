@@ -13,7 +13,6 @@ import PromoSection from "@/components/PromoSection";
 import FreeShippingBand from "@/components/FreeShippingBand";
 import TestimonialsCarousel from "@/components/TestimonialsCarousel";
 import CollectionBanner from "@/components/CollectionBanner";
-import NewsletterForm from "@/components/NewsletterForm";
 import InstagramGallery from "@/components/InstagramGallery";
 import Footer from "@/components/Footer";
 
@@ -40,7 +39,6 @@ const Index = () => {
         <FreeShippingBand />
         <TestimonialsCarousel />
         <CollectionBanner />
-        <NewsletterForm />
         <InstagramGallery />
       </main>
       

@@ -1,55 +1,66 @@
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { motion, useInView, AnimatePresence } from "framer-motion";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 import avatar1 from "@/assets/avatars/avatar-1.jpg";
 import avatar2 from "@/assets/avatars/avatar-2.jpg";
 import avatar3 from "@/assets/avatars/avatar-3.jpg";
+import { subscribeToTestimonials, Testimonial } from "@/services/testimonialService";
 
-const testimonials = [
-  {
-    id: 1,
-    title: "Charming Golden Jewellery",
-    quote: "Consectetur adipiscing elit. Integer nunc viverra laoreet est the is porta pretium metus aliquam eget maecenas porta is nunc viverra Aenean pulvinar maximus",
-    author: "Saanvi Iyer",
-    role: "Fresh Design",
-    avatar: avatar1,
-    rating: 5,
-  },
-  {
-    id: 2,
-    title: "Golden Bracelets",
-    quote: "Montluc claim to offer the finest diamond jewellery. I did my research, compared specifications with some of the big brands and now I will never walk into a store again.",
-    author: "Ananya Bansal",
-    role: "Fresh Design",
-    avatar: avatar2,
-    rating: 5,
-  },
-  {
-    id: 3,
-    title: "Charming Golden Jewellery",
-    quote: "I did my research, compared with some of the big brands and now Aenean pulvinar maximus. Montluc claim to offer the finest diamond jewellery you can buy direct from the maker.",
-    author: "Diya Nair",
-    role: "Fresh Design",
-    avatar: avatar3,
-    rating: 5,
-  },
-];
+const AVATAR_MAP: Record<string, string> = {
+  "avatar-1": avatar1,
+  "avatar-2": avatar2,
+  "avatar-3": avatar3,
+  "real-1": "https://randomuser.me/api/portraits/women/44.jpg",
+  "real-2": "https://randomuser.me/api/portraits/women/68.jpg",
+  "real-3": "https://randomuser.me/api/portraits/men/32.jpg",
+  "real-4": "https://randomuser.me/api/portraits/women/90.jpg",
+  "real-5": "https://randomuser.me/api/portraits/men/75.jpg",
+  "real-6": "https://randomuser.me/api/portraits/women/21.jpg",
+  "anim-1": "https://api.dicebear.com/9.x/lorelei/svg?seed=Priya&backgroundColor=ffd5dc",
+  "anim-2": "https://api.dicebear.com/9.x/lorelei/svg?seed=Ananya&backgroundColor=d1f4e0",
+  "anim-3": "https://api.dicebear.com/9.x/lorelei/svg?seed=Ravi&backgroundColor=dbeafe",
+  "anim-4": "https://api.dicebear.com/9.x/lorelei/svg?seed=Meera&backgroundColor=fef9c3",
+  "anim-5": "https://api.dicebear.com/9.x/notionists/svg?seed=Diya&backgroundColor=ede9fe",
+  "anim-6": "https://api.dicebear.com/9.x/notionists/svg?seed=Arjun&backgroundColor=fce7f3",
+};
+
+const resolveAvatar = (t: Testimonial): string => {
+  if (t.avatarType === "avatar") return AVATAR_MAP[t.avatarUrl] || avatar1;
+  return t.avatarUrl;
+};
 
 const TestimonialsCarousel = () => {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, amount: 0.2 });
+  const isInView = useInView(ref, { once: true, amount: 0.1 });
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [hasLoaded, setHasLoaded] = useState(false);
+
+  useEffect(() => {
+    const unsub = subscribeToTestimonials((data) => {
+      setTestimonials(data);
+      setCurrentIndex(0);
+      setHasLoaded(true);
+    }, true);
+    return unsub;
+  }, []);
+
+  // Always animate in once data is loaded and in view (or already was in view)
+  const shouldAnimate = isInView || hasLoaded;
 
   const next = () => setCurrentIndex((prev) => (prev + 1) % testimonials.length);
   const prev = () => setCurrentIndex((prev) => (prev - 1 + testimonials.length) % testimonials.length);
 
+  if (hasLoaded && testimonials.length === 0) return null;
+
   return (
     <section ref={ref} className="py-16 md:py-20 bg-white">
+      {testimonials.length > 0 && (
       <div className="container-custom">
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
           className="text-center mb-12"
           style={{ fontFamily: "'Poppins', sans-serif" }}
@@ -66,9 +77,9 @@ const TestimonialsCarousel = () => {
         <div className="hidden lg:grid grid-cols-3 gap-6">
           {testimonials.map((testimonial, index) => (
             <motion.div
-              key={testimonial.id}
+              key={testimonial.id || index}
               initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
+              animate={shouldAnimate ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.5, delay: index * 0.1 }}
               className="bg-white rounded-2xl p-8 shadow-md border border-border/30"
               style={{ fontFamily: "'Poppins', sans-serif" }}
@@ -100,7 +111,7 @@ const TestimonialsCarousel = () => {
               {/* Author */}
               <div className="flex items-center gap-3">
                 <img
-                  src={testimonial.avatar}
+                  src={resolveAvatar(testimonial)}
                   alt={testimonial.author}
                   className="w-12 h-12 rounded-full object-cover"
                 />
@@ -128,7 +139,7 @@ const TestimonialsCarousel = () => {
               {/* Rating */}
               <div className="flex items-center gap-1 mb-3">
                 {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-4 h-4 fill-orange-400 text-orange-400" />
+                  <Star key={i} className={`w-4 h-4 ${i < testimonials[currentIndex].rating ? 'fill-orange-400 text-orange-400' : 'fill-muted text-muted'}`} />
                 ))}
               </div>
               <h4 className="text-lg font-semibold mb-3 text-foreground">
@@ -139,7 +150,7 @@ const TestimonialsCarousel = () => {
               </p>
               <div className="flex items-center gap-3">
                 <img
-                  src={testimonials[currentIndex].avatar}
+                  src={resolveAvatar(testimonials[currentIndex])}
                   alt={testimonials[currentIndex].author}
                   className="w-10 h-10 rounded-full object-cover"
                 />
@@ -182,6 +193,7 @@ const TestimonialsCarousel = () => {
           </div>
         </div>
       </div>
+      )}
     </section>
   );
 };

@@ -191,7 +191,7 @@ const BestSellers = () => {
           style={{ fontFamily: "'Poppins', sans-serif" }}
         >
           <h2 className="text-3xl md:text-4xl font-semibold mb-4 text-foreground" style={{ fontFamily: "'Montserrat', sans-serif" }}>Our Best Sellers</h2>
-          <p className="text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
+          <p className="hidden md:block text-base md:text-lg text-muted-foreground max-w-2xl mx-auto">
             Our jewelry is made by the finest artists and carefully selected to reflect your style and personality.
           </p>
         </motion.div>
