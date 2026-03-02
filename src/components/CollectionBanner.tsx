@@ -25,7 +25,7 @@ const CollectionBanner = () => {
           <div className="container-custom">
             <div className="max-w-lg text-primary-foreground" style={{ fontFamily: "'Poppins', sans-serif" }}>
               <span className="text-xs uppercase tracking-[0.2em] text-white/80 block mb-3 font-medium">SREERASTHU SILVERS COLLECTION</span>
-              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-white whitespace-nowrap" style={{ fontFamily: "'Montserrat', sans-serif" }}>Shop The Latest Trends</h2>
+              <h2 className="text-xl md:text-2xl font-semibold mb-4 text-white whitespace-nowrap" style={{ fontFamily: "'Montserrat', sans-serif" }}>Shop The Latest Jewllery</h2>
               <p className="text-sm md:text-base text-white/80 mb-6">
                 Exceptional Handcrafted Design to Enhance the Magnificent Glow
               </p>
