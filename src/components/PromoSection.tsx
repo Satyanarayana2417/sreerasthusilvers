@@ -1,8 +1,7 @@
 import { useRef } from "react";
+import { Link } from "react-router-dom";
 import { motion, useInView } from "framer-motion";
 import { ArrowRight } from "lucide-react";
-import promoNecklace from "@/assets/promo-necklace.jpg";
-import promoEarrings from "@/assets/promo-earrings.jpg";
 
 const promos = [
   {
@@ -11,7 +10,8 @@ const promos = [
     title: "Best Friend Jewelry",
     subtitle: "A wide range of exquisite necklaces",
     cta: "Shop Now",
-    image: promoNecklace,
+    image: "https://t3.ftcdn.net/jpg/00/83/61/32/360_F_83613230_H6tLsTMziCU2cY1QIJufVuBbZRYhyDf6.jpg",
+    link: "/shop/necklaces",
   },
   {
     id: 2,
@@ -19,7 +19,8 @@ const promos = [
     title: "Diamond Stud Earrings",
     subtitle: "A wide range of exquisite earrings",
     cta: "Shop Now",
-    image: promoEarrings,
+    image: "https://img.freepik.com/premium-photo/elegant-silver-jewelry-with-detailed-design_1353959-17672.jpg?semt=ais_hybrid&w=740&q=80",
+    link: "/shop/earrings",
   },
 ];
 
@@ -60,12 +61,12 @@ const PromoSection = () => {
                 {promo.subtitle}
               </p>
               <div>
-                <a
-                  href="#"
+                <Link
+                  to={promo.link}
                   className="inline-flex items-center gap-2 px-6 py-3 bg-white text-foreground text-xs font-semibold tracking-wide rounded-full hover:bg-foreground hover:text-background transition-colors shadow-sm"
                 >
                   {promo.cta}
-                </a>
+                </Link>
               </div>
             </div>
           </motion.div>

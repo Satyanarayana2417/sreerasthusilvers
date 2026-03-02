@@ -148,44 +148,8 @@ const Contact = () => {
           </motion.div>
         </div>
 
-        {/* Map Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="mb-16 rounded-2xl overflow-hidden h-[400px] shadow-lg relative group"
-        >
-          <iframe
-            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d953.2945893094795!2d82.23350386958165!3d16.95701629864955!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a3825ba0aa21157%3A0x8e07f85d582af859!2sSreerastu%20silvers!5e0!3m2!1sen!2sin!4v1703347200000!5m2!1sen!2sin"
-            width="100%"
-            height="100%"
-            style={{ border: 0 }}
-            allowFullScreen
-            loading="lazy"
-            referrerPolicy="no-referrer-when-downgrade"
-          />
-          
-          {/* Clickable Overlay to Open in Google Maps */}
-          <a
-            href="https://www.google.com/maps/place/Sreerastu+silvers/@16.957928,82.2329618,17.66z/data=!4m6!3m5!1s0x3a38290006734e2b:0x9f8b6cdf933bc2a!8m2!3d16.9577817!4d82.2346344!16s%2Fg%2F11xclhs7tw?entry=ttu&g_ep=EgoyMDI1MTIwOS4wIKXMDSoASAFQAw%3D%3D"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="absolute top-4 right-4 z-10 bg-background/95 backdrop-blur-sm px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 group-hover:scale-105"
-          >
-            <MapPin className="w-5 h-5 text-primary" />
-            <span className="text-sm font-medium text-foreground">Open in Google Maps</span>
-          </a>
-        </motion.div>
-
-        {/* Contact Form */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.6 }}
-          className="max-w-5xl mx-auto"
-        >
+        {/* Contact Form and Map Section - Side by Side */}
+        <div className="max-w-7xl mx-auto">
           <h2
             className="text-4xl md:text-5xl font-light text-foreground text-center mb-12"
             style={{ fontFamily: "'Poppins', sans-serif" }}
@@ -193,56 +157,96 @@ const Contact = () => {
             Send a Message
           </h2>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid md:grid-cols-2 gap-6">
-              <Input
-                type="text"
-                name="name"
-                placeholder="Name"
-                value={formData.name}
-                onChange={handleChange}
-                className="h-14 px-6 text-base bg-muted/30 border-border rounded-xl focus:ring-2 focus:ring-primary/20"
-                required
-              />
-              <Input
-                type="email"
-                name="email"
-                placeholder="Email"
-                value={formData.email}
-                onChange={handleChange}
-                className="h-14 px-6 text-base bg-muted/30 border-border rounded-xl focus:ring-2 focus:ring-primary/20"
-                required
-              />
-            </div>
-
-            <Input
-              type="text"
-              name="subject"
-              placeholder="Subject"
-              value={formData.subject}
-              onChange={handleChange}
-              className="h-14 px-6 text-base bg-muted/30 border-border rounded-xl focus:ring-2 focus:ring-primary/20"
-              required
-            />
-
-            <Textarea
-              name="message"
-              placeholder="Message"
-              value={formData.message}
-              onChange={handleChange}
-              rows={8}
-              className="px-6 py-4 text-base bg-muted/30 border-border rounded-xl focus:ring-2 focus:ring-primary/20 resize-none"
-              required
-            />
-
-            <Button
-              type="submit"
-              className="w-full h-14 bg-foreground hover:bg-foreground/90 text-background text-base font-medium rounded-xl transition-all duration-300"
+          <div className="grid lg:grid-cols-2 gap-8 items-start">
+            {/* Contact Form */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
             >
-              Send Message
-            </Button>
-          </form>
-        </motion.div>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid gap-6">
+                  <Input
+                    type="text"
+                    name="name"
+                    placeholder="Name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="h-14 px-6 text-base bg-muted/30 border-border rounded-xl focus:ring-2 focus:ring-primary/20"
+                    required
+                  />
+                  <Input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="h-14 px-6 text-base bg-muted/30 border-border rounded-xl focus:ring-2 focus:ring-primary/20"
+                    required
+                  />
+                </div>
+
+                <Input
+                  type="text"
+                  name="subject"
+                  placeholder="Subject"
+                  value={formData.subject}
+                  onChange={handleChange}
+                  className="h-14 px-6 text-base bg-muted/30 border-border rounded-xl focus:ring-2 focus:ring-primary/20"
+                  required
+                />
+
+                <Textarea
+                  name="message"
+                  placeholder="Message"
+                  value={formData.message}
+                  onChange={handleChange}
+                  rows={8}
+                  className="px-6 py-4 text-base bg-muted/30 border-border rounded-xl focus:ring-2 focus:ring-primary/20 resize-none"
+                  required
+                />
+
+                <Button
+                  type="submit"
+                  className="w-full h-14 bg-foreground hover:bg-foreground/90 text-background text-base font-medium rounded-xl transition-all duration-300"
+                >
+                  Send Message
+                </Button>
+              </form>
+            </motion.div>
+
+            {/* Map Section */}
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="rounded-2xl overflow-hidden h-[550px] shadow-lg relative group"
+            >
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2221.0993420701366!2d82.23309095095026!3d16.957824580737896!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a38290006734e2b%3A0x9f8b6cdf933bc2a!2sSreerastu%20silvers!5e0!3m2!1sen!2sin!4v1772431378848!5m2!1sen!2sin"
+                width="100%"
+                height="100%"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+              
+              {/* Clickable Overlay to Open in Google Maps */}
+              <a
+                href="https://www.google.com/maps/place/Sreerastu+silvers/@16.957928,82.2329618,17.66z/data=!4m6!3m5!1s0x3a38290006734e2b:0x9f8b6cdf933bc2a!8m2!3d16.9577817!4d82.2346344!16s%2Fg%2F11xclhs7tw?entry=ttu&g_ep=EgoyMDI1MTIwOS4wIKXMDSoASAFQAw%3D%3D"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="absolute top-4 right-4 z-10 bg-background/95 backdrop-blur-sm px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 group-hover:scale-105"
+              >
+                <MapPin className="w-5 h-5 text-primary" />
+                <span className="text-sm font-medium text-foreground">Open in Google Maps</span>
+              </a>
+            </motion.div>
+          </div>
+        </div>
       </div>
       </div>
       <Footer />
