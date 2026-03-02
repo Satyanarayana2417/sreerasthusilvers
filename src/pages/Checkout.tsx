@@ -341,14 +341,6 @@ const MobileCheckout = () => {
           <button onClick={() => navigate(-1)} className="p-1">
             <ArrowLeft className="w-6 h-6 text-gray-800" />
           </button>
-          <div className="flex items-center gap-3">
-            <button className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center">
-              <ShoppingBag className="w-4 h-4 text-gray-800" />
-            </button>
-            <button className="p-1">
-              <MoreVertical className="w-5 h-5 text-gray-800" />
-            </button>
-          </div>
         </div>
 
         {/* Address bar */}
@@ -687,7 +679,7 @@ const MobileCheckout = () => {
             <div className="flex items-center gap-1.5">
               <Truck className="w-4 h-4 text-gray-600" />
               <span className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                {deliveryCharge === 0 ? 'Free Delivery' : '14 Mins'}
+                Free Delivery
               </span>
             </div>
             <span className="text-xs text-gray-400 font-medium" style={{ fontFamily: "'Poppins', sans-serif" }}>{totalItems} items</span>
@@ -875,10 +867,6 @@ const MobileCheckout = () => {
 
                   {/* Info */}
                   <div className="p-2.5">
-                    <div className="flex items-center gap-1 mb-1">
-                      <Zap className="w-3 h-3 text-gray-400" />
-                      <span className="text-[10px] text-gray-400 font-medium" style={{ fontFamily: "'Poppins', sans-serif" }}>15 MINS</span>
-                    </div>
                     <h4 className="text-xs font-semibold text-gray-900 line-clamp-2 leading-tight min-h-[28px]" style={{ fontFamily: "'Poppins', sans-serif" }}>
                       {product.title}
                     </h4>
@@ -1062,7 +1050,6 @@ const MobileCheckout = () => {
                       </div>
                       <div className="flex-1 min-w-0">
                         <h4 className="text-xs font-semibold text-gray-900 line-clamp-1">{item.name}</h4>
-                        <p className="text-[10px] text-gray-500 mt-0.5">Top Deals</p>
                       </div>
                     </div>
                   ))}
@@ -1280,7 +1267,7 @@ const MobileCheckout = () => {
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
               <Button
                 onClick={() => {
-                  navigate('/');
+                  navigate(`/account/orders/${orderId}`);
                 }}
                 variant="outline"
                 className="flex-1 h-12 border-gray-300 text-gray-900 font-semibold text-sm rounded-lg"
@@ -2547,7 +2534,7 @@ const Checkout = () => {
                   <div className="flex gap-4">
                     <Button
                       onClick={() => {
-                        navigate('/');
+                        navigate(`/account/orders/${orderId}`);
                       }}
                       variant="outline"
                       className="flex-1 h-12 border-gray-300 text-gray-900 font-semibold text-sm"

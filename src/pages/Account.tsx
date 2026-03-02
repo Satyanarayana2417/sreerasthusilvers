@@ -860,6 +860,12 @@ const AccountPage = () => {
               <div className="flex items-center justify-between mb-4">
                 {/* User Avatar and Name */}
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => navigate(-1)}
+                    className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                  >
+                    <ArrowLeft className="w-5 h-5 text-gray-700" />
+                  </button>
                   {user?.photoURL || userProfile?.avatar ? (
                     <img 
                       key={user?.photoURL || userProfile?.avatar}
@@ -893,16 +899,10 @@ const AccountPage = () => {
                   Orders
                 </button>
                 <button 
-                  onClick={() => navigate('/wishlist')}
+                  onClick={() => navigate('/buy-again')}
                   className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
                 >
                   Buy Again
-                </button>
-                <button 
-                  onClick={() => setSelectedMenu('profile')}
-                  className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
-                >
-                  Account
                 </button>
                 <button 
                   onClick={() => navigate('/wishlist')}

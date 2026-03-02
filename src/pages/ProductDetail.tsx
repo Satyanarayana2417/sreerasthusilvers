@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Star, Heart, Minus, Plus, ChevronRight, ShoppingBag, Truck, Shield, RotateCcw, Check, Loader2, X, ChevronLeft } from "lucide-react";
+import { Star, Heart, Minus, Plus, ChevronRight, ShoppingBag, Truck, Shield, RotateCcw, Check, Loader2, X, ChevronLeft, ArrowLeft } from "lucide-react";
 import { getProduct, getActiveProducts } from "@/services/productService";
 import { UIProductDetail, adaptFirebaseToUIDetail, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
 import { useCart } from "@/contexts/CartContext";
@@ -192,8 +192,19 @@ const ProductDetail = () => {
   return (
     <div className="min-h-screen w-full overflow-x-clip">
       <main>
+        {/* Mobile Back Button */}
+        <div className="lg:hidden bg-white sticky top-0 z-40 shadow-sm px-4 py-3">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            <span className="text-sm font-medium">Back</span>
+          </button>
+        </div>
+
         {/* Breadcrumb */}
-        <section className="bg-secondary/30 py-2">
+        <section className="hidden lg:block bg-secondary/30 py-2">
           <div className="container-custom">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <a href="/" className="hover:text-primary transition-colors">Home</a>

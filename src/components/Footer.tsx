@@ -96,16 +96,33 @@ const Footer = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>Ramasomayajulu street</li>
               <li>Ramaraopeta, Kakinada, Andhra Pradesh, India, 533001</li>
-              <li>Tel: +91 6304960489</li>
-              <li>sreerasthusilvers@gmail.com</li>
+              <li>
+                Tel: <a href="tel:+916304960489" className="hover:text-primary transition-colors">+91 6304960489</a>
+              </li>
+              <li className="break-all">
+                Email: <a href="mailto:sreerasthusilvers@gmail.com?subject=Inquiry%20about%20Sreerasthu%20Silvers&body=Hello%20Sreerasthu%20Silvers%20Team," className="hover:text-primary transition-colors">sreerasthusilvers@gmail.com</a>
+              </li>
             </ul>
           </div>
         </div>
       </div>
       <div className="border-t border-foreground/10 py-6">
-        <p className="text-center text-sm text-muted-foreground">
-          Copyright © 2025 <span className="text-primary">Sreerasthu Silvers</span>. All Rights Reserved
-        </p>
+        <div className="text-center text-sm text-muted-foreground px-4">
+          <p className="mb-1">
+            Copyright © 2025 <span className="text-primary">Sreerasthu Silvers</span>. All Rights Reserved
+          </p>
+          <p>
+            Built & Developed by{" "}
+            <a 
+              href="https://www.thedreamteamservices.com/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-primary hover:text-primary/80 transition-colors font-medium whitespace-nowrap"
+            >
+              DREAM TEAM SERVICES
+            </a>
+          </p>
+        </div>
       </div>
     </footer>
   );

@@ -62,6 +62,7 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [loading, setLoading] = useState(false);
   const [authResolved, setAuthResolved] = useState(false);
   const firebaseSyncRef = useRef(false);
+  const pendingOpRef = useRef(false);
 
   // Listen to auth state changes
   useEffect(() => {
@@ -107,6 +108,8 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const unsubscribe = onSnapshot(
       cartRef,
       (snapshot) => {
+        // Skip snapshot updates while a local operation is in progress
+        if (pendingOpRef.current) return;
         if (snapshot.exists()) {
           const data = snapshot.data();
           const cartItems: CartItem[] = data.items ? Object.values(data.items) : [];
@@ -183,6 +186,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // ─── REMOVE FROM CART ───
   const removeFromCart = async (id: string) => {
+    // Block onSnapshot from overwriting during this operation
+    pendingOpRef.current = true;
+    
     // Optimistic local update
     setItems((prev) => prev.filter((item) => item.id !== id));
 
@@ -202,6 +208,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error('Firebase sync failed for removeFromCart:', error);
       }
     }
+    
+    // Allow onSnapshot to work again after a small delay
+    setTimeout(() => { pendingOpRef.current = false; }, 500);
   };
 
   // ─── UPDATE QUANTITY ───

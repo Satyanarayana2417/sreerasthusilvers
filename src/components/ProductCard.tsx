@@ -82,11 +82,11 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: index * 0.1 }}
-      className="product-card group cursor-pointer"
+      className="product-card group cursor-pointer border border-gray-200 rounded-xl p-2 lg:p-0 lg:border-0"
       onClick={handleCardClick}
     >
       {/* Image Container */}
-      <div className="product-card-image relative bg-muted rounded-2xl overflow-hidden aspect-square mb-3">
+      <div className="product-card-image relative bg-muted rounded-xl lg:rounded-2xl overflow-hidden aspect-square mb-2 lg:mb-3">
         <img
           src={product.image}
           alt={product.alt || product.title}
@@ -97,11 +97,11 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
         {/* Wishlist Heart - Top Right */}
         <button
           onClick={handleWishlistClick}
-          className="absolute top-2 right-2 p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all"
+          className="absolute top-1.5 right-1.5 lg:top-2 lg:right-2 p-1.5 lg:p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all"
           aria-label={isInWishlist(product.id) ? "Remove from wishlist" : "Add to wishlist"}
         >
           <Heart 
-            className={`w-5 h-5 transition-colors ${
+            className={`w-4 h-4 lg:w-5 lg:h-5 transition-colors ${
               isInWishlist(product.id) 
                 ? "text-red-500 fill-red-500" 
                 : "text-gray-700 hover:text-red-500"
@@ -111,14 +111,14 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
       </div>
 
       {/* Product Info */}
-      <div className="space-y-1.5">
+      <div className="space-y-0.5 lg:space-y-1.5">
         {/* Category */}
-        <span className="text-xs uppercase tracking-wider font-medium" style={{ color: '#D4AF37' }}>
+        <span className="text-[10px] lg:text-xs uppercase tracking-wider font-medium" style={{ color: '#D4AF37' }}>
           {product.category}
         </span>
 
         {/* Title - Single Line with Ellipsis */}
-        <h4 className="font-medium text-base leading-snug text-gray-900 truncate" style={{ fontFamily: "'Poppins', sans-serif" }}>
+        <h4 className="font-medium text-xs lg:text-base leading-snug text-gray-900 truncate" style={{ fontFamily: "'Poppins', sans-serif" }}>
           {product.title}
         </h4>
 
@@ -127,7 +127,7 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
           {[...Array(5)].map((_, i) => (
             <Star
               key={i}
-              className={`w-4 h-4 ${
+              className={`w-3 h-3 lg:w-4 lg:h-4 ${
                 i < Math.floor(product.rating)
                   ? "fill-yellow-400 text-yellow-400"
                   : "fill-gray-200 text-gray-200"
@@ -137,21 +137,21 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
         </div>
 
         {/* Price */}
-        <div className="flex items-center gap-2 pt-1">
-          <span className="text-xl font-bold text-gray-900">₹{product.price.toLocaleString('en-IN')}</span>
+        <div className="flex items-center gap-1.5 lg:gap-2 pt-0.5 lg:pt-1">
+          <span className="text-sm lg:text-xl font-bold text-gray-900">₹{product.price.toLocaleString('en-IN')}</span>
           {product.oldPrice && (
-            <span className="text-sm text-gray-400 line-through">
+            <span className="text-[10px] lg:text-sm text-gray-400 line-through">
               ₹{product.oldPrice.toLocaleString('en-IN')}
             </span>
           )}
         </div>
 
-        {/* Add to Cart Button - Black Transparent Pill */}
+        {/* Add to Cart Button */}
         <button
           onClick={handleAddToCart}
-          className="w-full mt-2 py-2.5 px-4 bg-black/5 text-gray-900 text-sm font-medium rounded-full hover:bg-black/10 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2 border border-gray-200"
+          className="w-full mt-1 lg:mt-2 py-1.5 lg:py-2.5 px-3 lg:px-4 bg-black/5 text-gray-900 text-[11px] lg:text-sm font-medium rounded-full hover:bg-black/10 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-1.5 lg:gap-2 border border-gray-200"
         >
-          <ShoppingBag className="w-4 h-4" />
+          <ShoppingBag className="w-3 h-3 lg:w-4 lg:h-4" />
           Add to Cart
         </button>
       </div>

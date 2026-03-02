@@ -37,11 +37,14 @@ import Checkout from "./pages/Checkout";
 import Profile from "./pages/Profile";
 import Account from "./pages/Account";
 import SavedAddresses from "./pages/SavedAddresses";
+import BuyAgain from "./pages/BuyAgain";
 import LoadingScreen from "./components/LoadingScreen";
 import ScrollToTop from "./components/ScrollToTop";
 import MobileCart from "./pages/MobileCart";
 import MobileOrders from "./pages/MobileOrders";
 import MobileCategories from "./pages/MobileCategories";
+import MobileSearch from "./pages/MobileSearch";
+import SearchResults from "./pages/SearchResults";
 
 // Bracelet Category Pages
 import DiamondBracelets from "./pages/categories/DiamondBracelets";
@@ -161,6 +164,10 @@ const App = () => {
               {/* Mobile Categories Page */}
               <Route path="/categories" element={<MobileCategories />} />
               
+              {/* Mobile Search Pages */}
+              <Route path="/search" element={<MobileSearch />} />
+              <Route path="/search-results" element={<SearchResults />} />
+              
               {/* Jewelry Collections Main Page */}
               <Route path="/jewelry" element={<JewelryCollections />} />
               
@@ -247,6 +254,7 @@ const App = () => {
               <Route path="/account" element={<Account />} />
               <Route path="/account/orders" element={<MobileOrders />} />
               <Route path="/account/addresses" element={<SavedAddresses />} />
+              <Route path="/buy-again" element={<BuyAgain />} />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
               <Route path="/customer-support" element={<CustomerSupport />} />

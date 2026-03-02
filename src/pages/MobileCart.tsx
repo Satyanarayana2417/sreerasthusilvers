@@ -139,22 +139,15 @@ const MobileCart = () => {
               {/* Delete Icon - Positioned Absolutely */}
               <button
                 type="button"
-                onClick={() => {
-                  console.log('🗑️ Delete clicked for:', item.id);
+                onClick={(e) => {
+                  e.stopPropagation();
                   removeFromCart(item.id);
                 }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  console.log('🗑️ Touch delete for:', item.id);
-                  removeFromCart(item.id);
-                }}
-                className="absolute top-4 right-0 w-10 h-10 flex items-center justify-center hover:bg-red-50 rounded-full transition-colors z-50 cursor-pointer"
+                className="absolute top-2 right-2 p-1 z-50 cursor-pointer"
                 style={{ touchAction: 'manipulation' }}
                 aria-label="Remove from cart"
               >
-                <div className="w-8 h-8 rounded-full border border-red-200 flex items-center justify-center bg-white">
-                  <Trash2 className="w-4 h-4 text-red-500" />
-                </div>
+                <Trash2 className="w-3.5 h-3.5 text-red-500" />
               </button>
 
               {/* Product Image */}

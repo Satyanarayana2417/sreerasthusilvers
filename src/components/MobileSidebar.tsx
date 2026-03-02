@@ -16,9 +16,8 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
   const menuItems = [
     { name: "Home", icon: Home, href: "/", color: "text-blue-600" },
     { name: "Categories", icon: Grid, href: "/categories", color: "text-purple-600" },
-    { name: "My Orders", icon: Package, href: "#", color: "text-green-600" },
-    { name: "Wishlist", icon: Heart, href: "#", color: "text-red-600" },
-    { name: "My Account", icon: User, href: "/profile", color: "text-orange-600" },
+    { name: "My Orders", icon: Package, href: "/account/orders", color: "text-green-600" },
+    { name: "Wishlist", icon: Heart, href: "/wishlist", color: "text-red-600" },
     { name: "Settings", icon: Settings, href: "/account", color: "text-gray-600" },
   ];
 
