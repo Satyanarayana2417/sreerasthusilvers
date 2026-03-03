@@ -1,12 +1,18 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ShoppingCart, Heart } from "lucide-react";
 import { getAllProducts } from "@/services/productService";
 import { UIProduct, adaptFirebaseToUI } from "@/lib/productAdapter";
 import { useNavigate } from "react-router-dom";
+import { useCart } from "@/contexts/CartContext";
+import { useWishlist } from "@/hooks/useWishlist";
+import { useToast } from "@/hooks/use-toast";
 
 const TopDeals = () => {
   const navigate = useNavigate();
+  const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { toast } = useToast();
   const [products, setProducts] = useState<UIProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -27,6 +33,37 @@ const TopDeals = () => {
 
     loadProducts();
   }, []);
+
+  const handleAddToCart = async (e: React.MouseEvent, product: UIProduct) => {
+    e.stopPropagation();
+    
+    try {
+      await addToCart({
+        id: product.id,
+        name: product.title,
+        price: product.price,
+        image: product.image,
+        category: product.category,
+      });
+      
+      toast({
+        title: "Added to cart",
+        description: `${product.title} has been added to your cart.`,
+      });
+    } catch (error) {
+      console.error('Error adding to cart:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add item to cart. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleWishlistClick = (e: React.MouseEvent, productId: string, productTitle: string) => {
+    e.stopPropagation();
+    toggleWishlist(productId, productTitle);
+  };
 
   if (loading) {
     return (
@@ -64,12 +101,27 @@ const TopDeals = () => {
               >
                 <div className="bg-white rounded-lg overflow-hidden h-full flex flex-col shadow-sm">
                   {/* Image */}
-                  <div className="aspect-square overflow-hidden bg-gray-100">
+                  <div className="aspect-square overflow-hidden bg-gray-100 relative group">
                     <img
                       src={product.image}
                       alt={product.title}
                       className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
                     />
+                    
+                    {/* Wishlist Button */}
+                    <button
+                      onClick={(e) => handleWishlistClick(e, product.id, product.title)}
+                      className="absolute top-1 right-1 md:top-2 md:right-2 p-1 md:p-1.5 bg-white/90 backdrop-blur-sm rounded-full shadow-md hover:bg-white transition-all duration-200 z-10"
+                      aria-label="Add to wishlist"
+                    >
+                      <Heart 
+                        className={`w-3 h-3 md:w-4 md:h-4 ${
+                          isInWishlist(product.id) 
+                            ? 'fill-red-500 text-red-500' 
+                            : 'text-gray-600'
+                        }`}
+                      />
+                    </button>
                   </div>
 
                   {/* Content */}
@@ -78,14 +130,27 @@ const TopDeals = () => {
                       {product.title}
                     </h3>
                     <div className="mt-auto">
-                      <p className="text-sm md:text-lg font-bold text-gray-900">
-                        ₹{product.price.toLocaleString()}
-                      </p>
-                      {product.oldPrice && product.oldPrice > product.price && (
-                        <p className="text-[10px] md:text-xs text-gray-500 line-through">
-                          ₹{product.oldPrice.toLocaleString()}
-                        </p>
-                      )}
+                      <div className="flex items-end justify-between">
+                        <div>
+                          <p className="text-sm md:text-lg font-bold text-gray-900">
+                            ₹{product.price.toLocaleString()}
+                          </p>
+                          {product.oldPrice && product.oldPrice > product.price && (
+                            <p className="text-[10px] md:text-xs text-gray-500 line-through">
+                              ₹{product.oldPrice.toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+                        
+                        {/* Cart Button */}
+                        <button
+                          onClick={(e) => handleAddToCart(e, product)}
+                          className="hover:scale-110 transition-transform duration-200"
+                          aria-label="Add to cart"
+                        >
+                          <ShoppingCart className="w-5 h-5 md:w-6 md:h-6 text-[#8B7355]" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
