@@ -19,13 +19,20 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
     { name: "My Orders", icon: Package, href: "/account/orders", color: "text-green-600" },
     { name: "Wishlist", icon: Heart, href: "/wishlist", color: "text-red-600" },
     { name: "Settings", icon: Settings, href: "/account", color: "text-gray-600" },
+    ...(user ? [{ name: "Logout", icon: LogOut, href: "#logout", color: "text-red-600" }] : []),
   ];
 
-  const handleNavigation = (href: string) => {
-    if (href !== "#") {
+  const handleNavigation = async (href: string) => {
+    if (href === "#logout") {
+      await logout();
+      onClose();
+      navigate('/');
+    } else if (href !== "#") {
       navigate(href);
+      onClose();
+    } else {
+      onClose();
     }
-    onClose();
   };
 
   return (
@@ -52,39 +59,40 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
           >
             {/* Header */}
             <div className="bg-gray-100 text-gray-900 p-4 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                {user && userProfile ? (
-                  <>
-                    {user.photoURL || userProfile.avatar ? (
-                      <img 
-                        key={user.photoURL || userProfile.avatar}
-                        src={user.photoURL || userProfile.avatar} 
-                        alt={userProfile.name || userProfile.username || 'User'} 
-                        className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-gray-300">
-                        <span className="text-white font-semibold text-sm">
-                          {(userProfile.name || userProfile.username || 'U').charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                    )}
-                    <div>
-                      <p className="font-semibold text-base">{userProfile.name || userProfile.username || 'User'}</p>
+              {user && userProfile ? (
+                <div className="flex items-center gap-3">
+                  {user.photoURL || userProfile.avatar ? (
+                    <img 
+                      key={user.photoURL || userProfile.avatar}
+                      src={user.photoURL || userProfile.avatar} 
+                      alt={userProfile.name || userProfile.username || 'User'} 
+                      className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border-2 border-gray-300">
+                      <span className="text-white font-semibold text-sm">
+                        {(userProfile.name || userProfile.username || 'U').charAt(0).toUpperCase()}
+                      </span>
                     </div>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
-                      <User className="w-6 h-6 text-gray-600" />
-                    </div>
-                    <div>
-                      <p className="font-semibold text-sm">Welcome</p>
-                      <p className="text-xs text-gray-600">Sign in to continue</p>
-                    </div>
-                  </>
-                )}
-              </div>
+                  )}
+                  <div>
+                    <p className="font-semibold text-base">{userProfile.name || userProfile.username || 'User'}</p>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => handleNavigation('/account')}
+                  className="flex items-center gap-3 flex-1 hover:bg-gray-200 rounded-lg p-2 -m-2 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center">
+                    <User className="w-6 h-6 text-gray-600" />
+                  </div>
+                  <div className="text-left">
+                    <p className="font-semibold text-sm">Welcome</p>
+                    <p className="text-xs text-gray-600">Sign in to continue</p>
+                  </div>
+                </button>
+              )}
               <button
                 onClick={onClose}
                 className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-200 transition-colors"
@@ -115,23 +123,6 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
                 );
               })}
             </div>
-
-            {/* Footer */}
-            {user && (
-              <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200 bg-gray-50">
-                <button 
-                  onClick={async () => {
-                    await logout();
-                    onClose();
-                    navigate('/');
-                  }}
-                  className="flex items-center gap-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span className="text-sm font-medium">Logout</span>
-                </button>
-              </div>
-            )}
           </motion.div>
         </>
       )}

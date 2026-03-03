@@ -98,7 +98,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
           if (updatedUser) {
             const profile = await fetchUserProfile(updatedUser.uid);
-            setUserProfile(profile);
+            
+            // Sync photoURL from Firebase Auth to Firestore if different
+            if (updatedUser.photoURL && profile && profile.avatar !== updatedUser.photoURL) {
+              try {
+                await setDoc(doc(db, 'users', updatedUser.uid), {
+                  avatar: updatedUser.photoURL,
+                  updatedAt: serverTimestamp(),
+                }, { merge: true });
+                
+                setUserProfile({ ...profile, avatar: updatedUser.photoURL });
+              } catch (syncError) {
+                console.error('Error syncing avatar:', syncError);
+                setUserProfile(profile);
+              }
+            } else {
+              setUserProfile(profile);
+            }
           }
         } catch (error) {
           console.error('Error reloading user:', error);
@@ -203,6 +219,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
 
         profile = userProfileData;
+      } else {
+        // Update avatar for existing Google users to ensure photoURL is synced
+        if (photoURL && profile.avatar !== photoURL) {
+          await setDoc(doc(db, 'users', uid), {
+            avatar: photoURL,
+            updatedAt: serverTimestamp(),
+          }, { merge: true });
+          
+          profile = { ...profile, avatar: photoURL };
+        }
       }
 
       setUserProfile(profile);
@@ -224,7 +250,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Reset password
   const resetPassword = async (email: string) => {
-    await sendPasswordResetEmail(auth, email);
+    const actionCodeSettings = {
+      url: `${window.location.origin}/`,
+      handleCodeInApp: false,
+    };
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
   };
 
   // Update user profile

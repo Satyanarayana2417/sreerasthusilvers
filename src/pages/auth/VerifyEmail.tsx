@@ -171,102 +171,112 @@ const VerifyEmail = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center font-poppins">
-      <div className="px-4">
-        <div className="w-full max-w-md">
-          <div className="p-8">
-            {/* Email Icon */}
-            <div className="flex justify-center mb-6">
-              <div className="w-16 h-16 bg-blue-50 rounded-full flex items-center justify-center">
-                <Mail className="h-8 w-8 text-blue-500" />
-              </div>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 flex items-center justify-center p-4 font-poppins">
+      <div className="relative w-full max-w-md bg-white/80 backdrop-blur-sm rounded-2xl p-8 sm:p-10">
+        {/* Close Button */}
+        <button
+          onClick={() => navigate('/')}
+          className="absolute top-5 right-5 text-gray-400 hover:text-gray-600 transition-colors"
+        >
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
 
-            {/* Header */}
-            <div className="text-center space-y-2 mb-6">
-              <h1 className="text-xl font-bold text-gray-900 font-poppins">
-                Verify Your Email
-              </h1>
-              <p className="text-gray-600 text-sm leading-relaxed">
-                Your account has been created successfully!
-                <br />
-                Please check your inbox and click the verification link.
-              </p>
-            </div>
-
-            {/* User Email Display */}
-            <div className="bg-blue-50 rounded-xl p-3 mb-6 text-center">
-              <p className="text-xs text-gray-500 mb-1">Verification email sent to:</p>
-              <p className="text-blue-600 font-normal text-xs md:text-base overflow-hidden text-ellipsis whitespace-nowrap px-2">
-                {userEmail}
-              </p>
-            </div>
-
-            {/* Action Buttons */}
-            <div className="space-y-3">
-              {/* Resend Verification Email Button */}
-              <Button
-                variant="outline"
-                onClick={handleResendVerification}
-                disabled={resendCountdown > 0 || resendLoading}
-                className="w-full h-11 border-blue-300 text-blue-600 hover:bg-blue-50 rounded-xl text-sm font-medium transition-all"
-              >
-                {resendLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
-                  </>
-                ) : resendCountdown > 0 ? (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Resend in {resendCountdown}s
-                  </>
-                ) : (
-                  <>
-                    <RefreshCw className="mr-2 h-4 w-4" />
-                    Resend Verification Email
-                  </>
-                )}
-              </Button>
-
-              {/* I Have Verified Button */}
-              <Button
-                onClick={handleVerifyCheck}
-                disabled={verifyLoading}
-                className="w-full h-11 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-medium transition-all"
-              >
-                {verifyLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Checking...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle className="mr-2 h-4 w-4" />
-                    I Have Verified
-                  </>
-                )}
-              </Button>
-            </div>
-
-            {/* Tip */}
-            <div className="mt-5 p-2.5 bg-red-50 rounded-lg border border-red-200">
-              <p className="text-xs text-red-600 text-center flex items-center justify-center gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5" />
-                <span><span className="font-medium">Tip:</span> Didn't receive email? Check your spam folder.</span>
-              </p>
-            </div>
-
-            {/* Logout Link */}
-            <div className="mt-5 text-center">
-              <button
-                onClick={handleLogout}
-                className="text-xs text-gray-500 hover:text-gray-700 underline transition-colors"
-              >
-                Logout and try different account
-              </button>
-            </div>
+        {/* Email Icon with Purple Circle */}
+        <div className="flex justify-center mb-6">
+          <div className="relative w-28 h-28 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center shadow-lg">
+            {/* Pink dot indicator */}
+            <div className="absolute top-2 right-2 w-4 h-4 bg-pink-500 rounded-full animate-pulse" />
+            {/* Mail icon */}
+            <Mail className="w-14 h-14 text-white" strokeWidth={2.5} />
           </div>
+        </div>
+
+        {/* Header */}
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-3">
+            Verify Your Email
+          </h1>
+          <p className="text-gray-600 text-sm leading-relaxed">
+            Your email address is not verified yet. Please check your inbox and click the verification link.
+          </p>
+        </div>
+
+        {/* Email Display */}
+        <div className="mb-6 text-center">
+          <p className="text-sm text-gray-500 mb-2">Verification email sent to:</p>
+          <p className="text-blue-600 font-semibold text-base break-all">
+            {userEmail}
+          </p>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="space-y-3 mb-5">
+          {/* Resend Button */}
+          <Button
+            variant="outline"
+            onClick={handleResendVerification}
+            disabled={resendCountdown > 0 || resendLoading}
+            className="w-full h-12 bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 rounded-xl font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {resendLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Sending...
+              </>
+            ) : resendCountdown > 0 ? (
+              <>
+                <RefreshCw className="mr-2 h-5 w-5" />
+                Resend in {resendCountdown}s
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-5 w-5" />
+                Resend Verification Email
+              </>
+            )}
+          </Button>
+
+          {/* Verify Button */}
+          <Button
+            onClick={handleVerifyCheck}
+            disabled={verifyLoading}
+            className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold transition-all disabled:opacity-50"
+          >
+            {verifyLoading ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Checking...
+              </>
+            ) : (
+              <>
+                <CheckCircle className="mr-2 h-5 w-5" />
+                I Have Verified
+              </>
+            )}
+          </Button>
+        </div>
+
+        {/* Tip Box */}
+        <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200 mb-5">
+          <p className="text-xs text-yellow-800 text-center flex items-start justify-center gap-2">
+            <span className="text-base">💡</span>
+            <span>
+              <span className="font-semibold">Tip:</span> Didn't receive email? Check your spam folder.
+            </span>
+          </p>
+        </div>
+
+        {/* Logout Link */}
+        <div className="text-center">
+          <button
+            onClick={handleLogout}
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors underline"
+          >
+            Logout and try different account
+          </button>
         </div>
       </div>
     </div>

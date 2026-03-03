@@ -105,10 +105,15 @@ import CustomEngravedItems from "./pages/CustomEngravedItems";
 import SilverCoins from "./pages/SilverCoins";
 import LimitedEditionPieces from "./pages/LimitedEditionPieces";
 
+// Wallet & Security Pages
+import WalletPage from "./pages/WalletPage";
+import SecurityPage from "./pages/SecurityPage";
+
 // Auth Pages
 import Login from "./pages/auth/Login";
 import Signup from "./pages/auth/Signup";
 import ForgotPassword from "./pages/auth/ForgotPassword";
+import ResetPassword from "./pages/auth/ResetPassword";
 import VerifyEmail from "./pages/auth/VerifyEmail";
 
 // Admin Pages
@@ -255,6 +260,16 @@ const App = () => {
               <Route path="/account/orders" element={<MobileOrders />} />
               <Route path="/account/addresses" element={<SavedAddresses />} />
               <Route path="/buy-again" element={<BuyAgain />} />
+              <Route path="/wallet" element={
+                <ProtectedRoute requireEmailVerification={false}>
+                  <WalletPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/security" element={
+                <ProtectedRoute requireEmailVerification={false}>
+                  <SecurityPage />
+                </ProtectedRoute>
+              } />
               <Route path="/contact" element={<Contact />} />
               <Route path="/about" element={<About />} />
               <Route path="/customer-support" element={<CustomerSupport />} />
@@ -271,9 +286,13 @@ const App = () => {
               <Route path="/signup" element={<Signup />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/auth/signup" element={<Signup />} />
               <Route path="/auth/verify-email" element={<VerifyEmail />} />
               <Route path="/auth/forgot-password" element={<ForgotPassword />} />
+              <Route path="/auth/reset-password" element={<ResetPassword />} />
+              <Route path="/auth/action" element={<ResetPassword />} />
+              <Route path="/__/auth/action" element={<ResetPassword />} />
 
               {/* Admin Login (separate from admin panel) */}
               <Route path="/admin" element={<AdminLogin />} />

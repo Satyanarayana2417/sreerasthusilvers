@@ -324,7 +324,11 @@ export const getDeliveryBoyStats = async () => {
  */
 export const sendDeliveryBoyPasswordReset = async (email: string): Promise<void> => {
   try {
-    await sendPasswordResetEmail(auth, email);
+    const actionCodeSettings = {
+      url: `${window.location.origin}/`,
+      handleCodeInApp: false,
+    };
+    await sendPasswordResetEmail(auth, email, actionCodeSettings);
     console.log('✅ Password reset email sent to:', email);
   } catch (error: any) {
     console.error('❌ Error sending password reset email:', error);

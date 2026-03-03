@@ -130,7 +130,8 @@ const LoginForm = () => {
         return;
       }
       
-      // For regular verified users, reset loading (will redirect via useEffect)
+      // For regular verified users, redirect to home page
+      navigate('/');
       setGoogleLoading(false);
     } catch (err: any) {
       console.error('Google login error:', err);
@@ -221,7 +222,8 @@ const LoginForm = () => {
           return;
         }
         
-        // For regular verified users, reset loading and stay on page (will redirect via useEffect)
+        // For regular verified users, redirect to home page
+        navigate('/');
         setEmailLoading(false);
       }
     } catch (err: any) {
@@ -624,8 +626,8 @@ const AccountPage = () => {
   const menuItems = [
     { id: 'orders', label: 'My orders', icon: Package, path: null },
     { id: 'addresses', label: 'Your addresses', icon: MapPin, path: '/account/addresses' },
-    { id: 'security', label: 'Login & security', icon: Shield, path: null },
-    { id: 'payments', label: 'Payments', icon: CreditCard, path: null },
+    { id: 'security', label: 'Login & security', icon: Shield, path: '/security' },
+    { id: 'payments', label: 'Payments & Wallet', icon: CreditCard, path: '/wallet' },
     { id: 'archived', label: 'Archived orders', icon: Package, path: null },
     { id: 'saved', label: 'Saved items', icon: Heart, path: '/wishlist' },
     { id: 'support', label: 'Customer support', icon: MessageCircle, path: '/customer-support' },
@@ -947,14 +949,16 @@ const AccountPage = () => {
             {selectedMenu === 'security' && (
               <div className="bg-white rounded-lg shadow-sm p-4">
                 <h3 className="text-lg font-bold text-gray-900 mb-2">Login & Security</h3>
-                <p className="text-sm text-gray-600">Manage your login credentials and security settings.</p>
+                <p className="text-sm text-gray-600 mb-4">Manage your login credentials and security settings.</p>
+                <Button onClick={() => navigate('/security')} className="w-full">Manage Security</Button>
               </div>
             )}
 
             {selectedMenu === 'payments' && (
               <div className="bg-white rounded-lg shadow-sm p-4">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Payments</h3>
-                <p className="text-sm text-gray-600">Manage your payment methods and transaction history.</p>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">Payments & Wallet</h3>
+                <p className="text-sm text-gray-600 mb-4">Manage your wallet, rewards, and payment methods.</p>
+                <Button onClick={() => navigate('/wallet')} className="w-full">Open Wallet</Button>
               </div>
             )}
 
@@ -1316,14 +1320,16 @@ const AccountPage = () => {
               {selectedMenu === 'security' && (
                 <div className="bg-white rounded-lg shadow-sm p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-4">Login & Security</h3>
-                  <p className="text-gray-600">Manage your login credentials and security settings.</p>
+                  <p className="text-gray-600 mb-4">Manage your login credentials and security settings.</p>
+                  <Button onClick={() => navigate('/security')}>Manage Security</Button>
                 </div>
               )}
 
               {selectedMenu === 'payments' && (
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Payments</h3>
-                  <p className="text-gray-600">Manage your payment methods and transaction history.</p>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">Payments & Wallet</h3>
+                  <p className="text-gray-600 mb-4">Manage your wallet, rewards, and payment methods.</p>
+                  <Button onClick={() => navigate('/wallet')}>Open Wallet</Button>
                 </div>
               )}
 
