@@ -44,6 +44,13 @@ service cloud.firestore {
         allow read, write: if isOwner(userId) || isAdmin();
       }
       
+      // --- GIFT CARDS SUBCOLLECTION ---
+      match /giftCards/{giftCardId} {
+        allow read: if isOwner(userId) || isAdmin();
+        // Only admin can create/update/delete gift cards
+        allow write: if isAdmin();
+      }
+
       // --- WALLET (subcollection) ---
       // Balance is READ-ONLY for clients. Only server/admin can modify.
       // In production, replace client writes with Cloud Functions.

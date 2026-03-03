@@ -105,8 +105,8 @@ import CustomEngravedItems from "./pages/CustomEngravedItems";
 import SilverCoins from "./pages/SilverCoins";
 import LimitedEditionPieces from "./pages/LimitedEditionPieces";
 
-// Wallet & Security Pages
-import WalletPage from "./pages/WalletPage";
+// Purchase Summary & Security Pages
+import PurchaseSummary from "./pages/PurchaseSummary";
 import SecurityPage from "./pages/SecurityPage";
 
 // Auth Pages
@@ -130,6 +130,7 @@ import AdminTestimonials from "./pages/admin/AdminTestimonials";
 import AdminGallery from "./pages/admin/AdminGallery";
 import AdminOrders from "./pages/AdminOrders";
 import AdminDeliveryBoys from "./pages/admin/AdminDeliveryBoys";
+import AdminGiftCards from "./pages/admin/AdminGiftCards";
 
 // Delivery Partner Pages
 import DeliveryLogin from "./pages/delivery/DeliveryLogin";
@@ -262,7 +263,12 @@ const App = () => {
               <Route path="/buy-again" element={<BuyAgain />} />
               <Route path="/wallet" element={
                 <ProtectedRoute requireEmailVerification={false}>
-                  <WalletPage />
+                  <PurchaseSummary />
+                </ProtectedRoute>
+              } />
+              <Route path="/purchase-summary" element={
+                <ProtectedRoute requireEmailVerification={false}>
+                  <PurchaseSummary />
                 </ProtectedRoute>
               } />
               <Route path="/security" element={
@@ -318,6 +324,7 @@ const App = () => {
                 <Route path="showcases" element={<AdminShowcases />} />
                 <Route path="testimonials" element={<AdminTestimonials />} />
                 <Route path="gallery" element={<AdminGallery />} />
+                <Route path="gift-cards" element={<AdminGiftCards />} />
               </Route>
 
               {/* Delivery Partner Routes */}

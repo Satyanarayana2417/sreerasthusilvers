@@ -1267,7 +1267,7 @@ const MobileCheckout = () => {
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
               <Button
                 onClick={() => {
-                  navigate(`/account/orders/${orderId}`);
+                  navigate('/account/orders', { state: { orderId } });
                 }}
                 variant="outline"
                 className="flex-1 h-12 border-gray-300 text-gray-900 font-semibold text-sm rounded-lg"

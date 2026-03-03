@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscribeToUserOrders, Order, cancelOrder, requestReturn } from '@/services/orderService';
@@ -34,6 +34,7 @@ import {
 
 const MobileOrders = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, userProfile } = useAuth();
   const [selectedOrderTab, setSelectedOrderTab] = useState('current');
   const [orders, setOrders] = useState<Order[]>([]);
@@ -52,12 +53,7 @@ const MobileOrders = () => {
   const [returnReason, setReturnReason] = useState('');
   const [customReturnReason, setCustomReturnReason] = useState('');
   const [returnStep, setReturnStep] = useState<'reason' | 'details'>('reason');
-  const [returnType, setReturnType] = useState<'refund' | 'replacement'>('refund');
-  const [paymentMethod, setPaymentMethod] = useState('original');
-  const [refundMode, setRefundMode] = useState<'upi' | 'bank'>('upi');
-  const [upiId, setUpiId] = useState('');
-  const [accountNumber, setAccountNumber] = useState('');
-  const [ifscCode, setIfscCode] = useState('');
+  const [returnType, setReturnType] = useState<'replacement'>('replacement');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Subscribe to user orders
@@ -103,6 +99,21 @@ const MobileOrders = () => {
       }
     }
   }, [orders]);
+
+  // Auto-open order if orderId is passed via location state
+  useEffect(() => {
+    const state = location.state as { orderId?: string } | null;
+    if (state?.orderId && orders.length > 0 && !selectedOrder) {
+      const orderToOpen = orders.find(order => order.id === state.orderId);
+      if (orderToOpen) {
+        console.log('📂 Auto-opening order from location state:', state.orderId);
+        setSelectedOrder(orderToOpen);
+        setShowOrderModal(true);
+        // Clear the state to prevent re-opening on navigation back
+        window.history.replaceState({}, document.title);
+      }
+    }
+  }, [orders, location.state, selectedOrder]);
 
   // Filter orders based on tab
   const filteredOrders = selectedOrderTab === 'current'
@@ -187,14 +198,49 @@ const MobileOrders = () => {
 
   // Check if order can be returned (within 7 days of delivery)
   const canReturnOrder = (order: Order) => {
-    if (order.status !== 'delivered' || !order.deliveredAt) return false;
-
-    const deliveredDate = order.deliveredAt instanceof Date 
-      ? order.deliveredAt 
-      : new Date(order.deliveredAt.seconds * 1000);
+    // First check if order is delivered
+    if (order.status !== 'delivered') return false;
     
-    const hoursSinceDelivery = (new Date().getTime() - deliveredDate.getTime()) / (1000 * 60 * 60);
-    return hoursSinceDelivery <= 168; // 7 days = 168 hours
+    // If no deliveredAt, allow return (safer option)
+    if (!order.deliveredAt) {
+      console.warn('Order is delivered but has no deliveredAt timestamp. Allowing return.');
+      return true;
+    }
+
+    try {
+      let deliveredDate: Date;
+      
+      if (order.deliveredAt instanceof Date) {
+        deliveredDate = order.deliveredAt;
+      } else if (typeof order.deliveredAt === 'object' && 'toDate' in order.deliveredAt) {
+        // Firestore Timestamp with toDate method
+        deliveredDate = (order.deliveredAt as any).toDate();
+      } else if (typeof order.deliveredAt === 'object' && 'seconds' in order.deliveredAt) {
+        // Firestore Timestamp object format
+        deliveredDate = new Date((order.deliveredAt as any).seconds * 1000);
+      } else if (typeof order.deliveredAt === 'string') {
+        // String date format
+        deliveredDate = new Date(order.deliveredAt);
+      } else {
+        console.warn('Unknown deliveredAt format:', order.deliveredAt);
+        return true; // Allow return if we can't parse the date
+      }
+      
+      const hoursSinceDelivery = (new Date().getTime() - deliveredDate.getTime()) / (1000 * 60 * 60);
+      const canReturn = hoursSinceDelivery <= 168; // 7 days = 168 hours
+      
+      console.log('Return eligibility check:', {
+        orderId: order.orderId,
+        deliveredDate: deliveredDate.toISOString(),
+        hoursSinceDelivery: hoursSinceDelivery.toFixed(2),
+        canReturn
+      });
+      
+      return canReturn;
+    } catch (error) {
+      console.error('Error checking return eligibility:', error);
+      return true; // Allow return on error to be safe
+    }
   };
 
   // Handle order cancellation
@@ -1466,12 +1512,7 @@ const MobileOrders = () => {
                     setReturnReason('');
                     setCustomReturnReason('');
                     setReturnStep('reason');
-                    setReturnType('refund');
-                    setPaymentMethod('original');
-                    setRefundMode('upi');
-                    setUpiId('');
-                    setAccountNumber('');
-                    setIfscCode('');
+                    setReturnType('replacement');
                   }
                 }}
                 className="w-8 h-8 flex items-center justify-center"
@@ -1521,32 +1562,32 @@ const MobileOrders = () => {
                 {[
                   { 
                     reason: 'Quality not as expected', 
-                    image: 'https://i.ibb.co/j9Yw9yfr/quality.png',
+                    image: 'https://i.ibb.co/4R89tnfN/IMG-20260303-223842.webp',
                     description: 'Quality of the product not as expected'
                   },
                   { 
                     reason: 'Received wrong item', 
-                    image: 'https://i.ibb.co/fY5sWW7d/wrong-item.png',
+                    image: 'https://i.ibb.co/n8gYFKdG/IMG-20260303-223851.webp',
                     description: 'Received wrong item'
                   },
                   { 
                     reason: "Don't want anymore", 
-                    image: 'https://i.ibb.co/yctV3krs/dont-want.png',
+                    image: 'https://i.ibb.co/Gv310qKb/IMG-20260303-223900.webp',
                     description: "Don't want the product anymore"
                   },
                   { 
                     reason: 'Missing in package', 
-                    image: 'https://i.ibb.co/nMs7LwR6/missing.png',
+                    image: 'https://i.ibb.co/BSzmq7H/IMG-20260303-223908.webp',
                     description: 'Product is missing in the package'
                   },
                   { 
                     reason: 'Damaged/Broken item', 
-                    image: 'https://i.ibb.co/zTgcmkVQ/damaged.png',
+                    image: 'https://i.ibb.co/XxBg8Bcy/IMG-20260303-223921.webp',
                     description: 'Received a broken/damaged item'
                   },
                   { 
                     reason: "Size/Fit issue", 
-                    image: 'https://i.ibb.co/8njZJ7rv/size.png',
+                    image: 'https://i.ibb.co/yndkCNM1/IMG-20260303-223832.webp',
                     description: "Don't like the size/fit of the product"
                   },
                 ].map((item) => (
@@ -1664,196 +1705,22 @@ const MobileOrders = () => {
 
                     <div className="h-px bg-gray-200" />
 
-                    {/* What do you want in return? */}
+                    {/* Replacement Info */}
                     <div>
                       <h4 className="text-base font-medium text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                        What do you want in return?
+                        Return Type
                       </h4>
-                      <div className="space-y-3">
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="returnType"
-                            value="refund"
-                            checked={returnType === 'refund'}
-                            onChange={(e) => setReturnType(e.target.value as 'refund')}
-                            className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                            Refund
-                          </span>
-                        </label>
-                        <label className="flex items-center gap-3 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="returnType"
-                            value="replacement"
-                            checked={returnType === 'replacement'}
-                            onChange={(e) => setReturnType(e.target.value as 'replacement')}
-                            className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                          />
-                          <span className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                            Replacement
-                          </span>
-                        </label>
+                      <div className="p-4 bg-blue-50 rounded-lg border-2 border-blue-200">
+                        <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          Product Replacement
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          Your product will be replaced with the same item after quality check
+                        </p>
                       </div>
                     </div>
 
                     <div className="h-px bg-gray-200" />
-
-                    {/* Refund Amount */}
-                    {returnType === 'refund' && (
-                      <>
-                        <div>
-                          <p className="text-sm text-gray-500 mb-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                            Refund Amount:
-                          </p>
-                          <p className="text-xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                            ₹{selectedOrder.total.toLocaleString()}
-                          </p>
-                        </div>
-
-                        <div className="h-px bg-gray-200" />
-
-                        {/* Payment Method */}
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                            Refund Method
-                          </h4>
-                          <div className="space-y-3">
-                            <label
-                              className="flex items-start gap-3 p-4 rounded-lg border-2 border-blue-500 bg-blue-50"
-                            >
-                              <input
-                                type="radio"
-                                name="paymentMethod"
-                                value="original"
-                                checked={true}
-                                readOnly
-                                className="w-5 h-5 mt-0.5 text-blue-600 focus:ring-blue-500"
-                              />
-                              <div className="flex-1">
-                                <p className="text-sm font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                                  Original Payment Mode
-                                </p>
-                                <p className="text-xs text-gray-600 mt-1" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                                  ⏰ Refund within 5-7 days of pick-up
-                                </p>
-                              </div>
-                            </label>
-                          </div>
-                        </div>
-
-                        <div className="h-px bg-gray-200" />
-
-                        {/* Payment Details */}
-                        <div>
-                          <h4 className="text-sm font-medium text-gray-900 mb-3" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                            Payment Details for Refund
-                          </h4>
-                          
-                          {/* Refund Mode Selection */}
-                          <div className="space-y-3 mb-4">
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="radio"
-                                name="refundMode"
-                                value="upi"
-                                checked={refundMode === 'upi'}
-                                onChange={(e) => setRefundMode(e.target.value as 'upi')}
-                                className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                              />
-                              <span className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                                UPI ID
-                              </span>
-                            </label>
-                            <label className="flex items-center gap-3 cursor-pointer">
-                              <input
-                                type="radio"
-                                name="refundMode"
-                                value="bank"
-                                checked={refundMode === 'bank'}
-                                onChange={(e) => setRefundMode(e.target.value as 'bank')}
-                                className="w-5 h-5 text-blue-600 focus:ring-blue-500"
-                              />
-                              <span className="text-sm font-medium text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                                Bank Account
-                              </span>
-                            </label>
-                          </div>
-
-                          {/* UPI ID Field */}
-                          {refundMode === 'upi' && (
-                            <div className="space-y-2">
-                              <label className="text-xs font-medium text-gray-700" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                                Enter UPI ID
-                              </label>
-                              <input
-                                type="text"
-                                value={upiId}
-                                onChange={(e) => setUpiId(e.target.value)}
-                                placeholder="example@upi"
-                                className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm"
-                                style={{ fontFamily: "'Poppins', sans-serif" }}
-                              />
-                            </div>
-                          )}
-
-                          {/* Bank Account Fields */}
-                          {refundMode === 'bank' && (
-                            <div className="space-y-3">
-                              <div>
-                                <label className="text-xs font-medium text-gray-700" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                                  Bank Account Number
-                                </label>
-                                <input
-                                  type="text"
-                                  value={accountNumber}
-                                  onChange={(e) => setAccountNumber(e.target.value)}
-                                  placeholder="Enter account number"
-                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm mt-2"
-                                  style={{ fontFamily: "'Poppins', sans-serif" }}
-                                />
-                              </div>
-                              <div>
-                                <label className="text-xs font-medium text-gray-700" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                                  IFSC Code
-                                </label>
-                                <input
-                                  type="text"
-                                  value={ifscCode}
-                                  onChange={(e) => setIfscCode(e.target.value.toUpperCase())}
-                                  placeholder="Enter IFSC code"
-                                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm mt-2"
-                                  style={{ fontFamily: "'Poppins', sans-serif" }}
-                                />
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Verify Button */}
-                          <button
-                            onClick={() => {
-                              if (refundMode === 'upi' && !upiId.trim()) {
-                                toast.error('Please enter UPI ID');
-                                return;
-                              }
-                              if (refundMode === 'bank' && (!accountNumber.trim() || !ifscCode.trim())) {
-                                toast.error('Please enter both account number and IFSC code');
-                                return;
-                              }
-                              toast.success('Payment details verified successfully!');
-                            }}
-                            className="w-full mt-4 py-3 bg-blue-600 text-white rounded-lg font-semibold text-sm hover:bg-blue-700 transition-colors"
-                            style={{ fontFamily: "'Poppins', sans-serif" }}
-                          >
-                            Verify
-                          </button>
-                        </div>
-
-                        <div className="h-px bg-gray-200" />
-                      </>
-                    )}
 
                     {/* Pick up and delivery */}
                     <div>

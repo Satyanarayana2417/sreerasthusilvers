@@ -24,6 +24,7 @@ import {
   getSecuritySettings,
   updateSecuritySettings,
   getLoginHistory,
+  subscribeToLoginHistory,
   getActiveSessions,
   terminateSession,
   terminateAllSessions,
@@ -90,6 +91,10 @@ const SecurityPage: React.FC = () => {
   const [newEmail, setNewEmail] = useState('');
   const [emailPassword, setEmailPassword] = useState('');
   const [changingEmail, setChangingEmail] = useState(false);
+
+  // Login history filters
+  const [historyFilter, setHistoryFilter] = useState<'all' | 'success' | 'failed' | 'suspicious'>('all');
+  const [historyExpanded, setHistoryExpanded] = useState<string | null>(null);
 
   // General
   const [actionLoading, setActionLoading] = useState<string | null>(null);
@@ -337,10 +342,72 @@ const SecurityPage: React.FC = () => {
       ' ' + date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
   };
 
+  const formatRelativeTime = (timestamp: any) => {
+    if (!timestamp) return 'N/A';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffSec = Math.floor(diffMs / 1000);
+    const diffMin = Math.floor(diffSec / 60);
+    const diffHr = Math.floor(diffMin / 60);
+    const diffDay = Math.floor(diffHr / 24);
+
+    if (diffSec < 60) return 'Just now';
+    if (diffMin < 60) return `${diffMin}m ago`;
+    if (diffHr < 24) return `${diffHr}h ago`;
+    if (diffDay === 1) return 'Yesterday';
+    if (diffDay < 7) return `${diffDay}d ago`;
+    return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+  };
+
+  const formatFullTimestamp = (timestamp: any) => {
+    if (!timestamp) return 'N/A';
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    const dayName = date.toLocaleDateString('en-IN', { weekday: 'long' });
+    const dateStr = date.toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' });
+    const timeStr = date.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+    return `${dayName}, ${dateStr} at ${timeStr}`;
+  };
+
+  const getFilteredHistory = () => {
+    if (historyFilter === 'all') return loginHistory;
+    if (historyFilter === 'suspicious') return loginHistory.filter(e => e.isSuspicious);
+    return loginHistory.filter(e => e.status === historyFilter);
+  };
+
+  const getHistoryStats = () => {
+    const total = loginHistory.length;
+    const successful = loginHistory.filter(e => e.status === 'success').length;
+    const failed = loginHistory.filter(e => e.status === 'failed').length;
+    const suspicious = loginHistory.filter(e => e.isSuspicious).length;
+    const lastLogin = loginHistory.find(e => e.status === 'success');
+    return { total, successful, failed, suspicious, lastLogin };
+  };
+
+  const getLoginMethodLabel = (method: string) => {
+    switch (method) {
+      case 'google': return 'Google Sign-In';
+      case 'email': return 'Email & Password';
+      case 'phone': return 'Phone OTP';
+      case 'magic_link': return 'Magic Link';
+      default: return method;
+    }
+  };
+
   const getDeviceIcon = (os: string) => {
     if (os?.includes('Android') || os?.includes('iOS')) return <Smartphone className="w-5 h-5" />;
     if (os?.includes('Windows') || os?.includes('Mac') || os?.includes('Linux')) return <Monitor className="w-5 h-5" />;
     return <Globe className="w-5 h-5" />;
+  };
+
+  const getSectionTitle = (tab: SecurityTab) => {
+    switch (tab) {
+      case 'overview': return 'Login & Security';
+      case 'password': return 'Change Password';
+      case 'login-history': return 'Login History';
+      case 'account': return 'Account Settings';
+      default: return 'Login & Security';
+    }
   };
 
   if (authLoading || loading) {
@@ -369,7 +436,7 @@ const SecurityPage: React.FC = () => {
           <ArrowLeft className="w-5 h-5 text-gray-700" />
         </button>
         <h1 className="text-lg font-semibold text-gray-900">
-          {activeTab === 'overview' ? 'Login & Security' : 'Back to Security'}
+          {getSectionTitle(activeTab)}
         </h1>
       </div>
 
@@ -609,99 +676,130 @@ const SecurityPage: React.FC = () => {
                 </>
               )}
             </div>
-
-            {/* Change Email */}
-            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mt-6">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center">
-                  <Mail className="w-6 h-6 text-green-600" />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">Change Email</h3>
-                  <p className="text-sm text-gray-500">Current: {user?.email}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">New Email Address</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="email"
-                      value={newEmail}
-                      onChange={(e) => setNewEmail(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                      placeholder="Enter new email"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Current Password (for verification)</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                    <input
-                      type="password"
-                      value={emailPassword}
-                      onChange={(e) => setEmailPassword(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-green-500 outline-none"
-                      placeholder="Enter your password"
-                    />
-                  </div>
-                </div>
-                <Button
-                  onClick={handleChangeEmail}
-                  disabled={changingEmail || !newEmail || !emailPassword}
-                  className="w-full py-3 h-12 rounded-xl bg-green-600 hover:bg-green-700"
-                >
-                  {changingEmail ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Updating...</> : 'Update Email'}
-                </Button>
-              </div>
-            </div>
           </motion.div>
         )}
 
         {/* ─── LOGIN HISTORY ───────────────────── */}
         {activeTab === 'login-history' && (
           <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}>
-            <h3 className="font-semibold text-gray-900 mb-4">Login History</h3>
+            {/* Timeline */}
+            <div className="space-y-0">
+              {loginHistory.length > 0 ? loginHistory.map((entry, index) => {
+                const isExpanded = historyExpanded === entry.id;
+                const isLast = index === loginHistory.length - 1;
+                return (
+                  <div key={entry.id} className="relative">
+                    {/* Timeline connector line */}
+                    {!isLast && (
+                      <div className="absolute left-[18px] top-[40px] bottom-0 w-[2px] bg-gray-100" />
+                    )}
 
-            <div className="space-y-2">
-              {loginHistory.length > 0 ? loginHistory.map((entry) => (
-                <div key={entry.id} className={`bg-white rounded-xl shadow-sm border p-4 ${entry.isSuspicious ? 'border-red-200' : entry.status === 'failed' ? 'border-amber-200' : 'border-gray-100'}`}>
-                  <div className="flex items-start gap-3">
-                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${
-                      entry.status === 'success' ? 'bg-green-50 text-green-600' :
-                      entry.status === 'failed' ? 'bg-red-50 text-red-600' :
-                      'bg-amber-50 text-amber-600'
-                    }`}>
-                      {entry.status === 'success' ? <CheckCircle2 className="w-4 h-4" /> :
-                       entry.status === 'failed' ? <XCircle className="w-4 h-4" /> :
-                       <AlertTriangle className="w-4 h-4" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <p className="text-sm font-medium text-gray-900 capitalize">{entry.status} login</p>
-                        {entry.isSuspicious && (
-                          <span className="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full flex items-center gap-1">
-                            <ShieldAlert className="w-3 h-3" /> Suspicious
-                          </span>
-                        )}
+                    <motion.div
+                      layout
+                      onClick={() => setHistoryExpanded(isExpanded ? null : entry.id)}
+                      className={`relative flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all hover:bg-gray-50 ${
+                        isExpanded ? 'bg-gray-50' : ''
+                      }`}
+                    >
+                      {/* Status dot */}
+                      <div className={`relative z-10 w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 shadow-sm border-2 border-white ${
+                        entry.status === 'success' ? 'bg-green-100 text-green-600' :
+                        entry.status === 'failed' ? 'bg-red-100 text-red-600' :
+                        'bg-amber-100 text-amber-600'
+                      }`}>
+                        {entry.status === 'success' ? <CheckCircle2 className="w-4 h-4" /> :
+                         entry.status === 'failed' ? <XCircle className="w-4 h-4" /> :
+                         <AlertTriangle className="w-4 h-4" />}
                       </div>
-                      <p className="text-xs text-gray-500 mt-0.5">
-                        {entry.method} &middot; {entry.browser} on {entry.os}
-                      </p>
-                      <p className="text-xs text-gray-400 mt-0.5">{formatDate(entry.timestamp)}</p>
-                      {entry.suspiciousReason && (
-                        <p className="text-xs text-red-500 mt-1">{entry.suspiciousReason}</p>
-                      )}
-                    </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <p className="text-sm font-semibold text-gray-900 capitalize">
+                              {entry.status === 'success' ? 'Successful Login' :
+                               entry.status === 'failed' ? 'Failed Attempt' :
+                               'Login Attempt'}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {getLoginMethodLabel(entry.method)}
+                              <span className="text-gray-300 mx-1">•</span>
+                              {entry.browser || 'Unknown'} on {entry.os || 'Unknown'}
+                            </p>
+                          </div>
+                          <div className="text-right flex-shrink-0 ml-2">
+                            <p className="text-xs font-medium text-gray-700">{formatRelativeTime(entry.timestamp)}</p>
+                            <ChevronDown className={`w-3.5 h-3.5 text-gray-400 ml-auto mt-0.5 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
+                          </div>
+                        </div>
+
+                        {/* Expanded details */}
+                        <AnimatePresence>
+                          {isExpanded && (
+                            <motion.div
+                              initial={{ height: 0, opacity: 0 }}
+                              animate={{ height: 'auto', opacity: 1 }}
+                              exit={{ height: 0, opacity: 0 }}
+                              transition={{ duration: 0.2 }}
+                              className="overflow-hidden"
+                            >
+                              <div className="mt-3 pt-3 border-t border-gray-100 space-y-2.5">
+                                {/* Full timestamp */}
+                                <div className="flex items-center gap-2 text-xs">
+                                  <Clock className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                  <span className="text-gray-600">{formatFullTimestamp(entry.timestamp)}</span>
+                                </div>
+
+                                {/* Device info */}
+                                <div className="flex items-center gap-2 text-xs">
+                                  {entry.os?.includes('Android') || entry.os?.includes('iOS') ? (
+                                    <Smartphone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                  ) : (
+                                    <Monitor className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                  )}
+                                  <span className="text-gray-600">
+                                    {entry.device || 'Unknown Device'} — {entry.browser} / {entry.os}
+                                  </span>
+                                </div>
+
+                                {/* IP Address */}
+                                {entry.ipAddress && entry.ipAddress !== 'unknown' && (
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <Globe className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                    <span className="text-gray-600">IP: {entry.ipAddress}</span>
+                                  </div>
+                                )}
+
+                                {/* Location */}
+                                {entry.location && (entry.location.city || entry.location.country) && (
+                                  <div className="flex items-center gap-2 text-xs">
+                                    <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                    <span className="text-gray-600">
+                                      {[entry.location.city, entry.location.region, entry.location.country].filter(Boolean).join(', ')}
+                                    </span>
+                                  </div>
+                                )}
+
+                                {/* Auth method */}
+                                <div className="flex items-center gap-2 text-xs">
+                                  <Key className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+                                  <span className="text-gray-600">{getLoginMethodLabel(entry.method)}</span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          )}
+                        </AnimatePresence>
+                      </div>
+                    </motion.div>
                   </div>
-                </div>
-              )) : (
-                <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-gray-100">
-                  <Clock className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-                  <p className="text-sm text-gray-500">No login history yet</p>
+                );
+              }) : (
+                <div className="bg-white rounded-2xl p-10 text-center shadow-sm border border-gray-100">
+                  <div className="w-16 h-16 rounded-full bg-gray-50 mx-auto mb-4 flex items-center justify-center">
+                    <Clock className="w-8 h-8 text-gray-300" />
+                  </div>
+                  <p className="text-sm font-medium text-gray-700">No login history yet</p>
+                  <p className="text-xs text-gray-400 mt-1">Login events will appear here as they happen</p>
                 </div>
               )}
             </div>
@@ -746,7 +844,7 @@ const SecurityPage: React.FC = () => {
             <div className="bg-white rounded-2xl shadow-sm border border-red-200 p-5">
               <h3 className="font-semibold text-red-900 mb-2">Danger Zone</h3>
               <p className="text-xs text-gray-500 mb-4">
-                Deleting your account will remove all your data, orders, wallet balance, and rewards permanently after a 30-day grace period.
+                Deleting your account will remove all your data, orders, and rewards permanently after a 30-day grace period.
               </p>
 
               {!showDeleteConfirm ? (

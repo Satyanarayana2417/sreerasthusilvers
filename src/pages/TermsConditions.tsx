@@ -54,11 +54,11 @@ const TermsConditions = () => {
               </p>
             </section>
 
-            {/* Returns & Refunds */}
+            {/* Returns */}
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Returns & Refunds</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">5. Returns</h2>
               <p className="text-gray-700 leading-relaxed">
-                Returns and refunds are governed by our Cancellation & Refund Policy.
+                Product returns are governed by our Return & Replacement Policy. We offer product replacements for eligible items.
               </p>
             </section>
 

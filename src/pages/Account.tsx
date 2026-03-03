@@ -300,7 +300,7 @@ const LoginForm = () => {
           <div className="p-6 sm:p-8 lg:pt-0">
             {/* Mobile Back Arrow */}
             <button
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/')}
               className="lg:hidden mb-4 flex items-center gap-1 text-gray-500 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="h-5 w-5" />
@@ -554,6 +554,14 @@ const AccountPage = () => {
   const [cancelReason, setCancelReason] = useState('');
   const [returnReason, setReturnReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+  // Update avatar URL when user or userProfile changes
+  useEffect(() => {
+    const newAvatarUrl = user?.photoURL || userProfile?.avatar || null;
+    console.log('🖼️ Avatar URL updated:', newAvatarUrl);
+    setAvatarUrl(newAvatarUrl);
+  }, [user?.photoURL, userProfile?.avatar]);
 
   // Subscribe to user orders
   useEffect(() => {
@@ -627,7 +635,7 @@ const AccountPage = () => {
     { id: 'orders', label: 'My orders', icon: Package, path: null },
     { id: 'addresses', label: 'Your addresses', icon: MapPin, path: '/account/addresses' },
     { id: 'security', label: 'Login & security', icon: Shield, path: '/security' },
-    { id: 'payments', label: 'Payments & Wallet', icon: CreditCard, path: '/wallet' },
+    { id: 'payments', label: 'My Jewellery Journey', icon: CreditCard, path: '/purchase-summary' },
     { id: 'archived', label: 'Archived orders', icon: Package, path: null },
     { id: 'saved', label: 'Saved items', icon: Heart, path: '/wishlist' },
     { id: 'support', label: 'Customer support', icon: MessageCircle, path: '/customer-support' },
@@ -863,21 +871,22 @@ const AccountPage = () => {
                 {/* User Avatar and Name */}
                 <div className="flex items-center gap-3">
                   <button
-                    onClick={() => navigate(-1)}
+                    onClick={() => navigate('/')}
                     className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                   >
                     <ArrowLeft className="w-5 h-5 text-gray-700" />
                   </button>
-                  {user?.photoURL || userProfile?.avatar ? (
+                  {avatarUrl ? (
                     <img 
-                      key={user?.photoURL || userProfile?.avatar}
-                      src={user.photoURL || userProfile?.avatar} 
+                      key={`avatar-${avatarUrl}-${user?.uid}`}
+                      src={avatarUrl} 
                       alt="Profile" 
-                      className="w-10 h-10 rounded-full object-cover border border-black"
+                      className="w-10 h-10 rounded-full object-cover border border-black flex-shrink-0"
                       referrerPolicy="no-referrer"
+                      loading="eager"
                     />
                   ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black flex-shrink-0">
                       <span className="text-white font-semibold text-sm">
                         {(userProfile?.name || userProfile?.username || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
                       </span>
@@ -956,9 +965,9 @@ const AccountPage = () => {
 
             {selectedMenu === 'payments' && (
               <div className="bg-white rounded-lg shadow-sm p-4">
-                <h3 className="text-lg font-bold text-gray-900 mb-2">Payments & Wallet</h3>
-                <p className="text-sm text-gray-600 mb-4">Manage your wallet, rewards, and payment methods.</p>
-                <Button onClick={() => navigate('/wallet')} className="w-full">Open Wallet</Button>
+                <h3 className="text-lg font-bold text-gray-900 mb-2">My Jewellery Journey</h3>
+                <p className="text-sm text-gray-600 mb-4">Track your investment and order history with exclusive rewards.</p>
+                <Button onClick={() => navigate('/purchase-summary')} className="w-full">View Summary</Button>
               </div>
             )}
 
@@ -1327,9 +1336,9 @@ const AccountPage = () => {
 
               {selectedMenu === 'payments' && (
                 <div className="bg-white rounded-lg shadow-sm p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">Payments & Wallet</h3>
-                  <p className="text-gray-600 mb-4">Manage your wallet, rewards, and payment methods.</p>
-                  <Button onClick={() => navigate('/wallet')}>Open Wallet</Button>
+                  <h3 className="text-xl font-bold text-gray-900 mb-4">My Jewellery Journey</h3>
+                  <p className="text-gray-600 mb-4">Track your investment and order history with exclusive rewards.</p>
+                  <Button onClick={() => navigate('/purchase-summary')}>View Summary</Button>
                 </div>
               )}
 
