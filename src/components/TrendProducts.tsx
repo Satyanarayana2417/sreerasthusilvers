@@ -200,12 +200,18 @@ const TrendProducts = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
           transition={{ duration: 0.6 }}
-          className="mb-3 md:mb-6"
+          className="mb-3 md:mb-6 hidden md:block"
         >
           <h2 className="text-lg md:text-3xl font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
             Trend Products
           </h2>
         </motion.div>
+        {/* Mobile header without animation */}
+        <div className="mb-3 md:mb-6 md:hidden">
+          <h2 className="text-lg md:text-3xl font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            Trend Products
+          </h2>
+        </div>
 
         {/* Products Container */}
         <div className="relative">
@@ -233,14 +239,12 @@ const TrendProducts = () => {
 
           <div 
             ref={scrollRef}
-            className="flex gap-2 md:gap-4 overflow-x-auto scrollbar-hide snap-x snap-mandatory pb-4 cursor-grab active:cursor-grabbing select-none"
+            className="flex gap-2 md:gap-4 overflow-x-auto scrollbar-hide pb-4 md:snap-x md:snap-mandatory md:cursor-grab md:active:cursor-grabbing select-none"
+            style={{ WebkitOverflowScrolling: 'touch' }}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseLeave}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
           >
             {loading ? (
               // Loading skeleton
@@ -266,7 +270,7 @@ const TrendProducts = () => {
               displayProducts.map((product, index) => (
                 <div
                   key={`${product.id}-${index}`}
-                  className="flex-shrink-0 w-[130px] md:w-[220px] snap-start cursor-pointer"
+                  className="flex-shrink-0 w-[130px] md:w-[220px] md:snap-start cursor-pointer"
                   onClick={() => navigate(`/product/${product.id}`)}
                 >
                   <div className="bg-white rounded-lg overflow-hidden h-full flex flex-col border border-gray-100 md:shadow-sm">

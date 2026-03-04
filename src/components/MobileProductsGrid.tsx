@@ -345,14 +345,14 @@ const MobileProductsGrid = () => {
                 </h3>
 
                 {/* Price & Add Button */}
-                <div className="flex items-center justify-between mb-2">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm font-bold text-gray-900">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-sm font-bold text-gray-900 truncate">
                         {formatPrice(price)}
                       </span>
                       {oldPrice && (
-                        <span className="text-[10px] text-gray-400 line-through">
+                        <span className="text-[10px] text-gray-400 line-through truncate">
                           {formatPrice(oldPrice)}
                         </span>
                       )}
@@ -363,7 +363,7 @@ const MobileProductsGrid = () => {
                       e.stopPropagation();
                       handleAddToCart(product);
                     }}
-                    className="flex items-center gap-1 text-[10px] font-semibold text-orange-600 border border-orange-200 px-2 py-1 rounded hover:bg-orange-50"
+                    className="flex items-center gap-1 text-[10px] font-semibold text-orange-600 border border-orange-200 px-2 py-1 rounded hover:bg-orange-50 flex-shrink-0"
                   >
                     <ShoppingBag className="w-3 h-3" />
                     Add
