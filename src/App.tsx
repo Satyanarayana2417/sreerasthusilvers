@@ -42,6 +42,7 @@ import LoadingScreen from "./components/LoadingScreen";
 import ScrollToTop from "./components/ScrollToTop";
 import MobileCart from "./pages/MobileCart";
 import MobileOrders from "./pages/MobileOrders";
+import OrderDetailsPage from "./pages/OrderDetailsPage";
 import MobileCategories from "./pages/MobileCategories";
 import MobileSearch from "./pages/MobileSearch";
 import SearchResults from "./pages/SearchResults";
@@ -259,6 +260,7 @@ const App = () => {
               } />
               <Route path="/account" element={<Account />} />
               <Route path="/account/orders" element={<MobileOrders />} />
+              <Route path="/account/orders/:orderId" element={<OrderDetailsPage />} />
               <Route path="/account/addresses" element={<SavedAddresses />} />
               <Route path="/buy-again" element={<BuyAgain />} />
               <Route path="/wallet" element={

@@ -1240,8 +1240,7 @@ const AccountPage = () => {
                           className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow bg-gray-50"
                           style={{ fontFamily: "'Poppins', sans-serif" }}
                           onClick={() => {
-                            setSelectedOrder(order);
-                            setShowOrderModal(true);
+                            navigate(`/account/orders/${order.id}`);
                           }}
                         >
                           {/* Order Items Display */}

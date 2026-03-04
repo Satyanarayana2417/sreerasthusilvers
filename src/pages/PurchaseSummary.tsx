@@ -564,28 +564,67 @@ const PurchaseSummary: React.FC = () => {
               </div>
             ) : (
               <div className="space-y-3">
-                {recentDeliveredOrders.map((order) => (
-                  <div 
-                    key={order.id} 
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/order/${order.id}`)}
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="text-sm font-semibold text-gray-900">Order #{order.orderNumber || order.id.slice(0, 8)}</p>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-                          {order.status}
-                        </span>
+                {recentDeliveredOrders.map((order) => {
+                  const firstItem = order.items?.[0];
+                  const itemCount = order.items?.length || 0;
+                  const displayTitle = itemCount > 1 
+                    ? `${firstItem?.name || 'Product'} +${itemCount - 1} more`
+                    : firstItem?.name || 'Product';
+                  
+                  return (
+                    <div 
+                      key={order.id} 
+                      className="flex gap-3 p-3 bg-white rounded-xl border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer"
+                      onClick={() => navigate(`/account/orders/${order.id}`)}
+                    >
+                      {/* Product Image */}
+                      <div className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden bg-gray-100">
+                        {firstItem?.image ? (
+                          <img 
+                            src={firstItem.image} 
+                            alt={firstItem.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-gray-400" />
+                          </div>
+                        )}
                       </div>
-                      <p className="text-xs text-gray-500">
-                        {order.items?.length || 0} item(s) • {order.createdAt?.toDate?.()?.toLocaleDateString('en-IN') || 'N/A'}
-                      </p>
+
+                      {/* Order Info */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-900 truncate mb-1">
+                          {displayTitle}
+                        </p>
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                            {order.status}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-gray-500">
+                            Order #{order.orderNumber || order.id.slice(0, 10)}
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            {order.createdAt?.toDate?.()?.toLocaleDateString('en-IN', { 
+                              day: 'numeric', 
+                              month: 'short',
+                              year: 'numeric'
+                            }) || 'N/A'}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Price */}
+                      <div className="flex-shrink-0 text-right">
+                        <p className="text-sm font-bold text-gray-900">
+                          ₹{(order.totalAmount || 0).toLocaleString('en-IN')}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-bold text-gray-900">₹{(order.totalAmount || 0).toLocaleString('en-IN')}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             );
           })()}
