@@ -22,6 +22,7 @@ const ProductDetail = () => {
   const [notFound, setNotFound] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false);
   const [showShareMenu, setShowShareMenu] = useState(false);
+  const [showFullDescription, setShowFullDescription] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
 
@@ -134,28 +135,76 @@ const ProductDetail = () => {
     
     const productUrl = window.location.href;
     const productTitle = product.title;
-    const productImage = product.image;
+    const productImage = product.image.startsWith('http') ? product.image : `${window.location.origin}${product.image}`;
     const shareText = `Check out ${productTitle} at Sree Rasthu Silvers! ₹${product.price.toLocaleString("en-IN")}`;
 
+    // Helper function to share with image via native share API
+    const shareWithImage = async (text: string) => {
+      if (navigator.share && navigator.canShare) {
+        try {
+          const response = await fetch(productImage);
+          const blob = await response.blob();
+          const ext = blob.type.includes('png') ? 'png' : 'jpg';
+          const file = new File([blob], `${productTitle.replace(/[^a-zA-Z0-9]/g, '_')}.${ext}`, { type: blob.type });
+          
+          const shareData = { 
+            title: productTitle, 
+            text: text + '\n' + productUrl, 
+            files: [file]
+          };
+          
+          if (navigator.canShare(shareData)) {
+            await navigator.share(shareData);
+            return true;
+          }
+        } catch {
+          // Fallback below
+        }
+      }
+      return false;
+    };
+
     switch (platform) {
-      case 'whatsapp':
-        window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + productUrl)}`, '_blank');
+      case 'whatsapp': {
+        // Try native share with image first (mobile), fallback to URL
+        const shared = await shareWithImage(shareText);
+        if (!shared) {
+          window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(shareText + '\n' + productUrl)}`, '_blank');
+        }
         break;
-      case 'facebook':
-        window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank');
+      }
+      case 'facebook': {
+        const shared = await shareWithImage(shareText);
+        if (!shared) {
+          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}&quote=${encodeURIComponent(shareText)}`, '_blank');
+        }
         break;
-      case 'twitter':
-        window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(productUrl)}`, '_blank');
+      }
+      case 'twitter': {
+        const shared = await shareWithImage(shareText);
+        if (!shared) {
+          window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(productUrl)}`, '_blank');
+        }
         break;
-      case 'telegram':
-        window.open(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+      }
+      case 'telegram': {
+        const shared = await shareWithImage(shareText);
+        if (!shared) {
+          window.open(`https://t.me/share/url?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
+        }
         break;
+      }
       case 'pinterest':
         window.open(`https://pinterest.com/pin/create/button/?url=${encodeURIComponent(productUrl)}&media=${encodeURIComponent(productImage)}&description=${encodeURIComponent(shareText)}`, '_blank');
         break;
-      case 'email':
-        window.open(`mailto:?subject=${encodeURIComponent(productTitle + ' - Sree Rasthu Silvers')}&body=${encodeURIComponent(shareText + '\n\n' + productUrl)}`, '_blank');
+      case 'email': {
+        const shared = await shareWithImage(shareText);
+        if (!shared) {
+          const emailBody = `${shareText}\n\nProduct Link: ${productUrl}`;
+          window.open(`mailto:?subject=${encodeURIComponent(productTitle + ' - Sree Rasthu Silvers')}&body=${encodeURIComponent(emailBody)}`, '_blank');
+        }
         break;
+      }
       case 'copy':
         try {
           await navigator.clipboard.writeText(productUrl);
@@ -167,9 +216,24 @@ const ProductDetail = () => {
       case 'native':
         if (navigator.share) {
           try {
-            await navigator.share({ title: productTitle, text: shareText, url: productUrl });
-          } catch (err) {
-            // User cancelled share
+            const response = await fetch(productImage);
+            const blob = await response.blob();
+            const ext = blob.type.includes('png') ? 'png' : 'jpg';
+            const file = new File([blob], `${productTitle.replace(/[^a-zA-Z0-9]/g, '_')}.${ext}`, { type: blob.type });
+            
+            const shareData: ShareData = { 
+              title: productTitle, 
+              text: shareText + '\n' + productUrl,
+              files: [file]
+            };
+            
+            if (navigator.canShare && navigator.canShare(shareData)) {
+              await navigator.share(shareData);
+            } else {
+              await navigator.share({ title: productTitle, text: shareText, url: productUrl });
+            }
+          } catch {
+            // User cancelled or error
           }
         }
         break;
@@ -364,6 +428,24 @@ const ProductDetail = () => {
                   {product.title}
                 </h1>
 
+                {/* Description */}
+                <div className="mb-4">
+                  <p className={`text-xs md:text-sm text-gray-600 leading-relaxed ${
+                    !showFullDescription ? 'line-clamp-2' : ''
+                  }`}>
+                    {product.description ||
+                      `Traditional silver anklet with delicate bells creating a graceful and charming`}
+                  </p>
+                  {(product.description || 'Traditional silver anklet with delicate bells creating a graceful and charming').length > 100 && (
+                    <button
+                      onClick={() => setShowFullDescription(!showFullDescription)}
+                      className="text-blue-600 text-xs md:text-sm font-medium mt-1 hover:underline"
+                    >
+                      {showFullDescription ? 'less' : 'more'}
+                    </button>
+                  )}
+                </div>
+
                 {/* Rating */}
                 <div className="flex items-center gap-3 mb-4">
                   <div className="flex items-center gap-0.5">
@@ -402,12 +484,6 @@ const ProductDetail = () => {
 
                 {/* Divider */}
                 <div className="border-t border-border my-4" />
-
-                {/* Description */}
-                <p className="text-xs md:text-base text-muted-foreground leading-relaxed mb-4 md:mb-6">
-                  {product.description ||
-                    `Exquisitely crafted with attention to detail. This stunning piece from our ${product.category} collection showcases timeless elegance and superior craftsmanship.`}
-                </p>
 
                 {/* Quantity & Actions - Hidden on mobile, shown on desktop */}
                 <div className="hidden md:flex flex-wrap items-center gap-4 mb-6">
