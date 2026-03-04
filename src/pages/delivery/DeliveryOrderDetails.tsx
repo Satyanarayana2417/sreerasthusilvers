@@ -134,30 +134,57 @@ const DeliveryOrderDetails = () => {
     try {
       const address = order.shippingAddress;
       
-      // Try progressively simpler queries until one works
-      const queries = [
-        `${address.address}, ${address.locality || ''} ${address.city}, ${address.state} ${address.pincode}, India`,
-        `${address.locality || address.address}, ${address.city}, ${address.state}, India`,
-        `${address.city}, ${address.state} ${address.pincode}, India`,
-        `${address.city}, ${address.state}, India`,
-      ];
-      
       let lat: number | null = null;
       let lon: number | null = null;
       
-      for (const query of queries) {
-        try {
-          const res = await fetch(
-            `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`
-          );
+      // Use stored coordinates if available (most accurate)
+      if (address.latitude && address.longitude) {
+        lat = address.latitude;
+        lon = address.longitude;
+      } else {
+        // Helper: Haversine distance in km
+        const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371;
+          const dLat = ((lat2 - lat1) * Math.PI) / 180;
+          const dLon = ((lon2 - lon1) * Math.PI) / 180;
+          const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+          return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        };
+
+        // Helper: try a Nominatim query
+        const tryGeo = async (q: string) => {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=in`);
           const data = await res.json();
-          if (data && data.length > 0) {
-            lat = parseFloat(data[0].lat);
-            lon = parseFloat(data[0].lon);
-            break;
+          return data?.length > 0 ? { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) } : null;
+        };
+
+        // Get city reference point first
+        const cityRef = await tryGeo(`${address.city}, ${address.state}, India`);
+        if (cityRef) {
+          // Try locality-based queries, validate within 20km of city
+          const queries = [
+            address.locality ? `${address.locality}, ${address.city}, ${address.state}, India` : '',
+            address.locality && address.pincode ? `${address.locality}, ${address.pincode}, India` : '',
+            address.pincode ? `${address.pincode}, ${address.city}, India` : '',
+            address.pincode ? `${address.pincode}, India` : '',
+          ].filter(Boolean);
+
+          for (const query of queries) {
+            try {
+              const result = await tryGeo(query);
+              if (result && haversineKm(cityRef.lat, cityRef.lon, result.lat, result.lon) <= 20) {
+                lat = result.lat;
+                lon = result.lon;
+                break;
+              }
+            } catch { continue; }
           }
-        } catch {
-          continue;
+
+          // Fall back to city center
+          if (lat === null) {
+            lat = cityRef.lat;
+            lon = cityRef.lon;
+          }
         }
       }
       

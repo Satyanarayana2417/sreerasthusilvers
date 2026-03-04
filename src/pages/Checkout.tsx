@@ -279,6 +279,42 @@ const MobileCheckout = () => {
         quantity: item.quantity,
       }));
 
+      // Geocode address to get coordinates for delivery map
+      let addressLat: number | undefined;
+      let addressLon: number | undefined;
+      try {
+        const tryGeo = async (q: string) => {
+          const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=in`);
+          const d = await r.json();
+          return d?.length > 0 ? { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon) } : null;
+        };
+        const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371, dLat = ((lat2-lat1)*Math.PI)/180, dLon = ((lon2-lon1)*Math.PI)/180;
+          const a = Math.sin(dLat/2)**2 + Math.cos((lat1*Math.PI)/180)*Math.cos((lat2*Math.PI)/180)*Math.sin(dLon/2)**2;
+          return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        };
+        const cityRef = await tryGeo(`${selectedAddress.city}, ${selectedAddress.state}, India`);
+        if (cityRef) {
+          const geoQueries = [
+            selectedAddress.locality ? `${selectedAddress.locality}, ${selectedAddress.city}, ${selectedAddress.state}, India` : '',
+            selectedAddress.locality && selectedAddress.pinCode ? `${selectedAddress.locality}, ${selectedAddress.pinCode}, India` : '',
+            selectedAddress.pinCode ? `${selectedAddress.pinCode}, ${selectedAddress.city}, India` : '',
+            selectedAddress.pinCode ? `${selectedAddress.pinCode}, India` : '',
+          ].filter(Boolean);
+          for (const q of geoQueries) {
+            const result = await tryGeo(q);
+            if (result && haversineKm(cityRef.lat, cityRef.lon, result.lat, result.lon) <= 20) {
+              addressLat = result.lat; addressLon = result.lon;
+              console.log('Geocoded at checkout (validated):', q, '->', addressLat, addressLon);
+              break;
+            }
+          }
+          if (!addressLat) { addressLat = cityRef.lat; addressLon = cityRef.lon; }
+        }
+      } catch (geoErr) {
+        console.warn('Geocoding failed at checkout, order will still be placed:', geoErr);
+      }
+
       // Prepare order data
       const orderData: OrderFormData = {
         orderId: orderId,
@@ -302,6 +338,7 @@ const MobileCheckout = () => {
           landmark: '',
           alternativePhone: '',
           addressType: 'home',
+          ...(addressLat && addressLon ? { latitude: addressLat, longitude: addressLon } : {}),
         },
         paymentMethod: selectedPaymentMethod,
         status: 'pending',
@@ -1483,6 +1520,42 @@ const Checkout = () => {
         quantity: item.quantity,
       }));
 
+      // Geocode address to get coordinates for delivery map
+      let addressLat: number | undefined;
+      let addressLon: number | undefined;
+      try {
+        const tryGeo = async (q: string) => {
+          const r = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&countrycodes=in`);
+          const d = await r.json();
+          return d?.length > 0 ? { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon) } : null;
+        };
+        const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+          const R = 6371, dLat = ((lat2-lat1)*Math.PI)/180, dLon = ((lon2-lon1)*Math.PI)/180;
+          const a = Math.sin(dLat/2)**2 + Math.cos((lat1*Math.PI)/180)*Math.cos((lat2*Math.PI)/180)*Math.sin(dLon/2)**2;
+          return R*2*Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        };
+        const cityRef = await tryGeo(`${selectedAddress.city}, ${selectedAddress.state}, India`);
+        if (cityRef) {
+          const geoQueries = [
+            selectedAddress.locality ? `${selectedAddress.locality}, ${selectedAddress.city}, ${selectedAddress.state}, India` : '',
+            selectedAddress.locality && selectedAddress.pinCode ? `${selectedAddress.locality}, ${selectedAddress.pinCode}, India` : '',
+            selectedAddress.pinCode ? `${selectedAddress.pinCode}, ${selectedAddress.city}, India` : '',
+            selectedAddress.pinCode ? `${selectedAddress.pinCode}, India` : '',
+          ].filter(Boolean);
+          for (const q of geoQueries) {
+            const result = await tryGeo(q);
+            if (result && haversineKm(cityRef.lat, cityRef.lon, result.lat, result.lon) <= 20) {
+              addressLat = result.lat; addressLon = result.lon;
+              console.log('Geocoded at checkout (validated):', q, '->', addressLat, addressLon);
+              break;
+            }
+          }
+          if (!addressLat) { addressLat = cityRef.lat; addressLon = cityRef.lon; }
+        }
+      } catch (geoErr) {
+        console.warn('Geocoding failed at checkout, order will still be placed:', geoErr);
+      }
+
       // Prepare order data
       const orderData: OrderFormData = {
         orderId: orderId,
@@ -1506,6 +1579,7 @@ const Checkout = () => {
           landmark: '',
           alternativePhone: '',
           addressType: 'home',
+          ...(addressLat && addressLon ? { latitude: addressLat, longitude: addressLon } : {}),
         },
         paymentMethod: selectedPaymentMethod,
         status: 'pending',

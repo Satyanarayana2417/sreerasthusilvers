@@ -37,6 +37,8 @@ export interface ShippingAddress {
   landmark?: string;
   alternativePhone?: string;
   addressType: 'home' | 'work';
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface Order {

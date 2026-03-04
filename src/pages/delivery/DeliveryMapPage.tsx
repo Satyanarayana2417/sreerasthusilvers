@@ -48,9 +48,9 @@ type MapStyle = 'light' | 'dark' | 'satellite';
 
 const TILE_CONFIGS: Record<MapStyle, { url: string; attribution: string; maxZoom: number }> = {
   light: {
-    url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-    maxZoom: 20,
+    url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    maxZoom: 19,
   },
   dark: {
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
@@ -273,30 +273,100 @@ const DeliveryMapPage = () => {
     fetchOrder();
   }, [orderId, user, navigate]);
 
-  // ─── GEOCODE CUSTOMER ADDRESS (Nominatim) ───
+  // ─── GEOCODE CUSTOMER ADDRESS ───
   const geocodeAddress = async (address: any) => {
     try {
-      const full = `${address.address}, ${address.locality || ''} ${address.city}, ${address.state} - ${address.pincode}, India`;
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(full)}&limit=1`
-      );
-      const data = await res.json();
-
-      if (data?.length > 0) {
-        setCustomerLocation({ latitude: parseFloat(data[0].lat), longitude: parseFloat(data[0].lon) });
+      // 1) If coordinates are already stored with the order, use them directly (most accurate)
+      if (address.latitude && address.longitude) {
+        console.log('Using stored coordinates:', address.latitude, address.longitude);
+        setCustomerLocation({ latitude: address.latitude, longitude: address.longitude });
         return;
       }
 
-      // Fallback: city-level geocode
-      const cityRes = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
-          address.city + ', ' + address.state + ', India'
-        )}&limit=1`
-      );
-      const cityData = await cityRes.json();
-      if (cityData?.length > 0) {
-        setCustomerLocation({ latitude: parseFloat(cityData[0].lat), longitude: parseFloat(cityData[0].lon) });
+      console.log('No stored coordinates, geocoding address...');
+
+      // Haversine distance in km between two points
+      const haversineKm = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+        const R = 6371;
+        const dLat = ((lat2 - lat1) * Math.PI) / 180;
+        const dLon = ((lon2 - lon1) * Math.PI) / 180;
+        const a = Math.sin(dLat / 2) ** 2 + Math.cos((lat1 * Math.PI) / 180) * Math.cos((lat2 * Math.PI) / 180) * Math.sin(dLon / 2) ** 2;
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      };
+
+      // Helper to try a Nominatim query
+      const tryGeocode = async (queryStr: string): Promise<{ lat: number; lon: number } | null> => {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryStr)}&limit=1&countrycodes=in`
+        );
+        const data = await res.json();
+        if (data?.length > 0) {
+          return { lat: parseFloat(data[0].lat), lon: parseFloat(data[0].lon) };
+        }
+        return null;
+      };
+
+      // Step A: Get CITY coordinates first as our reference anchor
+      const cityRef = await tryGeocode(`${address.city}, ${address.state}, India`);
+      if (!cityRef) {
+        toast.error('Could not locate city on map');
+        return;
       }
+      console.log('City reference point:', address.city, cityRef);
+
+      // Validate a result is within maxKm of the city center (reject wrong matches)
+      const MAX_DISTANCE_KM = 20;
+      const isNearCity = (result: { lat: number; lon: number }) => {
+        const dist = haversineKm(cityRef.lat, cityRef.lon, result.lat, result.lon);
+        console.log(`  Distance from ${address.city}: ${dist.toFixed(1)} km`);
+        return dist <= MAX_DISTANCE_KM;
+      };
+
+      // Step B: Try locality (area name like Ramanayyapeta) + city — validate distance
+      if (address.locality) {
+        const result = await tryGeocode(`${address.locality}, ${address.city}, ${address.state}, India`);
+        if (result && isNearCity(result)) {
+          console.log('✓ Geocoded via locality+city (validated):', result);
+          setCustomerLocation({ latitude: result.lat, longitude: result.lon });
+          return;
+        }
+        if (result) console.log('✗ Locality result rejected — too far from city');
+      }
+
+      // Step C: Try locality + pincode — validate distance
+      if (address.locality && address.pincode) {
+        const result = await tryGeocode(`${address.locality}, ${address.pincode}, India`);
+        if (result && isNearCity(result)) {
+          console.log('✓ Geocoded via locality+pincode (validated):', result);
+          setCustomerLocation({ latitude: result.lat, longitude: result.lon });
+          return;
+        }
+      }
+
+      // Step D: Pincode + city — validate distance
+      if (address.pincode) {
+        const result = await tryGeocode(`${address.pincode}, ${address.city}, India`);
+        if (result && isNearCity(result)) {
+          console.log('✓ Geocoded via pincode+city (validated):', result);
+          setCustomerLocation({ latitude: result.lat, longitude: result.lon });
+          return;
+        }
+      }
+
+      // Step E: Just pincode — validate distance
+      if (address.pincode) {
+        const result = await tryGeocode(`${address.pincode}, India`);
+        if (result && isNearCity(result)) {
+          console.log('✓ Geocoded via pincode (validated):', result);
+          setCustomerLocation({ latitude: result.lat, longitude: result.lon });
+          return;
+        }
+      }
+
+      // Step F: Fall back to city center — always valid
+      console.log('Using city center as delivery location:', cityRef);
+      setCustomerLocation({ latitude: cityRef.lat, longitude: cityRef.lon });
+
     } catch {
       toast.error('Failed to locate customer address on map');
     }
@@ -364,8 +434,9 @@ const DeliveryMapPage = () => {
     };
   }, [getCurrentLocation]);
 
-  // ─── INITIALIZE MAP (once) ───
+  // ─── INITIALIZE MAP (once, after loading finishes and container is available) ───
   useEffect(() => {
+    if (loading) return; // wait for order to load so the container div is mounted
     if (!mapContainerRef.current || mapInitializedRef.current) return;
 
     const map = L.map(mapContainerRef.current, {
@@ -373,7 +444,7 @@ const DeliveryMapPage = () => {
       attributionControl: true,
     });
 
-    // Start with CartoDB Positron (light)
+    // Start with OpenStreetMap tiles (most reliable)
     const cfg = TILE_CONFIGS.light;
     const tile = L.tileLayer(cfg.url, {
       attribution: cfg.attribution,
@@ -389,8 +460,11 @@ const DeliveryMapPage = () => {
 
     mapRef.current = map;
     mapInitializedRef.current = true;
+
     // Force Leaflet to recalculate container size (fixes blank tiles)
-    setTimeout(() => map.invalidateSize(), 200);
+    setTimeout(() => map.invalidateSize(), 100);
+    setTimeout(() => map.invalidateSize(), 500);
+
     return () => {
       if (routingControlRef.current) {
         try { map.removeControl(routingControlRef.current); } catch (_) { /* safe */ }
@@ -400,7 +474,7 @@ const DeliveryMapPage = () => {
       mapRef.current = null;
       mapInitializedRef.current = false;
     };
-  }, []);
+  }, [loading]);
 
   // ─── SWITCH TILE LAYER ───
   const switchMapStyle = useCallback((style: MapStyle) => {
