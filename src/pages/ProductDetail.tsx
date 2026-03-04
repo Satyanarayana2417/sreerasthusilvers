@@ -6,6 +6,7 @@ import { getProduct, getActiveProducts } from "@/services/productService";
 import { UIProductDetail, adaptFirebaseToUIDetail, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import logo from "@/assets/logo-new.png";
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -307,13 +308,20 @@ const ProductDetail = () => {
       <main>
         {/* Mobile Back Button */}
         <div className="lg:hidden bg-white sticky top-0 z-40 shadow-sm px-4 py-3">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="text-sm font-medium">Back</span>
-          </button>
+          <div className="flex items-center justify-between">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              <span className="text-sm font-medium">Back</span>
+            </button>
+            <img 
+              src={logo} 
+              alt="Sree Rasthu Silvers" 
+              className="h-7 w-auto object-contain"
+            />
+          </div>
         </div>
 
         {/* Breadcrumb */}
