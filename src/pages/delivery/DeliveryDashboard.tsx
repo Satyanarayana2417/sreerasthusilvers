@@ -7,10 +7,7 @@ import {
   Truck,
   MapPin,
   Clock,
-  Phone,
-  Navigation,
   User,
-  X,
   LogOut,
   RefreshCw,
   CheckCircle2,
@@ -18,26 +15,18 @@ import {
   ChevronRight,
   Inbox,
   IndianRupee,
-  ExternalLink,
   LayoutDashboard,
   History,
   Settings,
   HelpCircle,
   Menu,
   Bell,
-  ShieldCheck,
-  KeyRound,
   PackageCheck
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
 import { 
   subscribeToDeliveryBoyOrders, 
-  Order,
-  updateDeliveryStatusByDeliveryBoy,
-  acceptOrderByDeliveryBoy,
-  startDelivery,
-  verifyDeliveryOTP
+  Order
 } from '@/services/orderService';
 import { toast } from 'sonner';
 
@@ -62,10 +51,6 @@ const DeliveryDashboard = () => {
   
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
-  const [showDetails, setShowDetails] = useState(false);
-  const [updatingStatus, setUpdatingStatus] = useState<string | null>(null);
-  const [verifyingOTP, setVerifyingOTP] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<'active' | 'completed'>('active');
@@ -117,87 +102,15 @@ const DeliveryDashboard = () => {
     }
   };
 
-  // Accept order handler
-  const handleAcceptOrder = async (orderId: string) => {
-    if (!user) return;
-    setUpdatingStatus(orderId);
-    try {
-      await acceptOrderByDeliveryBoy(orderId, user.uid);
-      toast.success('Order accepted! Ready to start delivery.');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to accept order');
-    } finally {
-      setUpdatingStatus(null);
-    }
-  };
-
-  // Start delivery handler (generates OTP)
-  const handleStartDelivery = async (orderId: string) => {
-    if (!user) return;
-    setUpdatingStatus(orderId);
-    try {
-      await startDelivery(orderId, user.uid);
-      toast.success('Delivery started! Ask customer for OTP.', {
-        description: 'OTP has been sent to the customer.',
-        duration: 5000,
-      });
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to start delivery');
-    } finally {
-      setUpdatingStatus(null);
-    }
-  };
-
-  // Verify OTP handler
-  const handleVerifyOTP = async (orderId: string, otp: string) => {
-    if (!user) return;
-    setVerifyingOTP(true);
-    try {
-      const result = await verifyDeliveryOTP(orderId, otp, user.uid);
-      if (result.success) {
-        toast.success(result.message, {
-          icon: '🎉',
-          duration: 5000,
-        });
-        setShowDetails(false);
-        setSelectedOrder(null);
-      } else {
-        toast.error(result.message);
-      }
-    } catch (error: any) {
-      toast.error('Failed to verify OTP. Please try again.');
-    } finally {
-      setVerifyingOTP(false);
-    }
-  };
-
-  const handleUpdateStatus = async (orderId: string, newStatus: Order['status']) => {
-    setUpdatingStatus(orderId);
-    try {
-      await updateDeliveryStatusByDeliveryBoy(orderId, newStatus);
-      toast.success(`Order marked as ${statusConfig[newStatus].label}`);
-      setShowDetails(false);
-    } catch (error) {
-      toast.error('Failed to update status');
-    } finally {
-      setUpdatingStatus(null);
-    }
+  // Handle view order details
+  const handleViewOrderDetails = (orderId: string) => {
+    navigate(`/delivery/order/${orderId}`);
   };
 
   const handleRefresh = () => {
     setRefreshing(true);
     // The refresh is automatic via onSnapshot, this just shows visual feedback
     setTimeout(() => setRefreshing(false), 1000);
-  };
-
-  const openPhoneDialer = (phone: string) => {
-    window.location.href = `tel:${phone}`;
-  };
-
-  const openMaps = (address: string) => {
-    const encodedAddress = encodeURIComponent(address);
-    // Try to open in maps app (works on both iOS and Android)
-    window.open(`https://www.google.com/maps/search/?api=1&query=${encodedAddress}`, '_blank');
   };
 
   const formatCurrency = (amount: number) => {
@@ -497,10 +410,7 @@ const DeliveryDashboard = () => {
                       key={order.id}
                       order={order}
                       index={index}
-                      onViewDetails={() => {
-                        setSelectedOrder(order);
-                        setShowDetails(true);
-                      }}
+                      onViewDetails={() => handleViewOrderDetails(order.id)}
                       formatCurrency={formatCurrency}
                     />
                   ))
@@ -519,10 +429,7 @@ const DeliveryDashboard = () => {
                       key={order.id}
                       order={order}
                       index={index}
-                      onViewDetails={() => {
-                        setSelectedOrder(order);
-                        setShowDetails(true);
-                      }}
+                      onViewDetails={() => handleViewOrderDetails(order.id)}
                       formatCurrency={formatCurrency}
                       isCompleted
                     />
@@ -541,26 +448,6 @@ const DeliveryDashboard = () => {
         </div>
       </div>
 
-      {/* Order Details Modal */}
-      <AnimatePresence>
-        {showDetails && selectedOrder && (
-          <OrderDetailsModal
-            order={selectedOrder}
-            onClose={() => {
-              setShowDetails(false);
-              setSelectedOrder(null);
-            }}
-            onAcceptOrder={handleAcceptOrder}
-            onStartDelivery={handleStartDelivery}
-            onVerifyOTP={handleVerifyOTP}
-            updatingStatus={updatingStatus}
-            verifyingOTP={verifyingOTP}
-            openPhoneDialer={openPhoneDialer}
-            openMaps={openMaps}
-            formatCurrency={formatCurrency}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 };
@@ -644,331 +531,6 @@ const OrderCard: React.FC<OrderCardProps> = ({
           </motion.button>
         </div>
       </div>
-    </motion.div>
-  );
-};
-
-// Order Details Modal Component
-interface OrderDetailsModalProps {
-  order: Order;
-  onClose: () => void;
-  onAcceptOrder: (orderId: string) => void;
-  onStartDelivery: (orderId: string) => void;
-  onVerifyOTP: (orderId: string, otp: string) => void;
-  updatingStatus: string | null;
-  verifyingOTP: boolean;
-  openPhoneDialer: (phone: string) => void;
-  openMaps: (address: string) => void;
-  formatCurrency: (amount: number) => string;
-}
-
-const OrderDetailsModal: React.FC<OrderDetailsModalProps> = ({
-  order,
-  onClose,
-  onAcceptOrder,
-  onStartDelivery,
-  onVerifyOTP,
-  updatingStatus,
-  verifyingOTP,
-  openPhoneDialer,
-  openMaps,
-  formatCurrency,
-}) => {
-  const status = statusConfig[order.status];
-  const [otpInput, setOtpInput] = useState('');
-  const [otpError, setOtpError] = useState('');
-
-  const fullAddress = `${order.shippingAddress.address}, ${order.shippingAddress.locality || ''} ${order.shippingAddress.city}, ${order.shippingAddress.state} - ${order.shippingAddress.pincode}`;
-
-  const isUpdating = updatingStatus === order.id;
-
-  const handleOTPChange = (value: string) => {
-    // Only allow numbers and max 4 digits
-    const cleanValue = value.replace(/\D/g, '').slice(0, 4);
-    setOtpInput(cleanValue);
-    setOtpError('');
-  };
-
-  const handleVerifyOTP = () => {
-    if (otpInput.length !== 4) {
-      setOtpError('Please enter 4-digit OTP');
-      return;
-    }
-    onVerifyOTP(order.id, otpInput);
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 sm:flex sm:items-center sm:justify-center sm:bg-stone-900/30 sm:backdrop-blur-sm"
-      onClick={onClose}
-    >
-      <motion.div
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        exit={{ x: '100%' }}
-        transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-        className="w-full h-full sm:h-auto sm:max-w-lg bg-white sm:rounded-3xl overflow-hidden shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-stone-100 sticky top-0 bg-white z-10">
-          <motion.button
-            whileTap={{ scale: 0.9 }}
-            onClick={onClose}
-            className="p-2 rounded-xl bg-stone-100 text-stone-500 hover:bg-stone-200 transition-all"
-          >
-            <X className="h-5 w-5" />
-          </motion.button>
-          <div>
-            <p className="text-[10px] uppercase tracking-widest text-stone-400 font-medium">Order Details</p>
-            <p className="font-mono text-base font-bold text-stone-800">#{order.orderId}</p>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="overflow-y-auto h-[calc(100vh-68px)] sm:max-h-[70vh]">
-          <div className="px-4 sm:px-6 py-4 sm:py-5">
-          {/* Status Badge */}
-          <div className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border ${status.bgColor} ${status.borderColor} mb-6`}>
-            <div className={`w-2 h-2 rounded-full ${status.dotColor}`} />
-            <span className={`font-semibold ${status.color}`}>{status.label}</span>
-          </div>
-
-          {/* Customer Info */}
-          <div className="mb-6">
-            <h3 className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-4">
-              Customer Information
-            </h3>
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-100 to-orange-100 flex items-center justify-center">
-                <User className="h-6 w-6 text-amber-600" />
-              </div>
-              <div>
-                <p className="text-stone-800 font-semibold">{order.shippingAddress.fullName}</p>
-                <p className="text-sm text-stone-400">{order.userName}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Quick Actions */}
-          <div className="flex gap-3 mb-6">
-            <motion.button
-              whileTap={{ scale: 0.98 }}
-              onClick={() => openPhoneDialer(order.shippingAddress.mobile)}
-              className="flex-1 flex items-center justify-center gap-2 py-3.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl font-semibold transition-all hover:bg-emerald-100"
-            >
-              <Phone className="h-5 w-5" />
-              Call Customer
-            </motion.button>
-            {order.shippingAddress.alternativePhone && (
-              <motion.button
-                whileTap={{ scale: 0.98 }}
-                onClick={() => openPhoneDialer(order.shippingAddress.alternativePhone!)}
-                className="w-14 flex items-center justify-center bg-stone-50 border border-stone-200 text-stone-600 rounded-xl transition-all hover:bg-stone-100"
-              >
-                <Phone className="h-5 w-5" />
-              </motion.button>
-            )}
-          </div>
-
-          {/* Delivery Address */}
-          <div className="mb-6">
-            <h3 className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-4">
-              Delivery Address
-            </h3>
-            <div className="bg-stone-50 border border-stone-100 rounded-2xl p-4 space-y-2">
-              <p className="text-stone-800 font-medium">{order.shippingAddress.address}</p>
-              {order.shippingAddress.locality && (
-                <p className="text-stone-600">{order.shippingAddress.locality}</p>
-              )}
-              <p className="text-stone-500">
-                {order.shippingAddress.city}, {order.shippingAddress.state} - {order.shippingAddress.pincode}
-              </p>
-              {order.shippingAddress.landmark && (
-                <p className="text-stone-400 text-sm italic">
-                  Near: {order.shippingAddress.landmark}
-                </p>
-              )}
-              <div className="pt-4">
-                <motion.button
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => openMaps(fullAddress)}
-                  className="flex items-center justify-center gap-2 w-full py-3.5 bg-blue-50 border border-blue-200 text-blue-700 rounded-xl font-semibold transition-all hover:bg-blue-100"
-                >
-                  <Navigation className="h-5 w-5" />
-                  Open in Maps
-                  <ExternalLink className="h-4 w-4 ml-1 opacity-50" />
-                </motion.button>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div className="mb-6">
-            <h3 className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-4">
-              Items ({order.items.length})
-            </h3>
-            <div className="space-y-3">
-              {order.items.map((item, index) => (
-                <div key={index} className="flex items-center gap-4 bg-stone-50 border border-stone-100 rounded-xl p-3">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="w-14 h-14 rounded-xl object-cover border border-stone-200"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-stone-800 text-sm font-medium truncate">{item.name}</p>
-                    <p className="text-stone-400 text-xs">Qty: {item.quantity}</p>
-                  </div>
-                  <p className="text-amber-600 font-semibold">{formatCurrency(item.price * item.quantity)}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Payment Summary */}
-          <div className="bg-stone-50 border border-stone-100 rounded-2xl p-4 mb-6">
-            <h3 className="text-[10px] uppercase tracking-widest text-stone-400 font-semibold mb-4">
-              Payment Summary
-            </h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-stone-500">Subtotal</span>
-                <span className="text-stone-700">{formatCurrency(order.subtotal)}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-stone-500">Delivery</span>
-                <span className="text-stone-700">{formatCurrency(order.deliveryCharge)}</span>
-              </div>
-              {order.discount > 0 && (
-                <div className="flex items-center justify-between">
-                  <span className="text-stone-500">Discount</span>
-                  <span className="text-emerald-600">-{formatCurrency(order.discount)}</span>
-                </div>
-              )}
-              <div className="flex items-center justify-between pt-3 border-t border-stone-200">
-                <span className="text-stone-800 font-semibold">Total</span>
-                <span className="text-amber-600 font-bold text-xl">{formatCurrency(order.total)}</span>
-              </div>
-            </div>
-            <div className="mt-4 pt-4 border-t border-stone-200 flex items-center gap-2">
-              <span className="text-stone-400 text-xs">Payment Method:</span>
-              <span className="text-stone-600 text-xs font-medium">{order.paymentMethod}</span>
-            </div>
-          </div>
-
-          {/* Footer Actions */}
-          {order.status !== 'delivered' && order.status !== 'cancelled' && (
-            <div className="px-4 sm:px-6 pb-5 space-y-4">
-            {/* Step 1: Accept Order (shipped/assigned -> picked) */}
-            {(order.status === 'shipped' || order.status === 'assigned') && (
-              <Button
-                onClick={() => onAcceptOrder(order.id)}
-                disabled={isUpdating}
-                className="w-full h-14 bg-gradient-to-r from-indigo-500 to-violet-500 hover:from-indigo-600 hover:to-violet-600 text-white font-bold rounded-xl text-base shadow-lg shadow-indigo-500/20"
-              >
-                {isUpdating ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <PackageCheck className="h-5 w-5 mr-2" />
-                    Accept & Pick Up
-                  </>
-                )}
-              </Button>
-            )}
-
-            {/* Step 2: Start Delivery (picked -> outForDelivery) */}
-            {order.status === 'picked' && (
-              <Button
-                onClick={() => onStartDelivery(order.id)}
-                disabled={isUpdating}
-                className="w-full h-14 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold rounded-xl text-base shadow-lg shadow-amber-500/20"
-              >
-                {isUpdating ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <>
-                    <Truck className="h-5 w-5 mr-2" />
-                    Start Delivery
-                  </>
-                )}
-              </Button>
-            )}
-
-            {/* Step 3: OTP Verification (outForDelivery -> delivered) */}
-            {order.status === 'outForDelivery' && (
-              <div className="space-y-3">
-                {/* OTP Input - FIRST for better visibility */}
-                <div className="space-y-2">
-                  <label className="text-xs sm:text-[10px] uppercase tracking-widest text-stone-400 font-semibold">
-                    Enter Customer's Delivery OTP
-                  </label>
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      pattern="[0-9]*"
-                      maxLength={4}
-                      value={otpInput}
-                      onChange={(e) => handleOTPChange(e.target.value)}
-                      placeholder="••••"
-                      className={`flex-1 h-12 sm:h-14 px-3 bg-white border-2 rounded-lg text-center text-xl sm:text-2xl font-bold tracking-[0.5em] text-stone-800 placeholder:text-stone-300 focus:outline-none focus:ring-0 transition-colors ${
-                        otpError ? 'border-rose-300 focus:border-rose-400' : 'border-amber-300 focus:border-amber-500'
-                      }`}
-                    />
-                  </div>
-                  {otpError && (
-                    <p className="text-rose-500 text-xs font-medium">{otpError}</p>
-                  )}
-                </div>
-
-                {/* Verify Button - Full width, prominent */}
-                <Button
-                  onClick={handleVerifyOTP}
-                  disabled={verifyingOTP || otpInput.length !== 4}
-                  className="w-full h-12 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold rounded-lg text-sm sm:text-base shadow-lg shadow-emerald-500/20 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {verifyingOTP ? (
-                    <Loader2 className="h-5 w-5 animate-spin" />
-                  ) : (
-                    <>
-                      <ShieldCheck className="h-5 w-5 mr-2" />
-                      <span className="hidden sm:inline">Verify OTP & Complete Delivery</span>
-                      <span className="sm:hidden">Verify & Complete</span>
-                    </>
-                  )}
-                </Button>
-
-                {/* OTP Info Banner - moved to bottom */}
-                <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5">
-                  <div className="flex items-center gap-2">
-                    <KeyRound className="h-3.5 w-3.5 text-amber-600" />
-                    <p className="text-amber-700 text-xs">
-                      Ask the customer to share their OTP from the Account page.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-          {/* Delivered Success Badge */}
-          {order.status === 'delivered' && order.otp_verified && (
-            <div className="px-4 sm:px-6 pb-5">
-              <div className="flex items-center gap-3 justify-center p-4 bg-emerald-50 border border-emerald-200 rounded-xl">
-                <ShieldCheck className="h-6 w-6 text-emerald-600" />
-                <span className="text-emerald-700 font-semibold">Delivered & OTP Verified</span>
-              </div>
-            </div>
-          )}
-        </div>
-        </div>
-      </motion.div>
     </motion.div>
   );
 };

@@ -43,6 +43,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import MobileCart from "./pages/MobileCart";
 import MobileOrders from "./pages/MobileOrders";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
+import ProfileEditPage from "./pages/ProfileEditPage";
 import MobileCategories from "./pages/MobileCategories";
 import MobileSearch from "./pages/MobileSearch";
 import SearchResults from "./pages/SearchResults";
@@ -136,6 +137,8 @@ import AdminGiftCards from "./pages/admin/AdminGiftCards";
 // Delivery Partner Pages
 import DeliveryLogin from "./pages/delivery/DeliveryLogin";
 import DeliveryDashboard from "./pages/delivery/DeliveryDashboard";
+import DeliveryOrderDetails from "./pages/delivery/DeliveryOrderDetails";
+import DeliveryMapPage from "./pages/delivery/DeliveryMapPage";
 
 const queryClient = new QueryClient();
 
@@ -261,6 +264,7 @@ const App = () => {
               <Route path="/account" element={<Account />} />
               <Route path="/account/orders" element={<MobileOrders />} />
               <Route path="/account/orders/:orderId" element={<OrderDetailsPage />} />
+              <Route path="/account/profile-edit" element={<ProfileEditPage />} />
               <Route path="/account/addresses" element={<SavedAddresses />} />
               <Route path="/buy-again" element={<BuyAgain />} />
               <Route path="/wallet" element={
@@ -336,6 +340,22 @@ const App = () => {
                 element={
                   <DeliveryRoute>
                     <DeliveryDashboard />
+                  </DeliveryRoute>
+                }
+              />
+              <Route
+                path="/delivery/order/:orderId"
+                element={
+                  <DeliveryRoute>
+                    <DeliveryOrderDetails />
+                  </DeliveryRoute>
+                }
+              />
+              <Route
+                path="/delivery/map/:orderId"
+                element={
+                  <DeliveryRoute>
+                    <DeliveryMapPage />
                   </DeliveryRoute>
                 }
               />

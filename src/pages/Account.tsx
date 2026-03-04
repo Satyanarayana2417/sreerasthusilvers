@@ -8,6 +8,8 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { subscribeToUserOrders, Order, updateOrderStatus, cancelOrder, requestReturn } from '@/services/orderService';
+import { uploadToCloudinary, UploadProgress } from '@/services/cloudinaryService';
+import { toast } from 'sonner';
 import {
   Loader2,
   User,
@@ -20,7 +22,6 @@ import {
   Package,
   LogOut,
   ChevronRight,
-  ChevronDown,
   Sparkles,
   Ticket,
   Globe,
@@ -42,6 +43,7 @@ import {
   RotateCcw as ReturnIcon,
   AlertCircle,
   X,
+  Edit,
 } from 'lucide-react';
 
 const Account = () => {
@@ -541,7 +543,7 @@ const LoginForm = () => {
 // Account Page Component
 const AccountPage = () => {
   const navigate = useNavigate();
-  const { logout, userProfile, user } = useAuth();
+  const { logout, userProfile, user, updateUserProfile } = useAuth();
   const [selectedMenu, setSelectedMenu] = useState('orders');
   const [selectedOrderTab, setSelectedOrderTab] = useState('current');
   const [isMobile, setIsMobile] = useState(false);
@@ -555,6 +557,8 @@ const AccountPage = () => {
   const [returnReason, setReturnReason] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Update avatar URL when user or userProfile changes
   useEffect(() => {
@@ -562,6 +566,62 @@ const AccountPage = () => {
     console.log('🖼️ Avatar URL updated:', newAvatarUrl);
     setAvatarUrl(newAvatarUrl);
   }, [user?.photoURL, userProfile?.avatar]);
+
+  // Handle photo upload
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size should be less than 5MB');
+      return;
+    }
+
+    setUploadingPhoto(true);
+    try {
+      const result = await uploadToCloudinary(file, (progress: UploadProgress) => {
+        console.log(`Upload progress: ${progress.percentage}%`);
+      });
+
+      await updateUserProfile({ avatar: result.secure_url });
+      setAvatarUrl(result.secure_url);
+      toast.success('Profile photo updated successfully');
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      toast.error('Failed to upload photo. Please try again.');
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  // Handle account deletion
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    const confirmed = window.confirm(
+      'Are you sure you want to delete your account? This action cannot be undone.'
+    );
+    
+    if (confirmed) {
+      try {
+        // TODO: Implement account deletion logic
+        toast.success('Account deletion requested. Please contact support.');
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        toast.error('Failed to delete account. Please try again.');
+      }
+    }
+  };
 
   // Subscribe to user orders
   useEffect(() => {
@@ -633,6 +693,7 @@ const AccountPage = () => {
 
   const menuItems = [
     { id: 'orders', label: 'My orders', icon: Package, path: null },
+    { id: 'editProfile', label: 'Edit Profile', icon: Edit, path: '/account/profile-edit' },
     { id: 'addresses', label: 'Your addresses', icon: MapPin, path: '/account/addresses' },
     { id: 'security', label: 'Login & security', icon: Shield, path: '/security' },
     { id: 'payments', label: 'My Jewellery Journey', icon: CreditCard, path: '/purchase-summary' },
@@ -876,29 +937,37 @@ const AccountPage = () => {
                   >
                     <ArrowLeft className="w-5 h-5 text-gray-700" />
                   </button>
-                  {avatarUrl ? (
-                    <img 
-                      key={`avatar-${avatarUrl}-${user?.uid}`}
-                      src={avatarUrl} 
-                      alt="Profile" 
-                      className="w-10 h-10 rounded-full object-cover border border-black flex-shrink-0"
-                      referrerPolicy="no-referrer"
-                      loading="eager"
-                    />
-                  ) : (
-                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black flex-shrink-0">
-                      <span className="text-white font-semibold text-sm">
-                        {(userProfile?.name || userProfile?.username || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-3">
+                    {avatarUrl ? (
+                      <img 
+                        key={`avatar-${avatarUrl}-${user?.uid}`}
+                        src={avatarUrl} 
+                        alt="Profile" 
+                        className="w-10 h-10 rounded-full object-cover border border-black flex-shrink-0"
+                        referrerPolicy="no-referrer"
+                        loading="eager"
+                      />
+                    ) : (
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black flex-shrink-0">
+                        <span className="text-white font-semibold text-sm">
+                          {(userProfile?.name || userProfile?.username || user?.email?.split('@')[0] || 'U').charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                    )}
                     <span className="text-sm font-medium text-gray-900">
                       Hello, {(userProfile?.name || userProfile?.username || user?.email?.split('@')[0] || 'User').slice(0, 12)}...
                     </span>
-                    <ChevronDown className="w-4 h-4 text-gray-500" />
                   </div>
                 </div>
+
+                {/* Hidden file input */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                />
               </div>
 
               {/* Quick Action Pills */}

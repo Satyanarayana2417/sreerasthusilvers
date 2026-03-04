@@ -602,24 +602,12 @@ const PurchaseSummary: React.FC = () => {
                             {order.status}
                           </span>
                         </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-gray-500">
-                            Order #{order.orderNumber || order.id.slice(0, 10)}
-                          </p>
-                          <p className="text-xs text-gray-400">
-                            {order.createdAt?.toDate?.()?.toLocaleDateString('en-IN', { 
-                              day: 'numeric', 
-                              month: 'short',
-                              year: 'numeric'
-                            }) || 'N/A'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Price */}
-                      <div className="flex-shrink-0 text-right">
-                        <p className="text-sm font-bold text-gray-900">
-                          ₹{(order.totalAmount || 0).toLocaleString('en-IN')}
+                        <p className="text-xs text-gray-400">
+                          {order.createdAt?.toDate?.()?.toLocaleDateString('en-IN', { 
+                            day: 'numeric', 
+                            month: 'short',
+                            year: 'numeric'
+                          }) || 'N/A'}
                         </p>
                       </div>
                     </div>
