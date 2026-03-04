@@ -10,48 +10,52 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useToast } from "@/hooks/use-toast";
 
-// Import product images (using available images as placeholders)
+// Import placeholder images
 import setImg from "@/assets/products/set-1.jpg";
+import necklaceImg from "@/assets/products/necklace-1.jpg";
+import ringImg from "@/assets/products/ring-1.jpg";
+import earringsImg from "@/assets/products/earrings-1.jpg";
+import bandImg from "@/assets/products/band-1.jpg";
 
-const productsCategories = [
+const giftsCategories = [
   {
     id: 1,
-    title: "Silver Idols",
-    description: "Divine silver idols",
+    title: "Wedding Gifts",
+    description: "Premium silver wedding gifts",
     image: setImg,
-    href: "/products/silver-idols",
+    href: "/gifts/wedding-gifts",
   },
   {
     id: 2,
-    title: "Silver Pooja Items",
-    description: "Sacred pooja essentials",
-    image: setImg,
-    href: "/products/silver-pooja-items",
+    title: "Birthday Gifts",
+    description: "Special silver birthday gifts",
+    image: necklaceImg,
+    href: "/gifts/birthday-gifts",
   },
   {
     id: 3,
-    title: "Silver Gift Articles",
-    description: "Exquisite silver gifts",
-    image: setImg,
-    href: "/products/silver-gift-articles",
+    title: "Festival Gifts",
+    description: "Festive silver gift collections",
+    image: ringImg,
+    href: "/gifts/festival-gifts",
   },
   {
     id: 4,
-    title: "Custom Engraved Items",
-    description: "Personalized silver pieces",
-    image: setImg,
-    href: "/products/custom-engraved-items",
+    title: "Corporate Gifts",
+    description: "Elegant silver corporate gifts",
+    image: earringsImg,
+    href: "/gifts/corporate-gifts",
   },
   {
     id: 5,
-    title: "Silver Coins",
-    description: "Premium silver coins",
-    image: setImg,
-    href: "/products/silver-coins",
+    title: "Return Gifts",
+    description: "Beautiful silver return gifts",
+    image: bandImg,
+    href: "/gifts/return-gifts",
   },
 ];
 
-const OtherProductsCollections = () => {
+const GiftsCollections = () => {
   const navigate = useNavigate();
   const { totalItems, addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -71,25 +75,24 @@ const OtherProductsCollections = () => {
   const minPrice = products.length > 0 ? Math.floor(Math.min(...products.map(p => p.price))) : 0;
   const maxPrice = products.length > 0 ? Math.ceil(Math.max(...products.map(p => p.price))) : 100000;
 
-  // Fetch all products from Firebase and filter by other products categories
+  // Fetch all products from Firebase and filter by gift-related categories
   useEffect(() => {
     setLoading(true);
     const unsubscribe = subscribeToProducts(
       (fbProducts) => {
         const uiProducts = adaptFirebaseArrayToUI(fbProducts);
-        // Filter only other products (idols, pooja items, gift articles, coins, custom items)
-        const otherProducts = uiProducts.filter(product => {
-          // Check if category contains other products keywords
+        // Filter only gift-related products
+        const giftProducts = uiProducts.filter(product => {
           const categoryLower = (product.category || '').toLowerCase();
-          return categoryLower.includes('idol') || 
-                 categoryLower.includes('pooja item') || 
-                 categoryLower.includes('gift') || 
-                 categoryLower.includes('coin') || 
-                 categoryLower.includes('engrav') ||
-                 categoryLower.includes('custom') ||
-                 categoryLower.includes('limited');
+          return categoryLower.includes('gift') || 
+                 categoryLower.includes('wedding') || 
+                 categoryLower.includes('birthday') || 
+                 categoryLower.includes('festival') || 
+                 categoryLower.includes('corporate') ||
+                 categoryLower.includes('return gift') ||
+                 categoryLower.includes('present');
         });
-        setProducts(otherProducts);
+        setProducts(giftProducts);
         setLoading(false);
       },
       true // activeOnly
@@ -117,7 +120,7 @@ const OtherProductsCollections = () => {
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortBy === 'price-low') return a.price - b.price;
     if (sortBy === 'price-high') return b.price - a.price;
-    return 0; // recent - keep original order
+    return 0;
   });
 
   return (
@@ -218,26 +221,10 @@ const OtherProductsCollections = () => {
               {activeFilterCategory === 'Rating' && (
                 <div className="py-1">
                   {[
-                    { 
-                      id: 'rating-1', 
-                      label: '1.0 to 5.0', 
-                      count: products.filter(p => (p.rating || 0) >= 1.0).length.toString() 
-                    },
-                    { 
-                      id: 'rating-2', 
-                      label: '2.0 to 5.0', 
-                      count: products.filter(p => (p.rating || 0) >= 2.0).length.toString() 
-                    },
-                    { 
-                      id: 'rating-3', 
-                      label: '3.0 to 5.0', 
-                      count: products.filter(p => (p.rating || 0) >= 3.0).length.toString() 
-                    },
-                    { 
-                      id: 'rating-4', 
-                      label: '4.0 to 5.0', 
-                      count: products.filter(p => (p.rating || 0) >= 4.0).length.toString() 
-                    },
+                    { id: 'rating-1', label: '1.0 to 5.0', count: products.filter(p => (p.rating || 0) >= 1.0).length.toString() },
+                    { id: 'rating-2', label: '2.0 to 5.0', count: products.filter(p => (p.rating || 0) >= 2.0).length.toString() },
+                    { id: 'rating-3', label: '3.0 to 5.0', count: products.filter(p => (p.rating || 0) >= 3.0).length.toString() },
+                    { id: 'rating-4', label: '4.0 to 5.0', count: products.filter(p => (p.rating || 0) >= 4.0).length.toString() },
                   ].map((filter) => (
                     <button
                       key={filter.id}
@@ -270,51 +257,15 @@ const OtherProductsCollections = () => {
               {activeFilterCategory === 'Discount' && (
                 <div className="py-1">
                   {[
-                    { 
-                      id: 'discount-10', 
-                      label: '10% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 10).length.toString() 
-                    },
-                    { 
-                      id: 'discount-20', 
-                      label: '20% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 20).length.toString() 
-                    },
-                    { 
-                      id: 'discount-30', 
-                      label: '30% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 30).length.toString() 
-                    },
-                    { 
-                      id: 'discount-40', 
-                      label: '40% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 40).length.toString() 
-                    },
-                    { 
-                      id: 'discount-50', 
-                      label: '50% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 50).length.toString() 
-                    },
-                    { 
-                      id: 'discount-60', 
-                      label: '60% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 60).length.toString() 
-                    },
-                    { 
-                      id: 'discount-70', 
-                      label: '70% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 70).length.toString() 
-                    },
-                    { 
-                      id: 'discount-80', 
-                      label: '80% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 80).length.toString() 
-                    },
-                    { 
-                      id: 'discount-90', 
-                      label: '90% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 90).length.toString() 
-                    },
+                    { id: 'discount-10', label: '10% and above', count: products.filter(p => Number(p.discount || 0) >= 10).length.toString() },
+                    { id: 'discount-20', label: '20% and above', count: products.filter(p => Number(p.discount || 0) >= 20).length.toString() },
+                    { id: 'discount-30', label: '30% and above', count: products.filter(p => Number(p.discount || 0) >= 30).length.toString() },
+                    { id: 'discount-40', label: '40% and above', count: products.filter(p => Number(p.discount || 0) >= 40).length.toString() },
+                    { id: 'discount-50', label: '50% and above', count: products.filter(p => Number(p.discount || 0) >= 50).length.toString() },
+                    { id: 'discount-60', label: '60% and above', count: products.filter(p => Number(p.discount || 0) >= 60).length.toString() },
+                    { id: 'discount-70', label: '70% and above', count: products.filter(p => Number(p.discount || 0) >= 70).length.toString() },
+                    { id: 'discount-80', label: '80% and above', count: products.filter(p => Number(p.discount || 0) >= 80).length.toString() },
+                    { id: 'discount-90', label: '90% and above', count: products.filter(p => Number(p.discount || 0) >= 90).length.toString() },
                   ].map((filter) => (
                     <button
                       key={filter.id}
@@ -447,7 +398,7 @@ const OtherProductsCollections = () => {
                 <Search className="w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search gifts..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none text-sm"
@@ -478,7 +429,7 @@ const OtherProductsCollections = () => {
                 >
                   <ArrowLeft className="w-5 h-5 text-gray-700" />
                 </button>
-                <h1 className="text-lg font-semibold text-gray-900">Other Products</h1>
+                <h1 className="text-lg font-semibold text-gray-900">Gifts Collections</h1>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -606,7 +557,7 @@ const OtherProductsCollections = () => {
                 <span>Home</span>
               </Link>
               <span>/</span>
-              <span className="text-foreground font-medium">Other Products</span>
+              <span className="text-foreground font-medium">Gifts Collections</span>
             </div>
           </div>
         </div>
@@ -616,7 +567,7 @@ const OtherProductsCollections = () => {
           <div className="container-custom">
             {/* Mobile: Horizontal Scroll */}
             <div className="md:hidden flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide">
-              {productsCategories.map((category, index) => (
+              {giftsCategories.map((category, index) => (
                 <motion.div
                   key={category.id}
                   initial={{ opacity: 0, x: 20 }}
@@ -633,7 +584,6 @@ const OtherProductsCollections = () => {
                     className="group block"
                   >
                     <div className="relative overflow-hidden flex flex-col items-center">
-                      {/* Small Circular Image for Mobile */}
                       <div className="w-24 h-24 rounded-full overflow-hidden bg-gray-100 mb-2 relative">
                         <img
                           src={category.image}
@@ -642,8 +592,6 @@ const OtherProductsCollections = () => {
                           className="w-full h-full object-cover"
                         />
                       </div>
-
-                      {/* Category Info */}
                       <div className="text-center max-w-[96px]">
                         <h3 
                           className="text-sm font-serif font-light text-foreground"
@@ -660,7 +608,7 @@ const OtherProductsCollections = () => {
             
             {/* Desktop: Grid */}
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-              {productsCategories.map((category, index) => (
+              {giftsCategories.map((category, index) => (
                 <motion.div
                   key={category.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -676,7 +624,6 @@ const OtherProductsCollections = () => {
                     className="group block"
                   >
                     <div className="relative overflow-hidden flex flex-col items-center">
-                      {/* Image Container - Circular */}
                       <div className="w-40 h-40 md:w-48 md:h-48 rounded-full overflow-hidden bg-gray-100 mb-6 relative">
                         <img
                           src={category.image}
@@ -694,7 +641,6 @@ const OtherProductsCollections = () => {
                         </div>
                       </div>
 
-                      {/* Category Info */}
                       <div className="text-center">
                         <h3 
                           className="text-2xl md:text-3xl font-serif font-light text-foreground mb-2 group-hover:text-primary transition-colors duration-300"
@@ -730,11 +676,11 @@ const OtherProductsCollections = () => {
                   className="text-3xl md:text-4xl font-serif font-light text-foreground mb-4"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  Where Tradition Meets Contemporary Design
+                  The Perfect Silver Gift for Every Occasion
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
-                  Every piece is meticulously crafted using premium silver, 
-                  ensuring lasting beauty and exceptional quality.
+                  Discover our curated collection of premium silver gifts, 
+                  perfect for weddings, birthdays, festivals, and corporate events.
                 </p>
               </motion.div>
             </div>
@@ -760,7 +706,7 @@ const OtherProductsCollections = () => {
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                   <Search className="w-8 h-8 text-gray-400" />
                 </div>
-                <p className="text-gray-500 text-sm">No products found</p>
+                <p className="text-gray-500 text-sm">No gift items found</p>
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
@@ -899,4 +845,4 @@ const OtherProductsCollections = () => {
   );
 };
 
-export default OtherProductsCollections;
+export default GiftsCollections;

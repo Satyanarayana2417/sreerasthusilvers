@@ -76,6 +76,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ...data,
           uid: data.uid || uid,
           username: data.username || data.name || data.email?.split('@')[0] || 'User',
+          // Convert Firestore Timestamp to Date
+          createdAt: data.createdAt?.toDate ? data.createdAt.toDate() : data.createdAt,
         } as UserProfile;
       }
       return null;
@@ -99,8 +101,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (updatedUser) {
             const profile = await fetchUserProfile(updatedUser.uid);
             
-            // Sync photoURL from Firebase Auth to Firestore if different
-            if (updatedUser.photoURL && profile && profile.avatar !== updatedUser.photoURL) {
+            // Only sync Google photoURL if user doesn't have a custom avatar (Cloudinary URL)
+            // This prevents overwriting custom uploaded avatars
+            const hasCustomAvatar = profile?.avatar && profile.avatar.includes('cloudinary');
+            
+            if (updatedUser.photoURL && profile && !hasCustomAvatar && profile.avatar !== updatedUser.photoURL) {
               try {
                 await setDoc(doc(db, 'users', updatedUser.uid), {
                   avatar: updatedUser.photoURL,

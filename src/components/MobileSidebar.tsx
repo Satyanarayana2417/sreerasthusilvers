@@ -61,10 +61,10 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
             <div className="bg-gray-100 text-gray-900 p-4 flex items-center justify-between">
               {user && userProfile ? (
                 <div className="flex items-center gap-3">
-                  {user.photoURL || userProfile.avatar ? (
+                  {userProfile.avatar || user.photoURL ? (
                     <img 
-                      key={user.photoURL || userProfile.avatar}
-                      src={user.photoURL || userProfile.avatar} 
+                      key={userProfile.avatar || user.photoURL}
+                      src={userProfile.avatar || user.photoURL} 
                       alt={userProfile.name || userProfile.username || 'User'} 
                       className="w-10 h-10 rounded-full object-cover border-2 border-gray-300"
                     />

@@ -236,10 +236,10 @@ const Header = () => {
                 aria-label="Account"
               >
                 {user ? (
-                  user.photoURL || userProfile?.avatar ? (
+                  userProfile?.avatar || user.photoURL ? (
                     <img 
-                      key={user.photoURL || userProfile?.avatar}
-                      src={user.photoURL || userProfile?.avatar} 
+                      key={userProfile?.avatar || user.photoURL}
+                      src={userProfile?.avatar || user.photoURL} 
                       alt="Profile" 
                       className="w-6 h-6 rounded-full object-cover border border-black"
                       referrerPolicy="no-referrer"

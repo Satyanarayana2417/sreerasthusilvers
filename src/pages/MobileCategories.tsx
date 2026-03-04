@@ -4,6 +4,7 @@ import { Search, ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { getAllProducts, Product } from '@/services/productService';
+import logo from '@/assets/logo-new.png';
 
 // Define main categories with their subcategories
 const mainCategories = [
@@ -33,8 +34,8 @@ const mainCategories = [
       { name: 'Silver Chairs', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture/royal-silver-chairs' },
       { name: 'Silver Tables', image: 'https://images.unsplash.com/photo-1499933374294-4584851497cc?w=200&h=200&fit=crop', path: '/furniture/royal-silver-tables' },
       { name: 'Silver Swings', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop', path: '/furniture/silver-swing-jhoola' },
-      { name: 'Silver Cradles', image: 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?w=200&h=200&fit=crop', path: '/furniture' },
-      { name: 'Silver Thrones', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture/royal-silver-chairs' },
+      { name: 'Silver Cradles', image: 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?w=200&h=200&fit=crop', path: '/furniture/silver-cradles' },
+      { name: 'Silver Thrones', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture/silver-thrones' },
       { name: 'Decorative Items', image: 'https://images.unsplash.com/photo-1499933374294-4584851497cc?w=200&h=200&fit=crop', path: '/furniture/antique-silver-decor' },
     ]
   },
@@ -44,12 +45,12 @@ const mainCategories = [
     icon: '🏺',
     image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=100&h=100&fit=crop',
     subcategories: [
-      { name: 'Pooja Items', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/products/silver-pooja-items' },
-      { name: 'Gift Articles', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/products/silver-gift-articles' },
-      { name: 'Silver Lamps', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', path: '/articles' },
-      { name: 'Silver Plates', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/articles' },
-      { name: 'Silver Idols', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/products/silver-idols' },
-      { name: 'Silver Vessels', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', path: '/articles' },
+      { name: 'Pooja Items', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/articles/pooja-items' },
+      { name: 'Gift Articles', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/articles/gift-articles' },
+      { name: 'Silver Lamps', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', path: '/articles/silver-lamps' },
+      { name: 'Silver Plates', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/articles/silver-plates' },
+      { name: 'Silver Idols', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/articles/silver-idols' },
+      { name: 'Silver Vessels', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', path: '/articles/silver-vessels' },
     ]
   },
   {
@@ -58,12 +59,12 @@ const mainCategories = [
     icon: '✨',
     image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=100&h=100&fit=crop',
     subcategories: [
-      { name: 'Silver Coins', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products/silver-coins' },
-      { name: 'Silver Bars', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products/silver-coins' },
-      { name: 'Silver Utensils', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Baby Items', image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Antique Silver', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/products/limited-edition-pieces' },
-      { name: 'Custom Orders', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/products/custom-engraved-items' },
+      { name: 'Silver Coins', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/other-products/silver-coins' },
+      { name: 'Silver Bars', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/other-products/silver-bars' },
+      { name: 'Silver Utensils', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/other-products/silver-utensils' },
+      { name: 'Baby Items', image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200&h=200&fit=crop', path: '/other-products/baby-items' },
+      { name: 'Antique Silver', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/other-products/antique-silver' },
+      { name: 'Custom Orders', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/other-products/custom-orders' },
     ]
   },
   {
@@ -72,11 +73,11 @@ const mainCategories = [
     icon: '🏠',
     image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=100&h=100&fit=crop',
     subcategories: [
-      { name: 'Wall Decor', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Photo Frames', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Showpieces', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Candle Stands', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Flower Vases', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/products' },
+      { name: 'Wall Decor', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/wall-decor' },
+      { name: 'Photo Frames', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/photo-frames' },
+      { name: 'Showpieces', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/showpieces' },
+      { name: 'Candle Stands', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/candle-stands' },
+      { name: 'Flower Vases', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/flower-vases' },
     ]
   },
   {
@@ -85,19 +86,31 @@ const mainCategories = [
     icon: '🎁',
     image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100&h=100&fit=crop',
     subcategories: [
-      { name: 'Wedding Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Birthday Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Festival Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Corporate Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/products' },
-      { name: 'Return Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/products' },
+      { name: 'Wedding Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/wedding-gifts' },
+      { name: 'Birthday Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/birthday-gifts' },
+      { name: 'Festival Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/festival-gifts' },
+      { name: 'Corporate Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/corporate-gifts' },
+      { name: 'Return Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/return-gifts' },
     ]
   },
 ];
 
 const MobileCategories = () => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState(mainCategories[0]);
+  const [selectedCategory, setSelectedCategory] = useState(() => {
+    const savedId = sessionStorage.getItem('selectedCategoryId');
+    if (savedId) {
+      const found = mainCategories.find(c => c.id === savedId);
+      if (found) return found;
+    }
+    return mainCategories[0];
+  });
   const [products, setProducts] = useState<Product[]>([]);
+
+  // Persist selected category so back navigation restores it
+  useEffect(() => {
+    sessionStorage.setItem('selectedCategoryId', selectedCategory.id);
+  }, [selectedCategory]);
 
   // Load products to show actual product images if available
   useEffect(() => {
@@ -134,9 +147,11 @@ const MobileCategories = () => {
           </button>
           <h1 className="text-lg font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Top Categories</h1>
         </div>
-        <button className="p-2">
-          <Search className="w-5 h-5 text-gray-600" />
-        </button>
+        <img 
+          src={logo} 
+          alt="Sreerasthu Silvers" 
+          className="h-6 w-auto"
+        />
       </div>
 
       {/* Main Content */}

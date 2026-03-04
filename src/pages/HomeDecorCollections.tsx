@@ -10,48 +10,52 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useToast } from "@/hooks/use-toast";
 
-// Import product images (using available images as placeholders)
+// Import placeholder images
 import setImg from "@/assets/products/set-1.jpg";
+import necklaceImg from "@/assets/products/necklace-1.jpg";
+import ringImg from "@/assets/products/ring-1.jpg";
+import earringsImg from "@/assets/products/earrings-1.jpg";
+import bandImg from "@/assets/products/band-1.jpg";
 
-const productsCategories = [
+const homeDecorCategories = [
   {
     id: 1,
-    title: "Silver Idols",
-    description: "Divine silver idols",
+    title: "Wall Decor",
+    description: "Elegant silver wall decorations",
     image: setImg,
-    href: "/products/silver-idols",
+    href: "/home-decor/wall-decor",
   },
   {
     id: 2,
-    title: "Silver Pooja Items",
-    description: "Sacred pooja essentials",
-    image: setImg,
-    href: "/products/silver-pooja-items",
+    title: "Photo Frames",
+    description: "Stunning silver photo frames",
+    image: necklaceImg,
+    href: "/home-decor/photo-frames",
   },
   {
     id: 3,
-    title: "Silver Gift Articles",
-    description: "Exquisite silver gifts",
-    image: setImg,
-    href: "/products/silver-gift-articles",
+    title: "Showpieces",
+    description: "Exquisite silver showpieces",
+    image: ringImg,
+    href: "/home-decor/showpieces",
   },
   {
     id: 4,
-    title: "Custom Engraved Items",
-    description: "Personalized silver pieces",
-    image: setImg,
-    href: "/products/custom-engraved-items",
+    title: "Candle Stands",
+    description: "Elegant silver candle stands",
+    image: earringsImg,
+    href: "/home-decor/candle-stands",
   },
   {
     id: 5,
-    title: "Silver Coins",
-    description: "Premium silver coins",
-    image: setImg,
-    href: "/products/silver-coins",
+    title: "Flower Vases",
+    description: "Beautiful silver flower vases",
+    image: bandImg,
+    href: "/home-decor/flower-vases",
   },
 ];
 
-const OtherProductsCollections = () => {
+const HomeDecorCollections = () => {
   const navigate = useNavigate();
   const { totalItems, addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, isInWishlist } = useWishlist();
@@ -71,25 +75,25 @@ const OtherProductsCollections = () => {
   const minPrice = products.length > 0 ? Math.floor(Math.min(...products.map(p => p.price))) : 0;
   const maxPrice = products.length > 0 ? Math.ceil(Math.max(...products.map(p => p.price))) : 100000;
 
-  // Fetch all products from Firebase and filter by other products categories
+  // Fetch all products from Firebase and filter by home decor-related categories
   useEffect(() => {
     setLoading(true);
     const unsubscribe = subscribeToProducts(
       (fbProducts) => {
         const uiProducts = adaptFirebaseArrayToUI(fbProducts);
-        // Filter only other products (idols, pooja items, gift articles, coins, custom items)
-        const otherProducts = uiProducts.filter(product => {
-          // Check if category contains other products keywords
+        // Filter only home decor-related products
+        const homeDecorProducts = uiProducts.filter(product => {
           const categoryLower = (product.category || '').toLowerCase();
-          return categoryLower.includes('idol') || 
-                 categoryLower.includes('pooja item') || 
-                 categoryLower.includes('gift') || 
-                 categoryLower.includes('coin') || 
-                 categoryLower.includes('engrav') ||
-                 categoryLower.includes('custom') ||
-                 categoryLower.includes('limited');
+          return categoryLower.includes('decor') || 
+                 categoryLower.includes('home decor') || 
+                 categoryLower.includes('wall') || 
+                 categoryLower.includes('frame') || 
+                 categoryLower.includes('showpiece') || 
+                 categoryLower.includes('candle') ||
+                 categoryLower.includes('vase') ||
+                 categoryLower.includes('lamp');
         });
-        setProducts(otherProducts);
+        setProducts(homeDecorProducts);
         setLoading(false);
       },
       true // activeOnly
@@ -270,51 +274,15 @@ const OtherProductsCollections = () => {
               {activeFilterCategory === 'Discount' && (
                 <div className="py-1">
                   {[
-                    { 
-                      id: 'discount-10', 
-                      label: '10% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 10).length.toString() 
-                    },
-                    { 
-                      id: 'discount-20', 
-                      label: '20% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 20).length.toString() 
-                    },
-                    { 
-                      id: 'discount-30', 
-                      label: '30% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 30).length.toString() 
-                    },
-                    { 
-                      id: 'discount-40', 
-                      label: '40% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 40).length.toString() 
-                    },
-                    { 
-                      id: 'discount-50', 
-                      label: '50% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 50).length.toString() 
-                    },
-                    { 
-                      id: 'discount-60', 
-                      label: '60% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 60).length.toString() 
-                    },
-                    { 
-                      id: 'discount-70', 
-                      label: '70% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 70).length.toString() 
-                    },
-                    { 
-                      id: 'discount-80', 
-                      label: '80% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 80).length.toString() 
-                    },
-                    { 
-                      id: 'discount-90', 
-                      label: '90% and above', 
-                      count: products.filter(p => Number(p.discount || 0) >= 90).length.toString() 
-                    },
+                    { id: 'discount-10', label: '10% and above', count: products.filter(p => Number(p.discount || 0) >= 10).length.toString() },
+                    { id: 'discount-20', label: '20% and above', count: products.filter(p => Number(p.discount || 0) >= 20).length.toString() },
+                    { id: 'discount-30', label: '30% and above', count: products.filter(p => Number(p.discount || 0) >= 30).length.toString() },
+                    { id: 'discount-40', label: '40% and above', count: products.filter(p => Number(p.discount || 0) >= 40).length.toString() },
+                    { id: 'discount-50', label: '50% and above', count: products.filter(p => Number(p.discount || 0) >= 50).length.toString() },
+                    { id: 'discount-60', label: '60% and above', count: products.filter(p => Number(p.discount || 0) >= 60).length.toString() },
+                    { id: 'discount-70', label: '70% and above', count: products.filter(p => Number(p.discount || 0) >= 70).length.toString() },
+                    { id: 'discount-80', label: '80% and above', count: products.filter(p => Number(p.discount || 0) >= 80).length.toString() },
+                    { id: 'discount-90', label: '90% and above', count: products.filter(p => Number(p.discount || 0) >= 90).length.toString() },
                   ].map((filter) => (
                     <button
                       key={filter.id}
@@ -447,7 +415,7 @@ const OtherProductsCollections = () => {
                 <Search className="w-4 h-4 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search products..."
+                  placeholder="Search home decor..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="flex-1 bg-transparent border-none outline-none text-sm"
@@ -478,7 +446,7 @@ const OtherProductsCollections = () => {
                 >
                   <ArrowLeft className="w-5 h-5 text-gray-700" />
                 </button>
-                <h1 className="text-lg font-semibold text-gray-900">Other Products</h1>
+                <h1 className="text-lg font-semibold text-gray-900">Home Decor Collections</h1>
               </div>
               <div className="flex items-center gap-2">
                 <button
@@ -606,7 +574,7 @@ const OtherProductsCollections = () => {
                 <span>Home</span>
               </Link>
               <span>/</span>
-              <span className="text-foreground font-medium">Other Products</span>
+              <span className="text-foreground font-medium">Home Decor Collections</span>
             </div>
           </div>
         </div>
@@ -616,7 +584,7 @@ const OtherProductsCollections = () => {
           <div className="container-custom">
             {/* Mobile: Horizontal Scroll */}
             <div className="md:hidden flex gap-4 overflow-x-auto pb-4 px-4 scrollbar-hide">
-              {productsCategories.map((category, index) => (
+              {homeDecorCategories.map((category, index) => (
                 <motion.div
                   key={category.id}
                   initial={{ opacity: 0, x: 20 }}
@@ -660,7 +628,7 @@ const OtherProductsCollections = () => {
             
             {/* Desktop: Grid */}
             <div className="hidden md:grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-12">
-              {productsCategories.map((category, index) => (
+              {homeDecorCategories.map((category, index) => (
                 <motion.div
                   key={category.id}
                   initial={{ opacity: 0, y: 30 }}
@@ -730,11 +698,11 @@ const OtherProductsCollections = () => {
                   className="text-3xl md:text-4xl font-serif font-light text-foreground mb-4"
                   style={{ fontFamily: "'Playfair Display', serif" }}
                 >
-                  Where Tradition Meets Contemporary Design
+                  Transform Your Home with Silver Elegance
                 </h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto">
                   Every piece is meticulously crafted using premium silver, 
-                  ensuring lasting beauty and exceptional quality.
+                  bringing timeless beauty and sophistication to your living spaces.
                 </p>
               </motion.div>
             </div>
@@ -760,7 +728,7 @@ const OtherProductsCollections = () => {
                 <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
                   <Search className="w-8 h-8 text-gray-400" />
                 </div>
-                <p className="text-gray-500 text-sm">No products found</p>
+                <p className="text-gray-500 text-sm">No home decor items found</p>
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
@@ -899,4 +867,4 @@ const OtherProductsCollections = () => {
   );
 };
 
-export default OtherProductsCollections;
+export default HomeDecorCollections;

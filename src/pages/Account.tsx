@@ -562,10 +562,10 @@ const AccountPage = () => {
 
   // Update avatar URL when user or userProfile changes
   useEffect(() => {
-    const newAvatarUrl = user?.photoURL || userProfile?.avatar || null;
+    const newAvatarUrl = userProfile?.avatar || user?.photoURL || null;
     console.log('🖼️ Avatar URL updated:', newAvatarUrl);
     setAvatarUrl(newAvatarUrl);
-  }, [user?.photoURL, userProfile?.avatar]);
+  }, [userProfile?.avatar, user?.photoURL]);
 
   // Handle photo upload
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {

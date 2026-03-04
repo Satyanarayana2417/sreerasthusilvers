@@ -7,7 +7,6 @@ import {
   Package,
   ShoppingCart,
   Image,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -46,7 +45,6 @@ const AdminLayout = () => {
     { path: '/admin/gallery', icon: Image, label: 'Gallery' },
     { path: '/admin/gift-cards', icon: Gift, label: 'Gift Cards' },
     { path: '/admin/media', icon: Image, label: 'Media' },
-    { path: '/admin/settings', icon: Settings, label: 'Settings' },
   ];
 
   return (
@@ -160,13 +158,6 @@ const AdminLayout = () => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48 bg-white border-[#F5EFE6]">
-              <DropdownMenuItem
-                className="text-gray-700 hover:text-gray-900 hover:bg-gray-100 cursor-pointer"
-                onClick={() => navigate('/admin/settings')}
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </DropdownMenuItem>
               <DropdownMenuItem
                 className="text-red-600 hover:text-red-700 hover:bg-red-50 cursor-pointer"
                 onClick={handleLogout}

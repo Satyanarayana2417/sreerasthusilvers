@@ -88,24 +88,42 @@ import RoyalSilverChairs from "./pages/RoyalSilverChairs";
 import RoyalSilverTables from "./pages/RoyalSilverTables";
 import AntiqueSilverDecor from "./pages/AntiqueSilverDecor";
 import SilverSwingJhoola from "./pages/SilverSwingJhoola";
+import SilverCradles from "./pages/SilverCradles";
+import SilverThrones from "./pages/SilverThrones";
 
 // Articles Pages
 import ArticlesCollections from "./pages/ArticlesCollections";
-import SilverPoojaKalashSet from "./pages/SilverPoojaKalashSet";
-import SilverCoconut from "./pages/SilverCoconut";
-import SilverFootwear from "./pages/SilverFootwear";
-import SilverGopuramIdolStand from "./pages/SilverGopuramIdolStand";
-import SilverCamelCart from "./pages/SilverCamelCart";
-import SilverJhula from "./pages/SilverJhula";
+import SilverPoojaItems from "./pages/SilverPoojaItems";
+import SilverGiftArticles from "./pages/SilverGiftArticles";
+import SilverLamps from "./pages/SilverLamps";
+import SilverPlates from "./pages/SilverPlates";
+import SilverIdols from "./pages/SilverIdols";
+import SilverVessels from "./pages/SilverVessels";
 
 // Other Products Pages
 import OtherProductsCollections from "./pages/OtherProductsCollections";
-import SilverIdols from "./pages/SilverIdols";
-import SilverPoojaItems from "./pages/SilverPoojaItems";
-import SilverGiftArticles from "./pages/SilverGiftArticles";
-import CustomEngravedItems from "./pages/CustomEngravedItems";
 import SilverCoins from "./pages/SilverCoins";
-import LimitedEditionPieces from "./pages/LimitedEditionPieces";
+import SilverBars from "./pages/SilverBars";
+import SilverUtensils from "./pages/SilverUtensils";
+import BabyItems from "./pages/BabyItems";
+import AntiqueSilver from "./pages/AntiqueSilver";
+import CustomOrders from "./pages/CustomOrders";
+
+// Home Decor Pages
+import HomeDecorCollections from "./pages/HomeDecorCollections";
+import SilverWallDecor from "./pages/SilverWallDecor";
+import SilverPhotoFrames from "./pages/SilverPhotoFrames";
+import SilverShowpieces from "./pages/SilverShowpieces";
+import SilverCandleStands from "./pages/SilverCandleStands";
+import SilverFlowerVases from "./pages/SilverFlowerVases";
+
+// Gifts Pages
+import GiftsCollections from "./pages/GiftsCollections";
+import SilverWeddingGifts from "./pages/SilverWeddingGifts";
+import SilverBirthdayGifts from "./pages/SilverBirthdayGifts";
+import SilverFestivalGifts from "./pages/SilverFestivalGifts";
+import SilverCorporateGifts from "./pages/SilverCorporateGifts";
+import SilverReturnGifts from "./pages/SilverReturnGifts";
 
 // Purchase Summary & Security Pages
 import PurchaseSummary from "./pages/PurchaseSummary";
@@ -125,7 +143,6 @@ import Dashboard from "./pages/admin/Dashboard";
 import Products from "./pages/admin/Products";
 import ProductForm from "./pages/admin/ProductForm";
 import Media from "./pages/admin/Media";
-import Settings from "./pages/admin/Settings";
 import AdminBanners from "./pages/AdminBanners";
 import AdminShowcases from "./pages/admin/AdminShowcases";
 import AdminTestimonials from "./pages/admin/AdminTestimonials";
@@ -236,22 +253,44 @@ const App = () => {
               <Route path="/furniture/royal-silver-tables" element={<RoyalSilverTables />} />
               <Route path="/furniture/antique-silver-decor" element={<AntiqueSilverDecor />} />
               <Route path="/furniture/silver-swing-jhoola" element={<SilverSwingJhoola />} />
+              <Route path="/furniture/silver-cradles" element={<SilverCradles />} />
+              <Route path="/furniture/silver-thrones" element={<SilverThrones />} />
               
               {/* Articles Routes */}
-              <Route path="/articles/silver-pooja-kalash-set" element={<SilverPoojaKalashSet />} />
-              <Route path="/articles/silver-coconut" element={<SilverCoconut />} />
-              <Route path="/articles/silver-footwear" element={<SilverFootwear />} />
-              <Route path="/articles/silver-gopuram-idol-stand" element={<SilverGopuramIdolStand />} />
-              <Route path="/articles/silver-camel-cart" element={<SilverCamelCart />} />
-              <Route path="/articles/silver-jhula" element={<SilverJhula />} />
+              <Route path="/articles/pooja-items" element={<SilverPoojaItems />} />
+              <Route path="/articles/gift-articles" element={<SilverGiftArticles />} />
+              <Route path="/articles/silver-lamps" element={<SilverLamps />} />
+              <Route path="/articles/silver-plates" element={<SilverPlates />} />
+              <Route path="/articles/silver-idols" element={<SilverIdols />} />
+              <Route path="/articles/silver-vessels" element={<SilverVessels />} />
               
               {/* Other Products Routes */}
-              <Route path="/products/silver-idols" element={<SilverIdols />} />
-              <Route path="/products/silver-pooja-items" element={<SilverPoojaItems />} />
-              <Route path="/products/silver-gift-articles" element={<SilverGiftArticles />} />
-              <Route path="/products/custom-engraved-items" element={<CustomEngravedItems />} />
-              <Route path="/products/silver-coins" element={<SilverCoins />} />
-              <Route path="/products/limited-edition-pieces" element={<LimitedEditionPieces />} />
+              <Route path="/other-products/silver-coins" element={<SilverCoins />} />
+              <Route path="/other-products/silver-bars" element={<SilverBars />} />
+              <Route path="/other-products/silver-utensils" element={<SilverUtensils />} />
+              <Route path="/other-products/baby-items" element={<BabyItems />} />
+              <Route path="/other-products/antique-silver" element={<AntiqueSilver />} />
+              <Route path="/other-products/custom-orders" element={<CustomOrders />} />
+              
+              {/* Home Decor Collections Main Page */}
+              <Route path="/home-decor" element={<HomeDecorCollections />} />
+              
+              {/* Home Decor Routes */}
+              <Route path="/home-decor/wall-decor" element={<SilverWallDecor />} />
+              <Route path="/home-decor/photo-frames" element={<SilverPhotoFrames />} />
+              <Route path="/home-decor/showpieces" element={<SilverShowpieces />} />
+              <Route path="/home-decor/candle-stands" element={<SilverCandleStands />} />
+              <Route path="/home-decor/flower-vases" element={<SilverFlowerVases />} />
+              
+              {/* Gifts Collections Main Page */}
+              <Route path="/gifts" element={<GiftsCollections />} />
+              
+              {/* Gifts Routes */}
+              <Route path="/gifts/wedding-gifts" element={<SilverWeddingGifts />} />
+              <Route path="/gifts/birthday-gifts" element={<SilverBirthdayGifts />} />
+              <Route path="/gifts/festival-gifts" element={<SilverFestivalGifts />} />
+              <Route path="/gifts/corporate-gifts" element={<SilverCorporateGifts />} />
+              <Route path="/gifts/return-gifts" element={<SilverReturnGifts />} />
               
               <Route path="/product/:productId" element={<ProductDetail />} />
               <Route path="/wishlist" element={<Wishlist />} />
@@ -325,7 +364,6 @@ const App = () => {
                 <Route path="orders" element={<AdminOrders />} />
                 <Route path="delivery-boys" element={<AdminDeliveryBoys />} />
                 <Route path="media" element={<Media />} />
-                <Route path="settings" element={<Settings />} />
                 <Route path="banners" element={<AdminBanners />} />
                 <Route path="showcases" element={<AdminShowcases />} />
                 <Route path="testimonials" element={<AdminTestimonials />} />

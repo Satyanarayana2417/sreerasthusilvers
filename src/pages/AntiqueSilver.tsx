@@ -1,4 +1,4 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Home, ArrowLeft, Search, X, ChevronDown, ShoppingCart, Heart, Star, SlidersHorizontal, Check } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
@@ -10,11 +10,11 @@ import { useCart } from "@/contexts/CartContext";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useToast } from "@/hooks/use-toast";
 
-const ShopNecklaces = () => {
-  const PAGE_TITLE = "Silver Necklaces";
-  const SUBCATEGORY = "Necklaces";
-  const PARENT_CATEGORY = "Jewelry";
-  const PARENT_PATH = "/jewelry";
+const AntiqueSilver = () => {
+  const PAGE_TITLE = "Antique Silver";
+  const SUBCATEGORY = "Antique Silver";
+  const PARENT_CATEGORY = "Other Products";
+  const PARENT_PATH = "/other-products";
 
   const navigate = useNavigate();
   const { totalItems, addToCart } = useCart();
@@ -149,7 +149,7 @@ const ShopNecklaces = () => {
                 <div className="px-4 py-6">
                   <div className="mb-4">
                     <h3 className="text-sm font-medium text-gray-700 mb-2">Selected Price range</h3>
-                    <p className="text-base font-semibold text-gray-900">â‚¹{priceRange[0].toLocaleString('en-IN')} - â‚¹{priceRange[1].toLocaleString('en-IN')}+</p>
+                    <p className="text-base font-semibold text-gray-900">₹{priceRange[0].toLocaleString('en-IN')} - ₹{priceRange[1].toLocaleString('en-IN')}+</p>
                   </div>
                   <div className="mb-6">
                     <div className="relative h-2 mt-8 mb-8">
@@ -288,8 +288,8 @@ const ShopNecklaces = () => {
                       </div>
                       <h3 className="text-xs font-medium text-gray-900 truncate mb-1">{product.title}</h3>
                       <div className="flex items-center gap-1.5 mb-2">
-                        <p className="text-sm font-bold text-gray-900">â‚¹{product.price.toLocaleString('en-IN')}</p>
-                        {product.oldPrice && <p className="text-[10px] text-gray-400 line-through">â‚¹{product.oldPrice.toLocaleString('en-IN')}</p>}
+                        <p className="text-sm font-bold text-gray-900">₹{product.price.toLocaleString('en-IN')}</p>
+                        {product.oldPrice && <p className="text-[10px] text-gray-400 line-through">₹{product.oldPrice.toLocaleString('en-IN')}</p>}
                       </div>
                       <button onClick={(e) => { e.stopPropagation(); addToCart({ id: product.id, name: product.title, price: product.price, image: product.image, category: product.category }); toast({ title: "Added to cart", description: `${product.title} has been added to your cart.` }); }} className="w-full py-2 bg-gray-900 hover:bg-gray-800 text-white rounded text-[11px] font-bold transition-colors flex items-center justify-center gap-1.5"><ShoppingCart className="w-3.5 h-3.5" />ADD TO CART</button>
                     </div>
@@ -306,5 +306,4 @@ const ShopNecklaces = () => {
   );
 };
 
-export default ShopNecklaces;
-
+export default AntiqueSilver;

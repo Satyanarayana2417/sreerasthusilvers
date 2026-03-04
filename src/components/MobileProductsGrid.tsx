@@ -323,30 +323,32 @@ const MobileProductsGrid = () => {
 
               {/* Product Info */}
               <div className="p-2.5">
-                {/* Cart Icon - Below Image */}
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart(product);
-                  }}
-                  className="mb-1.5 text-orange-600 hover:text-orange-700 transition-colors inline-block"
-                  aria-label="Add to cart"
-                >
-                  <ShoppingCart className="w-5 h-5" />
-                </button>
+                {/* Cart Icon & Rating - Same Row */}
+                <div className="flex items-center justify-between mb-1.5">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAddToCart(product);
+                    }}
+                    className="text-orange-600 hover:text-orange-700 transition-colors"
+                    aria-label="Add to cart"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                  </button>
 
-                {/* Rating & Reviews - Only show if product has rating */}
-                {product.rating && product.reviewCount && (
-                  <div className="flex items-center gap-1 mb-1.5">
-                    <div className="flex items-center gap-0.5 bg-green-600 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
-                      <span>{product.rating}</span>
-                      <Star className="w-2.5 h-2.5 fill-current" />
+                  {/* Rating & Reviews - Only show if product has rating */}
+                  {product.rating && product.reviewCount && (
+                    <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-0.5 bg-green-600 text-white text-[10px] font-semibold px-1.5 py-0.5 rounded">
+                        <span>{product.rating}</span>
+                        <Star className="w-2.5 h-2.5 fill-current" />
+                      </div>
+                      <span className="text-[10px] text-gray-500">
+                        ({product.reviewCount})
+                      </span>
                     </div>
-                    <span className="text-[10px] text-gray-500">
-                      ({product.reviewCount})
-                    </span>
-                  </div>
-                )}
+                  )}
+                </div>
 
                 {/* Product Name */}
                 <h3
