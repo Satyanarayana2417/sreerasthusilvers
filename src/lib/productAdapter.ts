@@ -26,10 +26,16 @@ export interface UIProduct {
  * @returns UIProduct - Product formatted for existing UI components
  */
 export const adaptFirebaseToUI = (fbProduct: FirebaseProduct): UIProduct => {
-  // Calculate discount percentage if original price exists
-  const discount = fbProduct.originalPrice && fbProduct.originalPrice > fbProduct.price
-    ? Math.round(((fbProduct.originalPrice - fbProduct.price) / fbProduct.originalPrice) * 100)
-    : undefined;
+  // Use explicit discount field if set, otherwise calculate from original price
+  let discount: number | undefined;
+  
+  if (fbProduct.discount !== undefined && fbProduct.discount > 0) {
+    // Use explicit discount from admin
+    discount = Math.round(fbProduct.discount);
+  } else if (fbProduct.originalPrice && fbProduct.originalPrice > fbProduct.price) {
+    // Calculate discount percentage if original price exists
+    discount = Math.round(((fbProduct.originalPrice - fbProduct.price) / fbProduct.originalPrice) * 100);
+  }
 
   // Determine badge based on product flags
   let badge: string | undefined;

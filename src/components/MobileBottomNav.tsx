@@ -9,6 +9,9 @@ const MobileBottomNav = () => {
   const location = useLocation();
   const { totalItems, subtotal } = useCart();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Listen for sidebar toggle events from MobileHeader
   useEffect(() => {
@@ -16,6 +19,44 @@ const MobileBottomNav = () => {
     window.addEventListener('toggle-mobile-sidebar', handleToggle);
     return () => window.removeEventListener('toggle-mobile-sidebar', handleToggle);
   }, []);
+
+  // Listen for modal open/close events
+  useEffect(() => {
+    const handleModalOpen = () => setIsModalOpen(true);
+    const handleModalClose = () => setIsModalOpen(false);
+    
+    window.addEventListener('mobile-modal-open', handleModalOpen);
+    window.addEventListener('mobile-modal-close', handleModalClose);
+    
+    return () => {
+      window.removeEventListener('mobile-modal-open', handleModalOpen);
+      window.removeEventListener('mobile-modal-close', handleModalClose);
+    };
+  }, []);
+
+  // Handle scroll to show/hide navbar
+  useEffect(() => {
+    const controlNavbar = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Hide navbar when scrolling down, show when scrolling up
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down and past threshold - hide navbar
+        setIsVisible(false);
+      } else if (currentScrollY < lastScrollY && currentScrollY > 50) {
+        // Scrolling up and past threshold - show navbar
+        setIsVisible(true);
+      } else if (currentScrollY < 50) {
+        // Near top of page - always show
+        setIsVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener('scroll', controlNavbar);
+    return () => window.removeEventListener('scroll', controlNavbar);
+  }, [lastScrollY]);
 
   // Format price compactly for mobile
   const formatMobilePrice = (price: number) => {
@@ -33,7 +74,11 @@ const MobileBottomNav = () => {
     <>
       <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-pb">
+      <nav 
+        className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-pb transition-transform duration-300 ${
+          (!isVisible || isModalOpen) ? 'translate-y-full' : 'translate-y-0'
+        }`}
+      >
         {/* SVG Background with curved notch */}
         <svg 
           className="absolute bottom-0 left-0 right-0 w-full h-16" 

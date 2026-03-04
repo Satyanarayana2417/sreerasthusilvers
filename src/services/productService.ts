@@ -56,12 +56,15 @@ export interface Product {
   description: string;
   price: number;
   originalPrice?: number;
+  discount?: number;
   currency: string;
   media: ProductMedia;
   inventory: ProductInventory;
   specifications: ProductSpecifications;
   flags: ProductFlags;
   seo?: ProductSEO;
+  rating?: number;
+  reviewCount?: number;
   createdAt?: Date | Timestamp;
   updatedAt?: Date | Timestamp;
   createdBy?: string;
@@ -306,6 +309,27 @@ export const subscribeToProducts = (
         orderBy('createdAt', 'desc')
       )
     : query(collection(db, PRODUCTS_COLLECTION), orderBy('createdAt', 'desc'));
+
+  return onSnapshot(q, (querySnapshot) => {
+    const products = querySnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    } as Product));
+    callback(products);
+  });
+};
+
+// Real-time best sellers listener
+export const subscribeToBestSellers = (
+  callback: (products: Product[]) => void,
+  limitCount = 10
+) => {
+  const q = query(
+    collection(db, PRODUCTS_COLLECTION),
+    where('flags.isActive', '==', true),
+    where('flags.isBestSeller', '==', true),
+    limit(limitCount)
+  );
 
   return onSnapshot(q, (querySnapshot) => {
     const products = querySnapshot.docs.map(doc => ({

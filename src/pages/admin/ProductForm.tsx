@@ -38,6 +38,8 @@ import {
 
 const shopCategories = [
   'Top Deals',
+  'Best Sellers',
+  'Trend Products',
   'Jewellery',
   'Furniture',
   'Articles',
@@ -87,6 +89,9 @@ const ProductForm = () => {
     tags: '',
     price: '',
     originalPrice: '',
+    discount: '',
+    rating: '',
+    reviewCount: '',
     stock: '',
     weight: '',
     material: '',
@@ -121,6 +126,9 @@ const ProductForm = () => {
           tags: '',
           price: product.price.toString(),
           originalPrice: product.originalPrice?.toString() || '',
+          discount: product.discount?.toString() || '',
+          rating: product.rating?.toString() || '',
+          reviewCount: product.reviewCount?.toString() || '',
           stock: product.inventory?.stock?.toString() || '',
           weight: product.inventory?.weight || '',
           material: product.specifications?.material || '',
@@ -146,6 +154,15 @@ const ProductForm = () => {
       setFetchingProduct(false);
     }
   };
+
+  // Auto-toggle flags when Best Sellers or Trend Products category is selected
+  useEffect(() => {
+    if (formData.category === 'Best Sellers') {
+      setFormData((prev) => ({ ...prev, isBestSeller: true }));
+    } else if (formData.category === 'Trend Products') {
+      setFormData((prev) => ({ ...prev, isNewArrival: true }));
+    }
+  }, [formData.category]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -296,14 +313,17 @@ const ProductForm = () => {
     setLoading(true);
 
     try {
-      const productData: Omit<Product, 'id'> = {
+      const productData: Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'> = {
         name: formData.name,
         slug: generateSlug(formData.name),
         category: formData.category,
         subcategory: formData.subcategory,
         description: formData.description,
         price: parseFloat(formData.price),
-        originalPrice: formData.originalPrice ? parseFloat(formData.originalPrice) : undefined,
+        ...(formData.originalPrice && { originalPrice: parseFloat(formData.originalPrice) }),
+        ...(formData.discount && { discount: parseFloat(formData.discount) }),
+        ...(formData.rating && { rating: parseFloat(formData.rating) }),
+        ...(formData.reviewCount && { reviewCount: parseFloat(formData.reviewCount) }),
         currency: 'INR',
         media: {
           images,
@@ -326,7 +346,7 @@ const ProductForm = () => {
           isNewArrival: formData.isNewArrival,
           isBestSeller: formData.isBestSeller,
         },
-      };
+      } as any;
 
       console.log('ProductForm: Saving product with data:', productData);
 
@@ -766,6 +786,55 @@ const ProductForm = () => {
                 </div>
               </div>
 
+              <div>
+                <Label className="text-gray-700">Discount (%)</Label>
+                <Input
+                  name="discount"
+                  type="number"
+                  value={formData.discount}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 20 for 20% off"
+                  min="0"
+                  max="100"
+                  step="1"
+                  className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                />
+                <p className="text-xs text-gray-500 mt-1">Optional: Add a discount percentage to display on product cards</p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-gray-700">Rating</Label>
+                  <Input
+                    name="rating"
+                    type="number"
+                    value={formData.rating}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 4.5"
+                    min="0"
+                    max="5"
+                    step="0.1"
+                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Optional: Rating out of 5</p>
+                </div>
+
+                <div>
+                  <Label className="text-gray-700">Review Count</Label>
+                  <Input
+                    name="reviewCount"
+                    type="number"
+                    value={formData.reviewCount}
+                    onChange={handleInputChange}
+                    placeholder="e.g., 8"
+                    min="0"
+                    step="0.1"
+                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">Optional: Number of reviews</p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-3 gap-4">
                 <div>
                   <Label className="text-gray-700">Stock</Label>
@@ -887,37 +956,43 @@ const ProductForm = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
 
-          {/* Actions */}
-          <Card className="bg-white border-gray-200">
-            <CardContent className="pt-6 space-y-3">
-              <Button
-                type="submit"
-                className="w-full bg-amber-600 hover:bg-amber-700"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    {isEditing ? 'Updating...' : 'Creating...'}
-                  </>
-                ) : isEditing ? (
-                  'Update Product'
-                ) : (
-                  'Create Product'
-                )}
-              </Button>
+        {/* Actions */}
+        <div className="lg:col-span-3 -mt-6">
+          <div className="inline-block">
+            <Card className="bg-white border-gray-200">
+              <CardContent className="pt-6">
+                <div className="flex gap-3">
+                  <Button
+                    type="submit"
+                    className="bg-amber-600 hover:bg-amber-700 px-8"
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        {isEditing ? 'Updating...' : 'Creating...'}
+                      </>
+                    ) : isEditing ? (
+                      'Update Product'
+                    ) : (
+                      'Create Product'
+                    )}
+                  </Button>
 
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full border-gray-300 text-gray-700 hover:bg-gray-50"
-                onClick={() => navigate('/admin/products')}
-              >
-                Cancel
-              </Button>
-            </CardContent>
-          </Card>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8"
+                    onClick={() => navigate('/admin/products')}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </form>
     </div>

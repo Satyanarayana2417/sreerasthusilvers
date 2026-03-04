@@ -80,8 +80,8 @@ const TopDeals = () => {
   if (products.length === 0) return null;
 
   return (
-    <section className="py-12 bg-gray-50">
-      <div className="container-custom bg-white rounded-lg shadow-lg p-3 md:p-6">
+    <section className="py-3 md:py-8 bg-gray-50">
+      <div className="container-custom md:bg-white md:rounded-lg md:shadow-lg md:p-6">
         <h2 className="text-lg md:text-3xl font-semibold text-gray-900 mb-3 md:mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
           Top Deals
         </h2>
@@ -99,7 +99,7 @@ const TopDeals = () => {
                 className="flex-shrink-0 w-[130px] md:w-[220px] snap-start cursor-pointer"
                 onClick={() => navigate(`/product/${product.id}`)}
               >
-                <div className="bg-white rounded-lg overflow-hidden h-full flex flex-col shadow-sm">
+                <div className="bg-white rounded-lg overflow-hidden h-full flex flex-col border border-gray-100 md:shadow-sm">
                   {/* Image */}
                   <div className="aspect-square overflow-hidden bg-gray-100 relative group">
                     <img

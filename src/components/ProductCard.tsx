@@ -94,6 +94,13 @@ const ProductCard = ({ product, index = 0, onQuickView }: ProductCardProps) => {
           loading="lazy"
         />
 
+        {/* Discount Badge - Top Left */}
+        {product.discount && product.discount > 0 && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] lg:text-xs font-bold px-2 py-1 rounded-md shadow-lg">
+            {product.discount}% OFF
+          </div>
+        )}
+
         {/* Wishlist Heart - Top Right */}
         <button
           onClick={handleWishlistClick}

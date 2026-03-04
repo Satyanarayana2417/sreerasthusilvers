@@ -9,6 +9,7 @@ import MarqueeBand from "@/components/MarqueeBand";
 import CategoryShowcase from "@/components/CategoryShowcase";
 import FeatureIcons from "@/components/FeatureIcons";
 import TrendProducts from "@/components/TrendProducts";
+import MobileProductsGrid from "@/components/MobileProductsGrid";
 import PromoSection from "@/components/PromoSection";
 import FreeShippingBand from "@/components/FreeShippingBand";
 import TestimonialsCarousel from "@/components/TestimonialsCarousel";
@@ -32,9 +33,15 @@ const Index = () => {
         <TopDeals />
         <BestSellers />
         <MarqueeBand />
-        <CategoryShowcase />
+        <div className="hidden md:block">
+          <CategoryShowcase />
+        </div>
         <FeatureIcons />
         <TrendProducts />
+        <div className="md:hidden">
+          <CategoryShowcase />
+          <MobileProductsGrid />
+        </div>
         <PromoSection />
         <FreeShippingBand />
         <TestimonialsCarousel />

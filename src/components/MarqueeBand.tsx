@@ -17,7 +17,7 @@ const MarqueeBand = () => {
   const duplicatedPhrases = [...phrases, ...phrases, ...phrases];
 
   return (
-    <section className="py-0 bg-background border-y border-border/30 overflow-hidden">
+    <section className="py-0 bg-black md:bg-background border-y border-border/30 overflow-hidden">
       <div className="relative">
         <motion.div
           className="flex items-center gap-8 whitespace-nowrap"
@@ -35,10 +35,10 @@ const MarqueeBand = () => {
         >
           {duplicatedPhrases.map((phrase, index) => (
             <div key={index} className="flex items-center gap-8">
-              <span className="text-lg md:text-xl font-heading font-medium text-foreground tracking-wide">
+              <span className="text-lg md:text-xl font-heading font-medium text-white md:text-foreground tracking-wide">
                 {phrase}
               </span>
-              <Sun className="w-5 h-5 text-primary flex-shrink-0" />
+              <Sun className="w-5 h-5 text-white md:text-primary flex-shrink-0" />
             </div>
           ))}
         </motion.div>

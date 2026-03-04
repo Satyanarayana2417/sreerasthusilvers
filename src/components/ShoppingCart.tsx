@@ -2,11 +2,20 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Loader2, Shield, RotateCcw, Truck } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 
 const ShoppingCart = () => {
   const { items, isCartOpen, closeCart, updateQuantity, removeFromCart, subtotal, totalItems, loading } = useCart();
   const navigate = useNavigate();
+
+  // Dispatch events to hide/show bottom navbar when cart opens/closes
+  useEffect(() => {
+    if (isCartOpen) {
+      window.dispatchEvent(new Event('mobile-modal-open'));
+    } else {
+      window.dispatchEvent(new Event('mobile-modal-close'));
+    }
+  }, [isCartOpen]);
 
   // Format price in Indian Rupees
   const formatPrice = useCallback((price: number) => {
