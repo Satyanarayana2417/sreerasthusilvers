@@ -77,10 +77,16 @@ export const adaptFirebaseArrayToUI = (fbProducts: FirebaseProduct[]): UIProduct
 
 /**
  * Extended UI Product interface for product detail pages
- * Includes additional fields like description
+ * Includes additional fields like description and images array
  */
 export interface UIProductDetail extends UIProduct {
   description?: string;
+  images: string[];
+  specifications?: {
+    material?: string;
+    purity?: string;
+    dimensions?: string;
+  };
 }
 
 /**
@@ -95,5 +101,7 @@ export const adaptFirebaseToUIDetail = (fbProduct: FirebaseProduct): UIProductDe
   return {
     ...baseProduct,
     description: fbProduct.description,
+    images: fbProduct.media.images || [],
+    specifications: fbProduct.specifications || {},
   };
 };

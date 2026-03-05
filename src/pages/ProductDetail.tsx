@@ -7,6 +7,8 @@ import { UIProductDetail, adaptFirebaseToUIDetail, adaptFirebaseArrayToUI } from
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/logo-new.png";
+import MobileHeader from "@/components/MobileHeader";
+import MobileSearchBar from "@/components/MobileSearchBar";
 
 const ProductDetail = () => {
   const { productId } = useParams();
@@ -300,28 +302,16 @@ const ProductDetail = () => {
   // Generate SKU
   const sku = `sreerasthu-${product.category.toLowerCase().replace(/[^a-z]/g, "-")}-${product.id}`;
 
-  // Product images for gallery - only show unique images
-  const productImages = [product.image];
+  // Product images for gallery - use all images from product, fallback to main image if no images array
+  const productImages = product.images && product.images.length > 0 ? product.images : [product.image];
 
   return (
     <div className="min-h-screen w-full overflow-x-clip">
       <main>
-        {/* Mobile Back Button */}
-        <div className="lg:hidden bg-white sticky top-0 z-40 shadow-sm px-4 py-3">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="text-sm font-medium">Back</span>
-            </button>
-            <img 
-              src={logo} 
-              alt="Sree Rasthu Silvers" 
-              className="h-7 w-auto object-contain"
-            />
-          </div>
+        {/* Mobile Header and Search */}
+        <div className="lg:hidden">
+          <MobileHeader />
+          <MobileSearchBar />
         </div>
 
         {/* Breadcrumb */}
@@ -423,21 +413,40 @@ const ProductDetail = () => {
                 className="flex flex-col"
                 style={{ fontFamily: "'Poppins', sans-serif" }}
               >
-                {/* Category */}
-                <span className="text-sm uppercase tracking-wider text-primary font-medium mb-2">
-                  {product.category}
-                </span>
-
                 {/* Title */}
                 <h1 
-                  className="text-lg md:text-3xl lg:text-4xl font-semibold text-foreground mb-3 md:mb-4"
+                  className="text-base md:text-2xl lg:text-3xl font-medium text-foreground mb-3"
                   style={{ fontFamily: "'Poppins', sans-serif" }}
                 >
                   {product.title}
                 </h1>
 
+                {/* Price */}
+                <div className="mb-1">
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <span className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground">
+                      ₹{product.price.toLocaleString("en-IN")}
+                    </span>
+                    {product.oldPrice && (
+                      <>
+                        <span className="text-lg md:text-xl text-muted-foreground line-through">
+                          ₹{product.oldPrice.toLocaleString("en-IN")}
+                        </span>
+                        {product.discount && (
+                          <span className="px-2 py-1 bg-red-100 text-red-600 text-xs md:text-sm font-semibold rounded">
+                            ({product.discount}% off)
+                          </span>
+                        )}
+                      </>
+                    )}
+                  </div>
+                  <p className="text-xs md:text-sm text-gray-600 mt-1">
+                    (MRP Inclusive of all taxes)
+                  </p>
+                </div>
+
                 {/* Description */}
-                <div className="mb-4">
+                <div className="mb-4 mt-4">
                   <p className={`text-xs md:text-sm text-gray-600 leading-relaxed ${
                     !showFullDescription ? 'line-clamp-2' : ''
                   }`}>
@@ -454,41 +463,35 @@ const ProductDetail = () => {
                   )}
                 </div>
 
-                {/* Rating */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex items-center gap-0.5">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-5 h-5 ${
-                          i < Math.floor(product.rating)
-                            ? "fill-primary text-primary"
-                            : "fill-muted text-muted"
-                        }`}
-                      />
-                    ))}
+                {/* Specifications */}
+                {product.specifications && (product.specifications.material || product.specifications.purity || product.specifications.dimensions) && (
+                  <div className="grid grid-cols-3 gap-2 md:gap-3 mb-6">
+                    {product.specifications.dimensions && (
+                      <div className="border-2 border-[#C4A962] rounded-lg p-3 text-center">
+                        <p className="text-xs text-gray-600 mb-1">Size</p>
+                        <p className="text-sm md:text-base font-medium text-foreground">
+                          {product.specifications.dimensions}
+                        </p>
+                      </div>
+                    )}
+                    {product.specifications.material && (
+                      <div className="border-2 border-[#C4A962] rounded-lg p-3 text-center">
+                        <p className="text-xs text-gray-600 mb-1">Metal</p>
+                        <p className="text-sm md:text-base font-medium text-foreground">
+                          {product.specifications.material}
+                        </p>
+                      </div>
+                    )}
+                    {product.specifications.purity && (
+                      <div className="border-2 border-[#C4A962] rounded-lg p-3 text-center">
+                        <p className="text-xs text-gray-600 mb-1">Purity</p>
+                        <p className="text-sm md:text-base font-medium text-foreground">
+                          {product.specifications.purity}
+                        </p>
+                      </div>
+                    )}
                   </div>
-                  <span className="text-muted-foreground">
-                    ({product.reviews} reviews)
-                  </span>
-                </div>
-
-                {/* Price */}
-                <div className="flex items-center gap-4 mb-6">
-                  <span className="text-3xl md:text-4xl font-bold text-foreground">
-                    ₹{product.price.toLocaleString("en-IN")}
-                  </span>
-                  {product.oldPrice && (
-                    <span className="text-xl text-muted-foreground line-through">
-                      ₹{product.oldPrice.toLocaleString("en-IN")}
-                    </span>
-                  )}
-                  {product.oldPrice && (
-                    <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                      Save ₹{(product.oldPrice - product.price).toLocaleString("en-IN")}
-                    </span>
-                  )}
-                </div>
+                )}
 
                 {/* Divider */}
                 <div className="border-t border-border my-4" />
@@ -648,6 +651,47 @@ const ProductDetail = () => {
 
                 {/* Divider */}
                 <div className="border-t border-border my-4" />
+
+                {/* Customer Reviews */}
+                <div className="mb-6 bg-gray-50 p-4 md:p-6 rounded-xl">
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="text-base md:text-lg font-semibold text-gray-900">
+                      Customer Reviews
+                    </h3>
+                    <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                      {product.rating}/5
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 mb-2">
+                    {[...Array(5)].map((_, i) => {
+                      const rating = product.rating;
+                      const starValue = i + 1;
+                      const fillPercentage = Math.min(Math.max((rating - i) * 100, 0), 100);
+                      
+                      return (
+                        <div key={i} className="relative w-6 h-6 md:w-7 md:h-7">
+                          {/* Background empty star */}
+                          <Star className="w-full h-full fill-gray-300 text-gray-300 absolute inset-0" />
+                          
+                          {/* Filled star overlay */}
+                          {fillPercentage > 0 && (
+                            <div 
+                              className="overflow-hidden absolute inset-0" 
+                              style={{ width: `${fillPercentage}%` }}
+                            >
+                              <Star className="w-full h-full fill-[#FFB800] text-[#FFB800]" />
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  
+                  <p className="text-xs md:text-sm text-gray-600">
+                    Based on {product.reviews || 45} Ratings & Reviews
+                  </p>
+                </div>
 
                 {/* Category */}
                 <div className="text-sm">

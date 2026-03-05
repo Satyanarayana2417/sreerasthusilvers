@@ -134,6 +134,17 @@
     width: 100%;
   }
 
+  /* Mobile Image Optimization */
+  @media (max-width: 1024px) {
+    img {
+      -webkit-transform: translateZ(0);
+      transform: translateZ(0);
+      -webkit-backface-visibility: hidden;
+      backface-visibility: hidden;
+      image-rendering: -webkit-optimize-contrast;
+    }
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Poppins', system-ui, sans-serif;
   }

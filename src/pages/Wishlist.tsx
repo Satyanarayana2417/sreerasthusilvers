@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, ShoppingBag, Trash2, ArrowLeft, Package, Search, SlidersHorizontal } from "lucide-react";
+import { Heart, ShoppingBag, Trash2, ArrowLeft, Package, Search, SlidersHorizontal, Plus, Minus, ChevronRight, SquarePen, MapPin, ShieldCheck, CreditCard, MessageCircle, LogOut } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import MobileBottomNav from "@/components/MobileBottomNav";
+import MobileHeader from "@/components/MobileHeader";
+import MobileSearchBar from "@/components/MobileSearchBar";
 import { Button } from "@/components/ui/button";
 import { useWishlist } from "@/hooks/useWishlist";
 import { getProduct } from "@/services/productService";
@@ -18,6 +19,7 @@ const Wishlist = () => {
   const [products, setProducts] = useState<UIProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [accountExpanded, setAccountExpanded] = useState(false);
 
   useEffect(() => {
     const loadWishlistProducts = async () => {
@@ -296,63 +298,171 @@ const Wishlist = () => {
       </div>
 
       {/* Mobile View */}
-      <div className="lg:hidden min-h-screen bg-gray-50 pb-20">
-        {/* Mobile Header */}
-        <div className="bg-white px-4 py-4 sticky top-0 z-40 shadow-sm">
-          <div className="flex items-center justify-center mb-3 relative">
-            <button
-              onClick={() => navigate(-1)}
-              className="absolute left-0 p-2 -ml-2 rounded-full hover:bg-gray-100 transition-colors"
-            >
-              <ArrowLeft className="w-5 h-5 text-gray-700" />
-            </button>
-            <h1 className="text-xl font-bold text-center" style={{ fontFamily: "'Poppins', sans-serif" }}>
-              My Wishlist
-            </h1>
-          </div>
+      <div className="lg:hidden min-h-screen bg-white pb-20">
+        {/* Tanishq-style Header + Search */}
+        <MobileHeader />
+        <MobileSearchBar />
+
+        {/* Breadcrumb */}
+        <div className="px-4 py-4 flex items-center gap-1 text-sm flex-wrap">
+          <button onClick={() => navigate("/")} className="text-gray-900 font-medium hover:underline">Home</button>
+          <span className="text-gray-400">|</span>
+          <button onClick={() => navigate("/account")} className="text-gray-900 font-medium hover:underline">My Account</button>
+          <span className="text-gray-400">|</span>
+          <span className="text-gray-400 text-xs">Wishlist</span>
+        </div>
+
+        {/* My Account Expandable Section */}
+        <div className="mx-4 mb-4">
+          <button
+            onClick={() => setAccountExpanded(!accountExpanded)}
+            className="w-full flex items-center justify-between px-5 py-4 border border-gray-200 rounded-md bg-white"
+          >
+            <span className="text-sm font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+              My Account
+            </span>
+            {accountExpanded ? (
+              <Minus className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
+            ) : (
+              <Plus className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
+            )}
+          </button>
           
-          {/* Search and Filter */}
-          <div className="flex items-center gap-2">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 bg-gray-100 rounded-lg text-sm outline-none"
-                style={{ fontFamily: "'Poppins', sans-serif" }}
-              />
-            </div>
-            <button className="p-2.5 bg-gray-100 rounded-lg">
-              <SlidersHorizontal className="w-5 h-5 text-gray-600" />
-            </button>
-          </div>
+          <AnimatePresence>
+            {accountExpanded && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden border border-t-0 border-gray-200 rounded-b-md"
+              >
+                {/* Quick tabs */}
+                <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100">
+                  {[
+                    { label: "Orders", path: "/orders" },
+                    { label: "Buy Again", path: "/" },
+                    { label: "Lists", path: "/wishlist" },
+                  ].map((tab) => (
+                    <button
+                      key={tab.label}
+                      onClick={() => navigate(tab.path)}
+                      className="px-4 py-1.5 text-xs font-medium text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                      style={{ fontFamily: "'Poppins', sans-serif" }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Menu items */}
+                <div className="py-1">
+                  {[
+                    { label: "Edit Profile", icon: SquarePen, path: "/profile" },
+                    { label: "Your addresses", icon: MapPin, path: "/addresses" },
+                    { label: "Login & security", icon: ShieldCheck, path: "/auth/login" },
+                    { label: "My Jewellery Journey", icon: CreditCard, path: "/orders" },
+                    { label: "Customer support", icon: MessageCircle, path: "/contact" },
+                  ].map((item) => (
+                    <button
+                      key={item.label}
+                      onClick={() => navigate(item.path)}
+                      className="w-full text-left px-5 py-3.5 text-sm flex items-center gap-3 text-gray-800 hover:bg-gray-50 transition-colors"
+                      style={{ fontFamily: "'Poppins', sans-serif" }}
+                    >
+                      <item.icon className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
+                      {item.label}
+                    </button>
+                  ))}
+
+                  {/* Log out */}
+                  {user && (
+                    <button
+                      onClick={() => {
+                        // Handle logout
+                        navigate('/auth/login');
+                      }}
+                      className="w-full text-left px-5 py-3.5 text-sm flex items-center gap-3 text-[#832729] hover:bg-gray-50 transition-colors border-t border-gray-100"
+                      style={{ fontFamily: "'Poppins', sans-serif" }}
+                    >
+                      <LogOut className="w-5 h-5 text-[#832729]" strokeWidth={1.5} />
+                      Log out
+                    </button>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Customer Service Info Box */}
+        <div className="mx-4 mb-6 bg-gray-100 rounded-md px-5 py-4">
+          <p className="text-xs text-gray-600 text-center leading-relaxed" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            If you have any questions or issues with an order,<br />
+            please contact our Customer Service team at sreerasthusilvers@gmail.com
+            or by calling the free number <span className="font-bold text-gray-900">+91 6304960489</span>.<br />
+            This toll free number is not applicable for<br />
+            International shipments.
+          </p>
+        </div>
+
+        {/* Wishlist Section Title */}
+        <div className="px-4 mb-4">
+          <h2 className="text-xl font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+            Wishlist
+          </h2>
         </div>
 
         {/* Content */}
-        <div className="px-4 py-4">
+        <div className="px-4 pb-4">
           {filteredProducts.length === 0 ? (
-            // Empty State
-            <div className="flex flex-col items-center justify-center py-16">
-              <div className="w-24 h-24 mb-4 rounded-full bg-gray-200 flex items-center justify-center">
-                <Heart className="w-12 h-12 text-gray-400" />
+            // Empty State - Tanishq Style
+            <div className="flex flex-col items-center justify-center py-10">
+              {/* Heart Icon */}
+              <div className="mb-6">
+                <Heart className="w-16 h-16 text-pink-200" fill="#FBCFE8" strokeWidth={1} />
               </div>
-              <h2 className="text-xl font-bold mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                {searchQuery ? 'No items found' : 'My Wishlist is Empty!'}
-              </h2>
-              <p className="text-gray-500 text-center mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                {searchQuery ? 'Try searching with different keywords' : 'Start adding items you love'}
+              
+              {/* Box illustration */}
+              <div className="relative mb-8">
+                <div className="w-48 h-40 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-3 bg-gray-300 rounded mx-auto mb-2" />
+                    <div className="w-12 h-3 bg-gray-300 rounded mx-auto mb-4" />
+                    <div className="flex justify-center gap-1">
+                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-gray-400" />
+                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-gray-400" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-gray-500 text-sm text-center mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                {user 
+                  ? "Your wishlist is empty. Start adding items you love!"
+                  : "Please login to start adding your favorite items to wishlist"
+                }
               </p>
-              {!searchQuery && (
+              <div className="flex gap-3">
+                {!user && (
+                  <Button
+                    onClick={() => navigate("/auth/login")}
+                    size="sm"
+                    className="gap-2 bg-[#832729] hover:bg-[#6a1f21] text-white rounded-md"
+                  >
+                    Login
+                  </Button>
+                )}
                 <Button
                   onClick={() => navigate("/")}
-                  className="gap-2"
+                  variant={user ? "default" : "outline"}
+                  size="sm"
+                  className={`gap-2 rounded-md ${user ? 'bg-[#832729] hover:bg-[#6a1f21] text-white' : ''}`}
                 >
                   <ShoppingBag className="w-4 h-4" />
                   Start Shopping
                 </Button>
-              )}
+              </div>
             </div>
           ) : (
             // Product Grid - 2 columns
@@ -365,11 +475,11 @@ const Wishlist = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.9 }}
                     transition={{ delay: index * 0.03 }}
-                    className="bg-white rounded-lg overflow-hidden shadow-sm"
+                    className="bg-white rounded-lg overflow-hidden border border-gray-100 shadow-sm"
                   >
                     {/* Product Image */}
                     <div
-                      className="relative aspect-square overflow-hidden cursor-pointer bg-gray-100"
+                      className="relative aspect-square overflow-hidden cursor-pointer bg-gray-50"
                       onClick={() => handleProductClick(product.id)}
                     >
                       {product.image ? (
@@ -384,34 +494,40 @@ const Wishlist = () => {
                         </div>
                       )}
                       
-                      {/* Trash Icon - Top Left */}
+                      {/* Heart Icon - Top Right */}
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleRemove(product.id, product.title);
                         }}
-                        className="absolute top-2 left-2 p-1.5 bg-white/90 rounded-full shadow-sm"
+                        className="absolute top-2 right-2 p-1.5 bg-white/90 rounded-full shadow-sm"
                       >
-                        <Trash2 className="w-4 h-4 text-gray-700" />
+                        <Heart className="w-4 h-4 text-red-500" fill="currentColor" />
                       </button>
+
+                      {product.oldPrice && product.oldPrice > product.price && (
+                        <div className="absolute top-2 left-2 bg-[#832729] text-white px-2 py-0.5 rounded text-[10px] font-semibold">
+                          {Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}% OFF
+                        </div>
+                      )}
                     </div>
 
                     {/* Product Info */}
                     <div className="p-3">
                       <h3
-                        className="text-sm font-normal text-gray-900 mb-1 line-clamp-1"
+                        className="text-xs font-normal text-gray-900 mb-1 line-clamp-2 leading-relaxed"
                         style={{ fontFamily: "'Poppins', sans-serif" }}
                         onClick={() => handleProductClick(product.id)}
                       >
                         {product.title}
                       </h3>
                       
-                      <div className="flex items-center gap-1.5 mb-2">
-                        <span className="text-base font-normal text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      <div className="flex items-center gap-1.5 mb-2.5">
+                        <span className="text-sm font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
                           ₹{product.price.toLocaleString('en-IN')}
                         </span>
                         {product.oldPrice && product.oldPrice > product.price && (
-                          <span className="text-xs text-gray-400 line-through" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                          <span className="text-[10px] text-gray-400 line-through">
                             ₹{product.oldPrice.toLocaleString('en-IN')}
                           </span>
                         )}
@@ -423,7 +539,7 @@ const Wishlist = () => {
                           e.stopPropagation();
                           handleProductClick(product.id);
                         }}
-                        className="w-full py-1.5 px-3 bg-white border border-gray-300 rounded text-xs font-medium text-gray-700 flex items-center justify-center gap-1.5 hover:bg-gray-50 transition-colors"
+                        className="w-full py-2 px-3 bg-[#832729] rounded text-xs font-medium text-white flex items-center justify-center gap-1.5 hover:bg-[#6a1f21] transition-colors"
                         style={{ fontFamily: "'Poppins', sans-serif" }}
                       >
                         <ShoppingBag className="w-3.5 h-3.5" />
@@ -437,8 +553,6 @@ const Wishlist = () => {
           )}
         </div>
       </div>
-
-      <MobileBottomNav />
     </>
   );
 };

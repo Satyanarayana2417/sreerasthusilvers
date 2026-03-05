@@ -11,13 +11,8 @@ import {
   onSnapshot,
   Timestamp 
 } from 'firebase/firestore';
-import { 
-  ref, 
-  uploadBytes, 
-  getDownloadURL, 
-  deleteObject 
-} from 'firebase/storage';
-import { db, storage } from '@/config/firebase';
+import { db } from '@/config/firebase';
+import { CLOUDINARY_UPLOAD_URL, cloudinaryConfig } from '@/config/cloudinary';
 
 export interface Banner {
   id?: string;
@@ -30,62 +25,11 @@ export interface Banner {
 }
 
 const BANNERS_COLLECTION = 'banners';
-const STORAGE_PATH = 'homepage-banners';
 
-// Compress and resize image before upload
-const compressImage = async (file: File): Promise<Blob> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1920;
-        const MAX_HEIGHT = 600;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-
-        canvas.toBlob(
-          (blob) => {
-            if (blob) {
-              resolve(blob);
-            } else {
-              reject(new Error('Image compression failed'));
-            }
-          },
-          'image/jpeg',
-          0.85
-        );
-      };
-      img.onerror = () => reject(new Error('Image load failed'));
-    };
-    reader.onerror = () => reject(new Error('File read failed'));
-  });
-};
-
-// Upload banner image to Firebase Storage
+// Upload banner image to Cloudinary (no CORS issues)
 export const uploadBannerImage = async (file: File): Promise<string> => {
   try {
-    // Validate file size (max 10MB before compression)
+    // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       throw new Error('Image size must be less than 10MB');
     }
@@ -95,20 +39,23 @@ export const uploadBannerImage = async (file: File): Promise<string> => {
       throw new Error('Only image files are allowed');
     }
 
-    // Compress image
-    const compressedBlob = await compressImage(file);
-    
-    // Generate unique filename
-    const timestamp = Date.now();
-    const filename = `${timestamp}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const storageRef = ref(storage, `${STORAGE_PATH}/${filename}`);
+    // Upload to Cloudinary
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('upload_preset', cloudinaryConfig.uploadPreset);
+    formData.append('folder', 'homepage-banners');
 
-    // Upload to Firebase Storage
-    await uploadBytes(storageRef, compressedBlob);
-    
-    // Get download URL
-    const downloadURL = await getDownloadURL(storageRef);
-    return downloadURL;
+    const response = await fetch(CLOUDINARY_UPLOAD_URL, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to upload image to Cloudinary');
+    }
+
+    const data = await response.json();
+    return data.secure_url;
   } catch (error) {
     console.error('Error uploading banner image:', error);
     throw error;
@@ -150,15 +97,7 @@ export const deleteBanner = async (id: string, imageUrl: string): Promise<void> 
     // Delete from Firestore
     const bannerRef = doc(db, BANNERS_COLLECTION, id);
     await deleteDoc(bannerRef);
-
-    // Delete image from Storage
-    if (imageUrl) {
-      const imageRef = ref(storage, imageUrl);
-      await deleteObject(imageRef).catch(() => {
-        // Image might already be deleted or doesn't exist
-        console.log('Image not found in storage');
-      });
-    }
+    // Note: Cloudinary images are managed via Cloudinary dashboard if needed
   } catch (error) {
     console.error('Error deleting banner:', error);
     throw error;

@@ -1,12 +1,12 @@
-import { User } from "lucide-react";
+import { Menu, Heart, ShoppingBag, LayoutGrid } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/contexts/CartContext";
 import { useState, useEffect } from "react";
-import logo from "../assets/logo-new.png";
+import logo from "../assets/mobile-logo.png";
 
 const MobileHeader = () => {
   const navigate = useNavigate();
-  const { user, userProfile } = useAuth();
+  const { totalItems, toggleCart } = useCart();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -15,13 +15,10 @@ const MobileHeader = () => {
       const currentScrollY = window.scrollY;
       
       if (currentScrollY < 10) {
-        // Always show header at top
         setIsVisible(true);
       } else if (currentScrollY > lastScrollY) {
-        // Scrolling down - hide header
         setIsVisible(false);
       } else {
-        // Scrolling up - show header
         setIsVisible(true);
       }
       
@@ -33,42 +30,58 @@ const MobileHeader = () => {
   }, [lastScrollY]);
 
   return (
-    <header className={`lg:hidden bg-white shadow-sm sticky top-0 z-50 transition-transform duration-300 ${
+    <header className={`lg:hidden bg-white sticky top-0 z-50 transition-transform duration-300 ${
       isVisible ? 'translate-y-0' : '-translate-y-full'
     }`}>
-      {/* Top Bar with Logo and Profile */}
-      <div className="flex items-center justify-between px-4 py-3">
-        {/* Logo - Left Side */}
-        <a href="/" className="flex items-center gap-2 ml-2">
-          <img src={logo} alt="Logo" className="h-8 w-auto object-contain" style={{ imageRendering: 'crisp-edges' }} />
-        </a>
+      <div className="flex items-center justify-between px-3 py-2">
+        {/* Left: Hamburger + Logo */}
+        <div className="flex items-center gap-2">
+          <button
+            className="p-1.5 hover:bg-gray-50 rounded-full transition-colors"
+            onClick={() => window.dispatchEvent(new Event('toggle-mobile-sidebar'))}
+            aria-label="Menu"
+          >
+            <Menu className="w-[26px] h-[26px]" strokeWidth={1} style={{ color: '#832729' }} />
+          </button>
+          <a href="/" className="flex items-center">
+            <img src={logo} alt="Logo" className="h-10 w-auto object-contain" />
+          </a>
+        </div>
 
-        {/* User Profile Icon */}
-        <button 
-          className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-          onClick={() => navigate('/account')}
-        >          {user ? (
-            userProfile?.avatar || user.photoURL ? (
-              <img 
-                key={userProfile?.avatar || user.photoURL}
-                src={userProfile?.avatar || user.photoURL} 
-                alt="Profile" 
-                className="w-9 h-9 rounded-full object-cover border border-black"
-                referrerPolicy="no-referrer"
-              />
-            ) : (
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black">
-                <span className="text-white font-semibold text-sm">
-                  {(userProfile?.name || userProfile?.username || 'U').charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
-              <User className="w-5 h-5 text-gray-600" />
-            </div>
-          )}
-        </button>
+        {/* Right: Icons row */}
+        <div className="flex items-center gap-0">
+          {/* Grid/Store icon */}
+          <button
+            className="p-1.5 hover:bg-gray-50 rounded-full transition-colors"
+            onClick={() => navigate('/categories')}
+            aria-label="Categories"
+          >
+            <LayoutGrid className="w-[24px] h-[24px]" strokeWidth={1} style={{ color: '#832729' }} />
+          </button>
+
+          {/* Wishlist */}
+          <button
+            className="p-1.5 hover:bg-gray-50 rounded-full transition-colors"
+            onClick={() => navigate('/wishlist')}
+            aria-label="Wishlist"
+          >
+            <Heart className="w-[24px] h-[24px]" strokeWidth={1} style={{ color: '#832729' }} />
+          </button>
+
+          {/* Cart */}
+          <button
+            className="p-1.5 hover:bg-gray-50 rounded-full transition-colors relative"
+            onClick={toggleCart}
+            aria-label="Cart"
+          >
+            <ShoppingBag className="w-[24px] h-[24px]" strokeWidth={1} style={{ color: '#832729' }} />
+            {totalItems > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#832729] text-white text-[10px] rounded-full flex items-center justify-center font-bold px-1">
+                {totalItems}
+              </span>
+            )}
+          </button>
+        </div>
       </div>
     </header>
   );

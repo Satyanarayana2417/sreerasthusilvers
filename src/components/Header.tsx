@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, Heart, ShoppingBag, User } from "lucide-react";
+import { Menu, X, Search, Heart, ShoppingBag, User, Camera, Mic, Diamond, Gift } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo-new.png";
 import { useCart } from "@/contexts/CartContext";
@@ -89,59 +89,45 @@ const Header = () => {
       {/* Mobile Header - Only on Mobile, hidden on auth pages */}
       {!isAuthPage && <MobileHeader />}
 
-      {/* Announcement Bar - Hidden on mobile */}
-      <div className="hidden md:block bg-foreground overflow-hidden w-full max-w-[100vw]">
-        <div className="marquee flex whitespace-nowrap py-2">
-          <span className="inline-flex items-center gap-8 text-xs tracking-wider text-primary-foreground px-4">
-            <span>UP TO 30% OFF EVERYTHING</span>
-            <span className="text-primary">✦</span>
-            <span>REGISTER TO ENJOY 10% OFF YOUR FIRST ONLINE ORDER</span>
-            <span className="text-primary">✦</span>
-            <span>FREE DELIVERY FOR NEXT 3 ORDERS</span>
-            <span className="text-primary">✦</span>
-            <span>20% OFF MOST LOVELED - NEW LINE</span>
-            <span className="text-primary">✦</span>
-            <span>UP TO 30% OFF EVERYTHING</span>
-            <span className="text-primary">✦</span>
-            <span>REGISTER TO ENJOY 10% OFF YOUR FIRST ONLINE ORDER</span>
-            <span className="text-primary">✦</span>
-            <span>FREE DELIVERY FOR NEXT 3 ORDERS</span>
-            <span className="text-primary">✦</span>
-            <span>20% OFF MOST LOVELED - NEW LINE</span>
-          </span>
-        </div>
-      </div>
-
       {/* Main Header */}
       <header
         className={`hidden lg:block sticky top-0 z-50 transition-all duration-300 ${
           isScrolled
-            ? "bg-background/95 backdrop-blur-md shadow-lg"
-            : "bg-background"
+            ? "bg-white/98 backdrop-blur-md shadow-md"
+            : "bg-white"
         }`}
       >
-        <div className="container-custom">
-          <div className="flex items-center justify-between gap-4 h-16 lg:h-20">
+        <div className="max-w-[1600px] mx-auto px-12 lg:px-16">
+          <div className="flex items-center justify-between gap-6 h-[60px] lg:h-16">
             {/* Logo */}
             <a href="/" className="flex items-center flex-shrink-0">
-              <img src={logo} alt="Sreerasthu Silvers" className="h-7 md:h-9 lg:h-10 w-auto" />
+              <img src={logo} alt="Sreerasthu Silvers" className="h-7 md:h-8 lg:h-9 w-auto" />
             </a>
 
-            {/* Search Bar - Desktop & Mobile */}
-            <div className="flex-1 max-w-2xl mx-4" ref={searchRef}>
+            {/* Search Bar - Tanishq Style */}
+            <div className="flex-1 max-w-[620px] mx-6" ref={searchRef}>
               <div className="relative">
                 <div className="relative flex items-center">
+                  <div className="absolute left-4">
+                    <Search className="w-[19px] h-[19px] text-[#832729]" strokeWidth={1.5} />
+                  </div>
                   <input
                     type="text"
-                    placeholder="Search for Products, Brands and More"
+                    placeholder="Search for silver jewelry, furniture and more"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => searchQuery && setShowSearchResults(true)}
-                    className="w-full pl-4 pr-12 py-2.5 bg-blue-50 text-sm rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    className="w-full pl-11 pr-24 py-2.5 bg-white text-sm rounded-full border border-gray-200 focus:outline-none focus:border-gray-300 transition-all placeholder:text-gray-400"
                   />
-                  <button className="absolute right-3 p-1.5 hover:bg-blue-100 rounded-md transition-colors">
-                    <Search className="w-5 h-5 text-blue-600" />
-                  </button>
+                  {/* Camera and Mic icons on right */}
+                  <div className="absolute right-3 flex items-center gap-2">
+                    <button className="p-1 hover:bg-gray-50 rounded-full transition-colors" aria-label="Search by image">
+                      <Camera className="w-[19px] h-[19px] text-[#832729]" strokeWidth={1.5} />
+                    </button>
+                    <button className="p-1 hover:bg-gray-50 rounded-full transition-colors" aria-label="Voice search">
+                      <Mic className="w-[19px] h-[19px] text-[#832729]" strokeWidth={1.5} />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Search Results Dropdown */}
@@ -227,12 +213,39 @@ const Header = () => {
               </div>
             </div>
 
-            {/* Right Actions */}
-            <div className="flex items-center gap-1 lg:gap-3 flex-shrink-0">
+            {/* Right Actions - Tanishq Style Icons */}
+            <div className="flex items-center gap-4 flex-shrink-0">
+              {/* Diamond Icon */}
+              <button 
+                onClick={() => navigate("/jewelry")}
+                className="p-1.5 hover:bg-gray-50 rounded-full transition-colors group"
+                aria-label="Diamond jewelry"
+              >
+                <Diamond className="w-[21px] h-[21px] text-[#832729] group-hover:text-[#832729] transition-colors" strokeWidth={1.3} />
+              </button>
+
+              {/* Store/Gift Icon */}
+              <button 
+                onClick={() => navigate("/products")}
+                className="p-1.5 hover:bg-gray-50 rounded-full transition-colors group"
+                aria-label="Store locator"
+              >
+                <Gift className="w-[21px] h-[21px] text-[#832729] group-hover:text-[#832729] transition-colors" strokeWidth={1.3} />
+              </button>
+
+              {/* Wishlist */}
+              <button 
+                onClick={() => navigate("/wishlist")}
+                className="p-1.5 hover:bg-gray-50 rounded-full transition-colors group relative"
+                aria-label="Wishlist"
+              >
+                <Heart className="w-[21px] h-[21px] text-[#832729] group-hover:text-[#832729] transition-colors" strokeWidth={1.3} />
+              </button>
+
               {/* User Profile */}
               <button 
                 onClick={() => navigate(user ? "/account" : "/account")}
-                className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors group"
+                className="p-1.5 hover:bg-gray-50 rounded-full transition-colors group"
                 aria-label="Account"
               >
                 {user ? (
@@ -241,62 +254,33 @@ const Header = () => {
                       key={userProfile?.avatar || user.photoURL}
                       src={userProfile?.avatar || user.photoURL} 
                       alt="Profile" 
-                      className="w-6 h-6 rounded-full object-cover border border-black"
+                      className="w-[21px] h-[21px] rounded-full object-cover border border-gray-200"
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center border border-black">
-                      <span className="text-white font-semibold text-xs">
+                    <div className="w-[21px] h-[21px] rounded-full bg-gradient-to-br from-gray-400 to-gray-500 flex items-center justify-center">
+                      <span className="text-white font-semibold text-[9px]">
                         {(userProfile?.name || userProfile?.username || 'U').charAt(0).toUpperCase()}
                       </span>
                     </div>
                   )
                 ) : (
-                  <User className="w-5 h-5 text-gray-700 group-hover:text-blue-600" />
+                  <User className="w-[21px] h-[21px] text-[#832729] group-hover:text-[#832729] transition-colors" strokeWidth={1.3} />
                 )}
-                <span className="hidden lg:block text-sm font-medium text-gray-700 group-hover:text-blue-600">
-                  {user ? userProfile?.username || 'Account' : 'Login'}
-                </span>
               </button>
 
-              {/* Wishlist - Hidden on small mobile */}
-              <button 
-                onClick={() => navigate("/wishlist")}
-                className="hidden sm:flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors group"
-                aria-label="Wishlist"
-              >
-                <Heart className="w-5 h-5 text-gray-700 group-hover:text-blue-600" />
-                <span className="hidden lg:block text-sm font-medium text-gray-700 group-hover:text-blue-600">
-                  Wishlist
-                </span>
-              </button>
-
-              {/* Cart */}
+              {/* Cart with Red Badge */}
               <button 
                 onClick={toggleCart}
-                className="flex items-center gap-1.5 lg:gap-2 px-2 lg:px-3 py-2 hover:bg-blue-50 rounded-lg transition-colors relative group" 
+                className="p-1.5 hover:bg-gray-50 rounded-full transition-colors relative group" 
                 aria-label="Cart"
               >
                 <div className="relative">
-                  <ShoppingBag className="w-5 h-5 text-gray-700 group-hover:text-blue-600" />
-                  {totalItems > 0 && (
-                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-orange-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                      {totalItems}
-                    </span>
-                  )}
+                  <ShoppingBag className="w-[21px] h-[21px] text-[#832729] group-hover:text-[#832729] transition-colors" strokeWidth={1.3} />
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-[#832729] text-white text-[9px] rounded-full flex items-center justify-center font-bold px-1">
+                    {totalItems}
+                  </span>
                 </div>
-                <span className="hidden lg:block text-sm font-medium text-gray-700 group-hover:text-blue-600">
-                  Cart
-                </span>
-              </button>
-
-              {/* Hamburger Menu Button - Always Visible */}
-              <button
-                className="p-2 hover:bg-blue-50 rounded-lg transition-colors ml-1"
-                onClick={() => setIsMenuOpen(!isMenuOpen)}
-                aria-label="Toggle menu"
-              >
-                {isMenuOpen ? <X className="w-6 h-6 text-gray-700" /> : <Menu className="w-6 h-6 text-gray-700" />}
               </button>
             </div>
           </div>

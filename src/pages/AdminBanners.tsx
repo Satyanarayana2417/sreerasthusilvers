@@ -62,11 +62,6 @@ const AdminBanners = () => {
       return;
     }
 
-    if (!formData.redirectLink) {
-      toast.error('Please enter a redirect link');
-      return;
-    }
-
     try {
       setIsSubmitting(true);
       let imageUrl = editingBanner?.imageUrl || '';
@@ -208,15 +203,14 @@ const AdminBanners = () => {
               {/* Redirect Link */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Redirect Link
+                  Redirect Link <span className="text-gray-400 text-xs">(Optional)</span>
                 </label>
                 <input
                   type="text"
                   value={formData.redirectLink}
                   onChange={(e) => setFormData({ ...formData, redirectLink: e.target.value })}
-                  placeholder="/shop/necklaces or https://example.com"
+                  placeholder="/shop/necklaces or https://example.com (leave empty for no click action)"
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
                 />
               </div>
 

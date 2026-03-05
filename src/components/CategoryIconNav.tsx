@@ -1,117 +1,177 @@
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { 
+  Gem, 
+  Armchair, 
+  BookOpen, 
+  Package, 
+  Shirt, 
+  ChefHat, 
+  Sparkles, 
+  Crown, 
+  Coins, 
+  Gift
+} from "lucide-react";
 
 const categories = [
   { 
     name: "Jewelry", 
+    icon: Gem, 
+    href: "/jewelry",
     image: "https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=200&h=200&fit=crop",
-    href: "/jewelry", 
-    color: "bg-yellow-50" 
   },
   { 
     name: "Furniture", 
+    icon: Armchair, 
+    href: "/furniture",
     image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop",
-    href: "/furniture", 
-    color: "bg-blue-50" 
   },
   { 
     name: "Articles", 
+    icon: BookOpen, 
+    href: "/articles",
     image: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop",
-    href: "/articles", 
-    color: "bg-purple-50" 
   },
   { 
     name: "Other Products", 
+    icon: Package, 
+    href: "/products",
     image: "https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop",
-    href: "/products", 
-    color: "bg-pink-50" 
   },
   { 
     name: "Fashion", 
+    icon: Shirt, 
+    href: "#",
     image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=200&h=200&fit=crop",
-    href: "#", 
-    color: "bg-orange-50" 
   },
   { 
     name: "Home & Kitchen", 
+    icon: ChefHat, 
+    href: "#",
     image: "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop",
-    href: "#", 
-    color: "bg-green-50" 
   },
   { 
     name: "Beauty & Toys", 
+    icon: Sparkles, 
+    href: "#",
     image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop",
-    href: "#", 
-    color: "bg-red-50" 
   },
   { 
     name: "Silver Chairs", 
+    icon: Crown, 
+    href: "/furniture/royal-silver-chairs",
     image: "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop",
-    href: "/furniture/royal-silver-chairs", 
-    color: "bg-amber-50" 
   },
   { 
     name: "Silver Coins", 
+    icon: Coins, 
+    href: "/products/silver-coins",
     image: "https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop",
-    href: "/products/silver-coins", 
-    color: "bg-yellow-50" 
   },
   { 
     name: "Gift Articles", 
+    icon: Gift, 
+    href: "/products/silver-gift-articles",
     image: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop",
-    href: "/products/silver-gift-articles", 
-    color: "bg-teal-50" 
   },
 ];
 
 const CategoryIconNav = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
   return (
-    <section className="bg-white border-b border-gray-200 py-4 lg:py-6 shadow-sm z-40">
-      <div className="container-custom max-w-full px-2 lg:px-4">
-        <div className="flex items-center justify-between gap-3 lg:gap-6 overflow-x-auto scrollbar-hide snap-x snap-mandatory">
+    <>
+      {/* ====== MOBILE: Circular image categories (Tanishq style) ====== */}
+      <section className="lg:hidden bg-white pt-2 pb-4">
+        <div className="flex gap-5 overflow-x-auto scrollbar-hide px-4">
           {categories.map((category, index) => {
             const isActive = location.pathname === category.href;
-            
             return (
               <motion.a
                 key={category.name}
                 href={category.href}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.05 }}
-                className="flex flex-col items-center gap-2 lg:gap-3 min-w-[70px] lg:min-w-[100px] group flex-shrink-0 snap-start relative"
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (category.href !== "#") navigate(category.href);
+                }}
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.04 }}
+                className="flex flex-col items-center gap-2 min-w-[90px] flex-shrink-0"
               >
-                <div className={`w-14 h-14 lg:w-20 lg:h-20 rounded-full ${category.color} flex items-center justify-center overflow-hidden transition-transform group-hover:scale-110 border-2 ${
-                  isActive ? "border-blue-500 shadow-lg" : "border-gray-200"
-                } shadow-md`}>
-                  <img 
-                    src={category.image} 
-                    alt={category.name}
-                    className="w-10 h-10 lg:w-12 lg:h-12 object-cover rounded"
-                  />
+                {/* Circular Image with ring */}
+                <div className={`w-[86px] h-[86px] rounded-full p-[2px] transition-all duration-200 ${
+                  isActive 
+                    ? "bg-[#832729]" 
+                    : "bg-[#832729]"
+                }`}>
+                  <div className="w-full h-full rounded-full overflow-hidden bg-white p-[6px]">
+                    <img 
+                      src={category.image} 
+                      alt={category.name}
+                      className="w-full h-full object-cover rounded-full"
+                      loading="lazy"
+                    />
+                  </div>
                 </div>
-                <span className={`text-xs lg:text-sm font-semibold text-center whitespace-nowrap ${
-                  isActive ? "text-blue-600" : "text-gray-800"
+                {/* Category Name */}
+                <span className={`text-[11px] font-medium text-center leading-tight max-w-[90px] ${
+                  isActive ? "text-[#832729]" : "text-gray-700"
                 }`}>
                   {category.name}
                 </span>
-                
-                {/* Active Blue Bar */}
-                {isActive && (
-                  <motion.div
-                    layoutId="activeCategory"
-                    className="absolute -bottom-4 left-0 right-0 h-0.5 lg:h-1 bg-blue-600 rounded-full"
-                    transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                  />
-                )}
               </motion.a>
             );
           })}
         </div>
-      </div>
+      </section>
+
+      {/* ====== DESKTOP: Icon + text horizontal nav (Tanishq style) ====== */}
+      <nav className="hidden lg:block bg-white border-b border-gray-200">
+        <div className="max-w-[1600px] mx-auto px-12 lg:px-16">
+          <div className="flex items-center justify-start gap-0 overflow-x-auto scrollbar-hide">
+            {categories.map((category, index) => {
+              const isActive = location.pathname === category.href;
+              const Icon = category.icon;
+
+              return (
+                <motion.a
+                  key={category.name}
+                  href={category.href}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (category.href !== "#") navigate(category.href);
+                  }}
+                  initial={{ opacity: 0, y: -5 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.03 }}
+                  className={`flex items-center gap-1.5 px-3 py-2 whitespace-nowrap text-[13px] font-normal transition-all duration-200 relative group flex-shrink-0 ${
+                    isActive
+                      ? "text-[#413F3A]"
+                      : "text-[#413F3A] hover:text-[#413F3A]"
+                  }`}
+                  style={{ fontFamily: '"IBM Plex Sans", sans-serif' }}
+                >
+                  <Icon className={`w-[17px] h-[17px] transition-colors duration-200 ${
+                    isActive ? "text-[#413F3A]" : "text-[#413F3A] group-hover:text-[#413F3A]"
+                  }`} strokeWidth={1.5} />
+                  <span>{category.name}</span>
+
+                  {/* Active indicator line at bottom */}
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeCategoryBar"
+                      className="absolute bottom-0 left-2 right-2 h-[2px] bg-[#413F3A] rounded-full"
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                </motion.a>
+              );
+            })}
+          </div>
+        </div>
+      </nav>
 
       <style>{`
         .scrollbar-hide::-webkit-scrollbar {
@@ -122,7 +182,7 @@ const CategoryIconNav = () => {
           scrollbar-width: none;
         }
       `}</style>
-    </section>
+    </>
   );
 };
 

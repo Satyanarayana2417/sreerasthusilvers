@@ -75,9 +75,7 @@ const MobileBottomNav = () => {
       <MobileSidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
       
       <nav 
-        className={`lg:hidden fixed bottom-0 left-0 right-0 z-50 safe-area-pb transition-transform duration-300 ${
-          (!isVisible || isModalOpen) ? 'translate-y-full' : 'translate-y-0'
-        }`}
+        className="hidden"
       >
         {/* SVG Background with curved notch */}
         <svg 
