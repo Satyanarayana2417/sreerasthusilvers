@@ -147,7 +147,28 @@ const Wishlist = () => {
 
           {/* Content */}
           <div className="container mx-auto px-4 py-8 sm:py-12 bg-background">
-            {products.length === 0 ? (
+            {!user ? (
+              /* Not Logged In */
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex flex-col items-center justify-center py-16 px-4"
+              >
+                <div className="w-32 h-32 bg-gradient-to-br from-red-50 to-pink-50 rounded-full flex items-center justify-center mb-6">
+                  <Heart className="w-16 h-16 text-red-300" />
+                </div>
+                <h2 className="text-2xl font-bold text-gray-900 mb-3">Login to View Wishlist</h2>
+                <p className="text-gray-500 text-center mb-8 max-w-md">
+                  Sign in to access your saved items and manage your wishlist.
+                </p>
+                <Button
+                  onClick={() => navigate('/login')}
+                  className="bg-gray-900 hover:bg-gray-800 text-white px-8 py-6 text-base rounded-lg"
+                >
+                  Login / Sign Up
+                </Button>
+              </motion.div>
+            ) : products.length === 0 ? (
               // Empty State
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -322,7 +343,8 @@ const Wishlist = () => {
         </div>
 
         {/* My Account Expandable Section */}
-        <div className="mx-4 mb-4">
+        {user && (
+          <div className="mx-4 mb-4">
           <button
             onClick={() => setAccountExpanded(!accountExpanded)}
             className="w-full flex items-center justify-between px-5 py-4 border border-gray-200 rounded-md bg-white"
@@ -411,9 +433,11 @@ const Wishlist = () => {
             )}
           </AnimatePresence>
         </div>
+        )}
 
         {/* Customer Service Info Box */}
-        <div className="mx-4 mb-6 bg-gray-100 rounded-md px-5 py-4">
+        {user && (
+          <div className="mx-4 mb-6 bg-gray-100 rounded-md px-5 py-4">
           <p className="text-xs text-gray-600 text-center leading-relaxed" style={{ fontFamily: "'Poppins', sans-serif" }}>
             If you have any questions or issues with an order,<br />
             please contact our Customer Service team at sreerasthusilvers@gmail.com
@@ -422,6 +446,7 @@ const Wishlist = () => {
             International shipments.
           </p>
         </div>
+        )}
 
         {/* Wishlist Section Title */}
         <div className="px-4 mb-4">
@@ -432,7 +457,40 @@ const Wishlist = () => {
 
         {/* Content */}
         <div className="px-4 pb-4">
-          {filteredProducts.length === 0 ? (
+          {!user ? (
+            /* Not Logged In State */
+            <div className="flex flex-col items-center justify-center py-10">
+              {/* Heart Icon */}
+              <div className="mb-6">
+                <Heart className="w-16 h-16 text-pink-200" fill="#FBCFE8" strokeWidth={1} />
+              </div>
+              
+              {/* Box illustration */}
+              <div className="relative mb-8">
+                <div className="w-48 h-40 bg-gray-100 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-3 bg-gray-300 rounded mx-auto mb-2" />
+                    <div className="w-12 h-3 bg-gray-300 rounded mx-auto mb-4" />
+                    <div className="flex justify-center gap-1">
+                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-gray-400" />
+                      <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-gray-400" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <p className="text-gray-500 text-sm text-center mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                Please login to view your wishlist
+              </p>
+              <Button
+                onClick={() => navigate("/login")}
+                size="sm"
+                className="gap-2 bg-gray-900 hover:bg-gray-800 text-white rounded-lg"
+              >
+                Login / Sign Up
+              </Button>
+            </div>
+          ) : filteredProducts.length === 0 ? (
             // Empty State - Tanishq Style
             <div className="flex flex-col items-center justify-center py-10">
               {/* Heart Icon */}
@@ -455,31 +513,16 @@ const Wishlist = () => {
               </div>
               
               <p className="text-gray-500 text-sm text-center mb-6" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                {user 
-                  ? "Your wishlist is empty. Start adding items you love!"
-                  : "Please login to start adding your favorite items to wishlist"
-                }
+                Your wishlist is empty. Start adding items you love!
               </p>
-              <div className="flex gap-3">
-                {!user && (
-                  <Button
-                    onClick={() => navigate("/auth/login")}
-                    size="sm"
-                    className="gap-2 bg-[#832729] hover:bg-[#6a1f21] text-white rounded-md"
-                  >
-                    Login
-                  </Button>
-                )}
-                <Button
-                  onClick={() => navigate("/")}
-                  variant={user ? "default" : "outline"}
-                  size="sm"
-                  className={`gap-2 rounded-md ${user ? 'bg-[#832729] hover:bg-[#6a1f21] text-white' : ''}`}
-                >
-                  <ShoppingBag className="w-4 h-4" />
-                  Start Shopping
-                </Button>
-              </div>
+              <Button
+                onClick={() => navigate("/")}
+                size="sm"
+                className="gap-2 bg-[#832729] hover:bg-[#6a1f21] text-white rounded-md"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                Start Shopping
+              </Button>
             </div>
           ) : (
             // Product Grid - 2 columns

@@ -102,7 +102,7 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
                     <p className="text-gray-500 text-xs mt-0.5 mb-3">
                       on your first order
                     </p>
-                    {!user && (
+                    {!user ? (
                       <div className="flex items-center justify-end gap-3">
                         <button
                           onClick={() => handleAuthAction('login')}
@@ -118,6 +118,13 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
                           SIGN UP
                         </button>
                       </div>
+                    ) : (
+                      <button
+                        onClick={() => handleNavigation('/wishlist')}
+                        className="text-[#832729] font-bold text-base hover:text-[#a02f32] transition-colors"
+                      >
+                        |MY PROFILE|
+                      </button>
                     )}
                   </div>
                 </div>

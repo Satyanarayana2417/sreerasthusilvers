@@ -1,6 +1,6 @@
-import { Search, Camera, Mic } from "lucide-react";
+import { Search, Gift, Mic } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 
 const MobileSearchBar = () => {
@@ -21,6 +21,7 @@ const MobileSearchBar = () => {
   
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   const handleVoiceSearch = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -32,6 +33,7 @@ const MobileSearchBar = () => {
 
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     
     recognition.lang = 'en-US';
     recognition.continuous = false;
@@ -53,9 +55,24 @@ const MobileSearchBar = () => {
 
     recognition.onend = () => {
       setIsListening(false);
+      recognitionRef.current = null;
     };
 
     recognition.start();
+  };
+
+  const handleCancelVoice = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (error) {
+        console.error('Error stopping recognition:', error);
+      }
+      setIsListening(false);
+      recognitionRef.current = null;
+    }
   };
   
   useEffect(() => {
@@ -69,6 +86,22 @@ const MobileSearchBar = () => {
   return (
     <div className="lg:hidden bg-white px-4 pt-1 pb-2 z-40">
       <div className="w-full relative flex items-center bg-white rounded-lg overflow-hidden border border-gray-200 h-[52px]">
+        {/* "Speak now..." overlay when listening */}
+        {isListening && (
+          <div 
+            onClick={handleCancelVoice}
+            className="absolute inset-0 bg-red-50 flex items-center justify-center z-10 cursor-pointer"
+          >
+            <div className="flex flex-col items-center gap-1">
+              <div className="flex items-center gap-2">
+                <Mic className="w-5 h-5 text-red-500 animate-pulse" strokeWidth={2} />
+                <span className="text-sm font-medium text-red-500">Speak now...</span>
+              </div>
+              <span className="text-xs text-red-400">Tap to stop</span>
+            </div>
+          </div>
+        )}
+        
         {/* Search Icon */}
         <button 
           onClick={() => navigate("/search")}
@@ -96,10 +129,14 @@ const MobileSearchBar = () => {
           </div>
         </button>
         
-        {/* Right Icons: Camera + Mic */}
+        {/* Right Icons: Gift + Mic */}
         <div className="flex items-center gap-0 pr-3">
-          <button className="p-1 hover:bg-gray-50 rounded-full transition-colors">
-            <Camera className="w-[22px] h-[22px]" strokeWidth={1} style={{ color: '#832729' }} />
+          <button 
+            onClick={() => navigate('/articles/gift-articles')}
+            className="p-1 hover:bg-gray-50 rounded-full transition-colors" 
+            aria-label="Gift articles"
+          >
+            <Gift className="w-[22px] h-[22px]" strokeWidth={1} style={{ color: '#832729' }} />
           </button>
           <div className="w-px h-5 bg-gray-300" />
           <button 

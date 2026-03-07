@@ -1,13 +1,18 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Loader2, Shield, RotateCcw, Truck, ChevronDown, Tag, Menu, LayoutGrid, Heart, Search, Camera, Mic } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ShoppingBag, ArrowRight, Loader2, Shield, RotateCcw, Truck, ChevronDown, Tag, Menu, LayoutGrid, Heart, Search, ScanLine, Mic, Check } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 import { useNavigate } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
+import shoppingBags from '@/assets/shopping-bags.png';
+import loginCartImage from '@/assets/login-cart.png';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ShoppingCart = () => {
   const { items, isCartOpen, closeCart, updateQuantity, removeFromCart, subtotal, totalItems, loading } = useCart();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isCouponExpanded, setIsCouponExpanded] = useState(false);
+  const [currentStep] = useState(1); // 1: Cart, 2: Checkout, 3: Payment, 4: Confirmation
 
   // Dispatch events to hide/show bottom navbar when cart opens/closes
   useEffect(() => {
@@ -28,13 +33,10 @@ const ShoppingCart = () => {
     }).format(price);
   }, []);
 
-  // Free delivery threshold
-  const FREE_DELIVERY_THRESHOLD = 5000;
-  const deliveryCharge = subtotal >= FREE_DELIVERY_THRESHOLD ? 0 : 60;
+  // Delivery charge
+  const deliveryCharge = 60;
   const taxAmount = Math.round(subtotal * 0.03); // 3% tax
   const total = subtotal + deliveryCharge + taxAmount;
-  const remainingForFreeDelivery = FREE_DELIVERY_THRESHOLD - subtotal;
-  const freeDeliveryProgress = Math.min((subtotal / FREE_DELIVERY_THRESHOLD) * 100, 100);
 
   return (
     <AnimatePresence>
@@ -93,7 +95,7 @@ const ShoppingCart = () => {
                   </button>
                   <button className="p-2 text-gray-700 hover:text-gray-900 relative">
                     <ShoppingBag size={22} strokeWidth={1.5} />
-                    {totalItems > 0 && (
+                    {user && totalItems > 0 && (
                       <span className="absolute -top-1 -right-1 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-[#832729] rounded-full">
                         {totalItems}
                       </span>
@@ -120,7 +122,7 @@ const ShoppingCart = () => {
                   />
                   <div className="absolute right-3 flex items-center gap-2">
                     <button className="p-1.5 text-gray-500 hover:text-gray-700">
-                      <Camera size={18} strokeWidth={1.5} />
+                      <ScanLine size={18} strokeWidth={1.5} />
                     </button>
                     <button className="p-1.5 text-gray-500 hover:text-gray-700">
                       <Mic size={18} strokeWidth={1.5} />
@@ -128,42 +130,125 @@ const ShoppingCart = () => {
                   </div>
                 </div>
               </div>
+
+              {/* 4-Step Timeline */}
+              <div className="px-4 pb-3">
+                <div className="flex items-center justify-between">
+                  {/* Step 1: Cart */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      currentStep >= 1 ? 'bg-gray-900' : 'bg-gray-200'
+                    }`}>
+                      {currentStep > 1 ? (
+                        <Check className="w-4 h-4 text-white" />
+                      ) : (
+                        <span className={`text-xs font-bold ${
+                          currentStep === 1 ? 'text-white' : 'text-gray-500'
+                        }`}>1</span>
+                      )}
+                    </div>
+                    <span className={`text-xs mt-1 ${
+                      currentStep >= 1 ? 'text-gray-900 font-semibold' : 'text-gray-400'
+                    }`}>Cart</span>
+                  </div>
+                  <div className={`flex-1 h-0.5 -mt-5 ${
+                    currentStep >= 2 ? 'bg-gray-900' : 'bg-gray-200'
+                  }`} />
+                  
+                  {/* Step 2: Checkout */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      currentStep >= 2 ? 'bg-gray-900' : 'bg-gray-200'
+                    }`}>
+                      {currentStep > 2 ? (
+                        <Check className="w-4 h-4 text-white" />
+                      ) : (
+                        <span className={`text-xs font-bold ${
+                          currentStep === 2 ? 'text-white' : 'text-gray-500'
+                        }`}>2</span>
+                      )}
+                    </div>
+                    <span className={`text-xs mt-1 ${
+                      currentStep >= 2 ? 'text-gray-900 font-semibold' : 'text-gray-400'
+                    }`}>Checkout</span>
+                  </div>
+                  <div className={`flex-1 h-0.5 -mt-5 ${
+                    currentStep >= 3 ? 'bg-gray-900' : 'bg-gray-200'
+                  }`} />
+                  
+                  {/* Step 3: Payment */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      currentStep >= 3 ? 'bg-gray-900' : 'bg-gray-200'
+                    }`}>
+                      {currentStep > 3 ? (
+                        <Check className="w-4 h-4 text-white" />
+                      ) : (
+                        <span className={`text-xs font-bold ${
+                          currentStep === 3 ? 'text-white' : 'text-gray-500'
+                        }`}>3</span>
+                      )}
+                    </div>
+                    <span className={`text-xs mt-1 ${
+                      currentStep >= 3 ? 'text-gray-900 font-semibold' : 'text-gray-400'
+                    }`}>Payment</span>
+                  </div>
+                  <div className={`flex-1 h-0.5 -mt-5 ${
+                    currentStep >= 4 ? 'bg-gray-900' : 'bg-gray-200'
+                  }`} />
+                  
+                  {/* Step 4: Confirm */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                      currentStep >= 4 ? 'bg-gray-900' : 'bg-gray-200'
+                    }`}>
+                      <span className={`text-xs font-bold ${
+                        currentStep === 4 ? 'text-white' : 'text-gray-500'
+                      }`}>4</span>
+                    </div>
+                    <span className={`text-xs mt-1 ${
+                      currentStep >= 4 ? 'text-gray-900 font-semibold' : 'text-gray-400'
+                    }`}>Confirm</span>
+                  </div>
+                </div>
+              </div>
             </div>
-
-            {/* ─── FREE DELIVERY PROGRESS BAR ─── */}
-            {items.length > 0 && remainingForFreeDelivery > 0 && (
-              <div className="px-6 py-3 bg-amber-50/80 border-b border-amber-100/60">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <Truck className="w-4 h-4 text-amber-600" />
-                  <p className="text-xs text-amber-800 font-medium">
-                    Add {formatPrice(remainingForFreeDelivery)} more for <span className="font-bold">FREE delivery</span>
-                  </p>
-                </div>
-                <div className="w-full h-1.5 rounded-full bg-amber-200/60 overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-amber-400 to-orange-500"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${freeDeliveryProgress}%` }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {items.length > 0 && remainingForFreeDelivery <= 0 && (
-              <div className="px-6 py-3 bg-green-50/80 border-b border-green-100/60">
-                <div className="flex items-center gap-2">
-                  <Truck className="w-4 h-4 text-green-600" />
-                  <p className="text-xs text-green-800 font-semibold">
-                    You've unlocked FREE delivery! 🎉
-                  </p>
-                </div>
-              </div>
-            )}
 
             {/* ─── CART CONTENT (everything scrolls together) ─── */}
             <div className="flex-1 overflow-y-auto overscroll-contain">
-              {loading ? (
+              {!user ? (
+                /* Not Logged In State */
+                <motion.div
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.1 }}
+                  className="flex flex-col items-center justify-center h-full text-center px-8 py-16"
+                >
+                  <div className="relative mb-8">
+                    <img 
+                      src={loginCartImage} 
+                      alt="Login to view cart" 
+                      className="w-32 h-32 object-contain"
+                    />
+                  </div>
+                  <h3 className="text-xl font-semibold text-gray-900 mb-2" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Please Login to View Cart
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-8 max-w-[260px] leading-relaxed" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    Sign in to access your saved items and continue shopping.
+                  </p>
+                  <button
+                    onClick={() => {
+                      closeCart();
+                      navigate('/login');
+                    }}
+                    className="group inline-flex items-center gap-2 px-8 py-3.5 bg-gray-900 text-white text-sm font-medium rounded-full hover:bg-gray-800 active:scale-[0.97] transition-all duration-200 shadow-lg shadow-gray-900/20"
+                  >
+                    Login / Sign Up
+                    <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </motion.div>
+              ) : loading ? (
                 /* Loading State */
                 <div className="flex flex-col items-center justify-center h-full text-center py-16">
                   <div className="relative">
@@ -208,14 +293,13 @@ const ShoppingCart = () => {
                 <>
                   {/* Cart Items */}
                   <div className="px-6 py-4 space-y-0 divide-y divide-gray-100">
-                    <AnimatePresence mode="popLayout">
+                    <AnimatePresence>
                       {items.map((item, index) => (
                         <motion.div
                           key={item.id}
-                          layout
                           initial={{ opacity: 0, y: 15 }}
                           animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, x: 80, height: 0, marginTop: 0, paddingTop: 0, paddingBottom: 0 }}
+                          exit={{ opacity: 0, x: 80 }}
                           transition={{ duration: 0.25, delay: index * 0.04 }}
                           className="flex gap-4 py-5 group"
                         >
@@ -360,9 +444,7 @@ const ShoppingCart = () => {
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Delivery Charge</span>
-                        <span className={deliveryCharge === 0 ? 'text-green-600 font-bold' : 'text-gray-900'}>
-                          {deliveryCharge === 0 ? 'FREE' : `₹ ${deliveryCharge}`}
-                        </span>
+                        <span className="text-gray-900">₹ {deliveryCharge}</span>
                       </div>
                       <div className="h-px bg-gray-100" />
                       <div className="flex justify-between items-baseline">
@@ -378,7 +460,7 @@ const ShoppingCart = () => {
                     {/* Desktop Action Buttons (hidden on mobile) */}
                     <div className="hidden md:block space-y-2.5 pt-2">
                       <button
-                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-[#832729] text-white text-sm font-semibold rounded-lg hover:bg-[#6d1f21] active:scale-[0.98] transition-all duration-200"
+                        className="w-full flex items-center justify-center gap-2 py-3.5 bg-gray-900 text-white text-sm font-semibold rounded-lg hover:bg-gray-800 active:scale-[0.98] transition-all duration-200"
                         onClick={() => {
                           closeCart();
                           navigate('/checkout');
@@ -418,14 +500,14 @@ const ShoppingCart = () => {
             </div>
 
             {/* Mobile Bottom Bar - Fixed at bottom */}
-            {items.length > 0 && !loading && (
+            {user && items.length > 0 && !loading && (
               <div className="md:hidden border-t border-gray-200 bg-white p-4 shadow-[0_-4px_12px_rgba(0,0,0,0.08)] flex items-center gap-3">
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-gray-900">₹ {total.toLocaleString()}</span>
                   <span className="text-xs text-gray-500">({totalItems} Item{totalItems !== 1 ? 's' : ''})</span>
                 </div>
                 <button
-                  className="flex-1 py-3 bg-[#832729] text-white text-sm font-semibold rounded-full active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
+                  className="flex-1 py-3 bg-gray-900 text-white text-sm font-semibold rounded-full active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2"
                   onClick={() => {
                     closeCart();
                     navigate('/checkout');

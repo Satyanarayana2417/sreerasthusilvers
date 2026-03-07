@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { subscribeToUserOrders, Order, cancelOrder, requestReturn } from '@/services/orderService';
+import { subscribeToUserOrders, Order, requestReturn } from '@/services/orderService';
 import { toast } from 'sonner';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -124,10 +124,8 @@ const OrderDetailsPage = () => {
   const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
   const receiptRef = useRef<HTMLDivElement>(null);
 
-  // Cancel/Return modal states
-  const [showCancelModal, setShowCancelModal] = useState(false);
+  // Return modal states
   const [showReturnModal, setShowReturnModal] = useState(false);
-  const [cancelReason, setCancelReason] = useState('');
   const [returnReason, setReturnReason] = useState('');
   const [customReturnReason, setCustomReturnReason] = useState('');
   const [returnStep, setReturnStep] = useState<'reason' | 'details'>('reason');
@@ -231,27 +229,6 @@ const OrderDetailsPage = () => {
     } catch (error) {
       console.error('Error checking return eligibility:', error);
       return true;
-    }
-  };
-
-  // Handle order cancellation
-  const handleCancelOrder = async () => {
-    if (!order || !user || !cancelReason) {
-      toast.error('Please select a cancellation reason');
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      await cancelOrder(order.id, user.uid, cancelReason);
-      toast.success('Order cancelled successfully');
-      setShowCancelModal(false);
-      setCancelReason('');
-    } catch (error: any) {
-      console.error('Error cancelling order:', error);
-      toast.error(error.message || 'Failed to cancel order');
-    } finally {
-      setIsSubmitting(false);
     }
   };
 
@@ -855,7 +832,7 @@ const OrderDetailsPage = () => {
           {/* Cancel Button - Only for pending/processing orders */}
           {(order.status === 'pending' || order.status === 'processing') && (
             <button
-              onClick={() => setShowCancelModal(true)}
+              onClick={() => navigate(`/account/orders/${orderId}/cancel`)}
               className="flex-1 py-2.5 px-4 bg-red-50 border border-red-200 rounded-lg text-sm font-medium text-red-700 flex items-center justify-center gap-2 hover:bg-red-100 transition-colors"
             >
               <Ban className="w-4 h-4" />
@@ -1265,86 +1242,6 @@ const OrderDetailsPage = () => {
                     <Share2 className="w-7 h-7 text-gray-600" />
                   </div>
                   <span className="text-xs text-gray-700">More</span>
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Cancel Order Modal */}
-      <AnimatePresence>
-        {showCancelModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-[99999] flex items-end sm:items-center sm:justify-center p-4"
-            onClick={() => setShowCancelModal(false)}
-          >
-            <motion.div
-              initial={{ y: '100%', opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              className="bg-white rounded-t-3xl sm:rounded-3xl w-full sm:max-w-md overflow-hidden"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* Modal Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
-                    <Ban className="w-5 h-5 text-red-600" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Cancel Order</h3>
-                </div>
-                <button
-                  onClick={() => setShowCancelModal(false)}
-                  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors"
-                >
-                  <X className="w-5 h-5 text-gray-500" />
-                </button>
-              </div>
-
-              {/* Modal Body */}
-              <div className="p-6">
-                <p className="text-sm text-gray-600 mb-4">
-                  Please select a reason for cancelling this order:
-                </p>
-
-                <div className="space-y-2">
-                  {[
-                    'Changed my mind',
-                    'Ordered by mistake',
-                    'Found a better price',
-                    'Need to change delivery address',
-                    'Other reason'
-                  ].map((reason) => (
-                    <button
-                      key={reason}
-                      onClick={() => setCancelReason(reason)}
-                      className={`w-full p-4 text-left rounded-xl border-2 transition-all ${
-                        cancelReason === reason
-                          ? 'border-red-400 bg-red-50 text-red-700'
-                          : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300'
-                      }`}
-                    >
-                      <span className="text-sm font-medium">{reason}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {/* Submit Button */}
-                <button
-                  onClick={handleCancelOrder}
-                  disabled={!cancelReason || isSubmitting}
-                  className={`w-full mt-6 py-3 rounded-xl font-semibold transition-all ${
-                    !cancelReason || isSubmitting
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-red-600 text-white hover:bg-red-700'
-                  }`}
-                >
-                  {isSubmitting ? 'Cancelling...' : 'Cancel Order'}
                 </button>
               </div>
             </motion.div>

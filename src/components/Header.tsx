@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Search, Heart, ShoppingBag, User, Camera, Mic, Diamond, Gift } from "lucide-react";
+import { Menu, X, Search, Heart, ShoppingBag, User, Mic, Diamond, Gift } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/logo-new.png";
 import { useCart } from "@/contexts/CartContext";
@@ -20,7 +20,9 @@ const Header = () => {
   const [searchResults, setSearchResults] = useState<UIProduct[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [allProducts, setAllProducts] = useState<UIProduct[]>([]);
+  const [isListening, setIsListening] = useState(false);
   const searchRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   // Check if current page is an auth page
   const isAuthPage = location.pathname.startsWith('/login') || 
@@ -80,6 +82,61 @@ const Header = () => {
     });
   }
 
+  // Handle voice search
+  const handleVoiceSearch = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      alert('Voice search is not supported in your browser');
+      return;
+    }
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+    
+    recognition.lang = 'en-US';
+    recognition.continuous = false;
+    recognition.interimResults = false;
+
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setSearchQuery(transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
+
+    recognition.start();
+  };
+
+  // Handle cancel voice search
+  const handleCancelVoice = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (error) {
+        console.error('Error stopping recognition:', error);
+      }
+      setIsListening(false);
+      recognitionRef.current = null;
+    }
+  };
+
   const navItems = [
     { name: "Contact", href: "/contact" },
   ];
@@ -119,13 +176,40 @@ const Header = () => {
                     onFocus={() => searchQuery && setShowSearchResults(true)}
                     className="w-full pl-11 pr-24 py-2.5 bg-white text-sm rounded-full border border-gray-200 focus:outline-none focus:border-gray-300 transition-all placeholder:text-gray-400"
                   />
-                  {/* Camera and Mic icons on right */}
+                  
+                  {/* "Speak now..." overlay when listening */}
+                  {isListening && (
+                    <div 
+                      onClick={handleCancelVoice}
+                      className="absolute inset-0 bg-red-50 rounded-full flex items-center justify-center cursor-pointer"
+                    >
+                      <div className="flex flex-col items-center gap-1">
+                        <div className="flex items-center gap-2">
+                          <Mic className="w-5 h-5 text-red-500 animate-pulse" strokeWidth={2} />
+                          <span className="text-sm font-medium text-red-500">Speak now...</span>
+                        </div>
+                        <span className="text-xs text-red-400">Tap to stop</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Gift and Mic icons on right */}
                   <div className="absolute right-3 flex items-center gap-2">
-                    <button className="p-1 hover:bg-gray-50 rounded-full transition-colors" aria-label="Search by image">
-                      <Camera className="w-[19px] h-[19px] text-[#832729]" strokeWidth={1.5} />
+                    <button 
+                      onClick={() => navigate('/articles/gift-articles')}
+                      className="p-1 hover:bg-gray-50 rounded-full transition-colors" 
+                      aria-label="Gift articles"
+                    >
+                      <Gift className="w-[19px] h-[19px] text-[#832729]" strokeWidth={1.5} />
                     </button>
-                    <button className="p-1 hover:bg-gray-50 rounded-full transition-colors" aria-label="Voice search">
-                      <Mic className="w-[19px] h-[19px] text-[#832729]" strokeWidth={1.5} />
+                    <button 
+                      onClick={handleVoiceSearch}
+                      className={`p-1 hover:bg-gray-50 rounded-full transition-colors ${
+                        isListening ? 'bg-red-50' : ''
+                      }`}
+                      aria-label="Voice search"
+                    >
+                      <Mic className="w-[19px] h-[19px]" strokeWidth={1.5} style={{ color: isListening ? '#EF4444' : '#832729' }} />
                     </button>
                   </div>
                 </div>
@@ -277,9 +361,11 @@ const Header = () => {
               >
                 <div className="relative">
                   <ShoppingBag className="w-[21px] h-[21px] text-[#832729] group-hover:text-[#832729] transition-colors" strokeWidth={1.3} />
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-[#832729] text-white text-[9px] rounded-full flex items-center justify-center font-bold px-1">
-                    {totalItems}
-                  </span>
+                  {user && totalItems > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 bg-[#832729] text-white text-[9px] rounded-full flex items-center justify-center font-bold px-1">
+                      {totalItems}
+                    </span>
+                  )}
                 </div>
               </button>
             </div>

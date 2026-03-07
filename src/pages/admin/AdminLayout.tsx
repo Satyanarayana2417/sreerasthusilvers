@@ -15,6 +15,7 @@ import {
   Truck,
   MessageSquare,
   Gift,
+  Star,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,6 +45,7 @@ const AdminLayout = () => {
     { path: '/admin/testimonials', icon: MessageSquare, label: 'Testimonials' },
     { path: '/admin/gallery', icon: Image, label: 'Gallery' },
     { path: '/admin/gift-cards', icon: Gift, label: 'Gift Cards' },
+    { path: '/admin/reviews', icon: Star, label: 'Reviews' },
     { path: '/admin/media', icon: Image, label: 'Media' },
   ];
 

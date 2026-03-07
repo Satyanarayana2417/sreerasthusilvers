@@ -1,12 +1,14 @@
 import { Menu, Heart, ShoppingBag, LayoutGrid } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useState, useEffect } from "react";
 import logo from "../assets/mobile-logo.png";
 
 const MobileHeader = () => {
   const navigate = useNavigate();
   const { totalItems, toggleCart } = useCart();
+  const { user } = useAuth();
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -75,7 +77,7 @@ const MobileHeader = () => {
             aria-label="Cart"
           >
             <ShoppingBag className="w-[24px] h-[24px]" strokeWidth={1} style={{ color: '#832729' }} />
-            {totalItems > 0 && (
+            {user && totalItems > 0 && (
               <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] bg-[#832729] text-white text-[10px] rounded-full flex items-center justify-center font-bold px-1">
                 {totalItems}
               </span>

@@ -15,6 +15,7 @@ const HeroBanner = () => {
   const preloadedImages = useRef<Map<string, HTMLImageElement>>(new Map());
   const touchStartX = useRef(0);
   const touchEndX = useRef(0);
+  const isSwiping = useRef(false);
 
   // Real-time subscription to active banners
   useEffect(() => {
@@ -106,9 +107,14 @@ const HeroBanner = () => {
   // Touch/swipe handling
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.targetTouches[0].clientX;
+    touchEndX.current = e.targetTouches[0].clientX;
+    isSwiping.current = false;
   };
   const handleTouchMove = (e: React.TouchEvent) => {
     touchEndX.current = e.targetTouches[0].clientX;
+    if (Math.abs(touchStartX.current - touchEndX.current) > 10) {
+      isSwiping.current = true;
+    }
   };
   const handleTouchEnd = () => {
     const diff = touchStartX.current - touchEndX.current;
@@ -186,6 +192,7 @@ const HeroBanner = () => {
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0.2}
                 onDragEnd={(_, info) => {
+                  isSwiping.current = true;
                   if (info.offset.x > 50) {
                     prevSlide();
                   } else if (info.offset.x < -50) {
@@ -193,8 +200,8 @@ const HeroBanner = () => {
                   }
                 }}
                 onTap={() => {
-                  // Only trigger navigation when tapping current slide
-                  if (index === currentSlide) {
+                  // Only trigger navigation when tapping (not swiping) current slide
+                  if (index === currentSlide && !isSwiping.current) {
                     handleBannerClick(index);
                   }
                 }}

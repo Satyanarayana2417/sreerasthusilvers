@@ -8,7 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { ArrowLeft, Tag, Gift, ChevronDown, Shield, ChevronRight, Plus, Minus, Zap, CreditCard, MapPin, MoreVertical, Sparkles, ShoppingBag, Truck, Home, Edit, X, Loader2, Trash2 } from 'lucide-react';
+import MobileSearchBar from '@/components/MobileSearchBar';
+import { ArrowLeft, Tag, Gift, ChevronDown, Shield, ChevronRight, Plus, Minus, Zap, CreditCard, MapPin, MoreVertical, Sparkles, ShoppingBag, Truck, Home, Edit, X, Loader2, Trash2, Search, ScanLine, Mic, Check } from 'lucide-react';
 import { getActiveProducts } from '@/services/productService';
 import { adaptFirebaseToUI, UIProduct } from '@/lib/productAdapter';
 import { getUserAddresses, getDefaultAddress, Address, addAddress, AddressFormData } from '@/services/addressService';
@@ -86,7 +87,8 @@ const SlideToPayButton = ({ amount, onComplete }: { amount: string; onComplete: 
 const MobileCheckout = () => {
   const navigate = useNavigate();
   const { user, userProfile } = useAuth();
-  const { items, subtotal, updateQuantity, removeFromCart, totalItems, addToCart, clearCart } = useCart();
+  const { items, subtotal, updateQuantity, removeFromCart, totalItems, addToCart, clearCart, openCart } = useCart();
+  const [currentStep] = useState(2); // 1: Cart, 2: Checkout, 3: Payment, 4: Confirmation
   const { toast } = useToast();
   const [suggestedProducts, setSuggestedProducts] = useState<UIProduct[]>([]);
   const [activeTab, setActiveTab] = useState('Did you forget?');
@@ -236,7 +238,7 @@ const MobileCheckout = () => {
   };
 
   // Calculations
-  const deliveryCharge = subtotal >= 5000 ? 0 : 60;
+  const deliveryCharge = items.length === 0 ? 0 : (subtotal >= 5000 ? 0 : 60);
   const taxAmount = Math.round(subtotal * 0.03); // 3% tax
   const savings = items.reduce((acc, item) => {
     const originalPrice = Math.round(item.price * 1.3);
@@ -375,43 +377,11 @@ const MobileCheckout = () => {
       <div className="bg-white sticky top-0 z-50 shadow-sm">
         {/* Top bar */}
         <div className="flex items-center justify-between px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-1">
+          <button onClick={() => openCart()} className="p-1">
             <ArrowLeft className="w-6 h-6 text-gray-800" />
           </button>
         </div>
-
-        {/* Address bar */}
-        <div className="px-4 pb-2">
-          <button
-            onClick={handleOpenAddressSelector}
-            className="w-full flex items-center gap-2 hover:bg-gray-50 rounded-lg transition-colors"
-          >
-            <MapPin className="w-4 h-4 text-gray-600 flex-shrink-0" />
-            <div className="flex-1 min-w-0 text-left">
-              {selectedAddress ? (
-                <>
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-900 font-semibold text-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                      {selectedAddress.fullName.toUpperCase()}
-                    </span>
-                    <ChevronDown className="w-3.5 h-3.5 text-gray-600" />
-                  </div>
-                  <p className="text-gray-600 text-xs truncate" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                    {selectedAddress.address}, {selectedAddress.city}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-center gap-1">
-                    <span className="text-gray-900 font-semibold text-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>ADD ADDRESS</span>
-                    <Plus className="w-3.5 h-3.5 text-gray-600" />
-                  </div>
-                  <p className="text-gray-600 text-xs" style={{ fontFamily: "'Poppins', sans-serif" }}>Tap to add your delivery address</p>
-                </>
-              )}
-            </div>
-          </button>
-        </div>
+        <MobileSearchBar />
       </div>
 
       {/* ─── Address Selector Modal ─── */}
@@ -704,9 +674,124 @@ const MobileCheckout = () => {
 
       {/* ─── Main Content ─── */}
       <div className="flex-1 overflow-y-auto">
+        {/* Stepper - scrolls with content */}
+        <div className="px-4 pt-4 pb-3">
+          <div className="flex items-center justify-between">
+            {/* Step 1: Cart */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                currentStep >= 1 ? 'bg-green-500' : 'bg-gray-200'
+              }`}>
+                {currentStep > 1 ? (
+                  <Check className="w-4 h-4 text-white" />
+                ) : (
+                  <span className={`text-xs font-bold ${
+                    currentStep === 1 ? 'text-white' : 'text-gray-500'
+                  }`}>1</span>
+                )}
+              </div>
+              <span className={`text-xs mt-1 ${
+                currentStep >= 1 ? 'text-green-600 font-semibold' : 'text-gray-400'
+              }`}>Cart</span>
+            </div>
+            <div className={`flex-1 h-0.5 -mt-5 ${
+              currentStep >= 2 ? 'bg-green-500' : 'bg-gray-200'
+            }`} />
+            
+            {/* Step 2: Checkout */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                currentStep >= 2 ? 'bg-green-500' : 'bg-gray-200'
+              }`}>
+                {currentStep > 2 ? (
+                  <Check className="w-4 h-4 text-white" />
+                ) : (
+                  <span className={`text-xs font-bold ${
+                    currentStep === 2 ? 'text-white' : 'text-gray-500'
+                  }`}>2</span>
+                )}
+              </div>
+              <span className={`text-xs mt-1 ${
+                currentStep >= 2 ? 'text-green-600 font-semibold' : 'text-gray-400'
+              }`}>Checkout</span>
+            </div>
+            <div className={`flex-1 h-0.5 -mt-5 ${
+              currentStep >= 3 ? 'bg-green-500' : 'bg-gray-200'
+            }`} />
+            
+            {/* Step 3: Payment */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                currentStep >= 3 ? 'bg-green-500' : 'bg-gray-200'
+              }`}>
+                {currentStep > 3 ? (
+                  <Check className="w-4 h-4 text-white" />
+                ) : (
+                  <span className={`text-xs font-bold ${
+                    currentStep === 3 ? 'text-white' : 'text-gray-500'
+                  }`}>3</span>
+                )}
+              </div>
+              <span className={`text-xs mt-1 ${
+                currentStep >= 3 ? 'text-green-600 font-semibold' : 'text-gray-400'
+              }`}>Payment</span>
+            </div>
+            <div className={`flex-1 h-0.5 -mt-5 ${
+              currentStep >= 4 ? 'bg-green-500' : 'bg-gray-200'
+            }`} />
+            
+            {/* Step 4: Confirm */}
+            <div className="flex flex-col items-center flex-1">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                currentStep >= 4 ? 'bg-green-500' : 'bg-gray-200'
+              }`}>
+                <span className={`text-xs font-bold ${
+                  currentStep === 4 ? 'text-white' : 'text-gray-500'
+                }`}>4</span>
+              </div>
+              <span className={`text-xs mt-1 ${
+                currentStep >= 4 ? 'text-green-600 font-semibold' : 'text-gray-400'
+              }`}>Confirm</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Address bar - scrolls with content */}
+        <div className="px-4 pt-4 pb-2">
+          <button
+            onClick={handleOpenAddressSelector}
+            className="w-full flex items-center gap-2 hover:bg-gray-50 rounded-lg transition-colors"
+          >
+            <MapPin className="w-4 h-4 text-gray-600 flex-shrink-0" />
+            <div className="flex-1 min-w-0 text-left">
+              {selectedAddress ? (
+                <>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-900 font-semibold text-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                      {selectedAddress.fullName.toUpperCase()}
+                    </span>
+                    <ChevronDown className="w-3.5 h-3.5 text-gray-600" />
+                  </div>
+                  <p className="text-gray-600 text-xs truncate" style={{ fontFamily: "'Poppins', sans-serif" }}>
+                    {selectedAddress.address}, {selectedAddress.city}
+                  </p>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-center gap-1">
+                    <span className="text-gray-900 font-semibold text-sm" style={{ fontFamily: "'Poppins', sans-serif" }}>ADD ADDRESS</span>
+                    <Plus className="w-3.5 h-3.5 text-gray-600" />
+                  </div>
+                  <p className="text-gray-600 text-xs" style={{ fontFamily: "'Poppins', sans-serif" }}>Tap to add your delivery address</p>
+                </>
+              )}
+            </div>
+          </button>
+        </div>
+
         {/* Review Your Order */}
         <div className="px-4 pt-5 pb-2">
-          <h2 className="text-lg font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Review your Order</h2>
+          <h2 className="text-lg font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Review your Order</h2>
         </div>
 
         {/* Order Card */}
@@ -715,25 +800,22 @@ const MobileCheckout = () => {
           <div className="px-4 py-3 flex items-center justify-between border-b border-gray-50">
             <div className="flex items-center gap-1.5">
               <Truck className="w-4 h-4 text-gray-600" />
-              <span className="text-sm font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                Free Delivery
-              </span>
             </div>
             <span className="text-xs text-gray-400 font-medium" style={{ fontFamily: "'Poppins', sans-serif" }}>{totalItems} items</span>
           </div>
 
           {/* Cart items */}
           <div className="divide-y divide-gray-50">
-            <AnimatePresence mode="popLayout">
+            <AnimatePresence>
               {items.map((item) => {
                 const originalPrice = Math.round(item.price * 1.3);
                 return (
                   <motion.div
                     key={item.id}
-                    layout
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.2 }}
                     className="flex items-center gap-3 px-4 py-3"
                   >
                     {/* Image */}
@@ -744,9 +826,6 @@ const MobileCheckout = () => {
                     {/* Details */}
                     <div className="flex-1 min-w-0">
                       <h4 className="text-sm font-semibold text-gray-900 line-clamp-1" style={{ fontFamily: "'Poppins', sans-serif" }}>{item.name}</h4>
-                      {item.category && (
-                        <p className="text-[11px] text-gray-400 mt-0.5" style={{ fontFamily: "'Poppins', sans-serif" }}>{item.category}</p>
-                      )}
                     </div>
 
                     {/* Quantity controls */}
@@ -762,7 +841,11 @@ const MobileCheckout = () => {
                       {/* Minus button - transparent */}
                       <button
                         onClick={() => {
-                          if (item.quantity > 1) updateQuantity(item.id, item.quantity - 1);
+                          if (item.quantity === 1) {
+                            removeFromCart(item.id);
+                          } else {
+                            updateQuantity(item.id, item.quantity - 1);
+                          }
                         }}
                         className="w-8 h-8 flex items-center justify-center bg-transparent border border-gray-900/20 hover:bg-gray-900/5 rounded-full transition-colors"
                       >
@@ -844,25 +927,7 @@ const MobileCheckout = () => {
           <div className="mb-4">
             <div className="px-4 flex items-center gap-2 mb-3">
               <Sparkles className="w-5 h-5 text-amber-500" />
-              <h3 className="text-base font-bold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Your last minute add-ons</h3>
-            </div>
-
-            {/* Tabs */}
-            <div className="px-4 flex gap-2 mb-3 overflow-x-auto pb-1 no-scrollbar">
-              {addOnTabs.map((tab) => (
-                <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all ${
-                    activeTab === tab
-                      ? 'bg-gray-900 text-white shadow-sm'
-                      : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                  }`}
-                  style={{ fontFamily: "'Poppins', sans-serif" }}
-                >
-                  {tab}
-                </button>
-              ))}
+              <h3 className="text-base font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Your last minute add-ons</h3>
             </div>
 
             {/* Horizontal scroll products */}
@@ -929,6 +994,14 @@ const MobileCheckout = () => {
             key={String(!showPaymentDetails)}
             amount={formatPrice(total)}
             onComplete={() => {
+              if (!selectedAddress) {
+                toast({
+                  title: "Address Required",
+                  description: "Please add a delivery address to proceed.",
+                  variant: "destructive",
+                });
+                return;
+              }
               setShowPaymentDetails(true);
             }}
           />
@@ -957,29 +1030,53 @@ const MobileCheckout = () => {
                 </button>
                 <div>
                   <h2 className="text-lg font-bold text-gray-900">Payment Details</h2>
-                  <p className="text-xs text-gray-500">step 3 of 3</p>
                 </div>
               </div>
             </div>
 
             <div className="overflow-y-auto pb-24" style={{ height: 'calc(100vh - 60px)' }}>
-              {/* Offer & Coupons */}
-              <div className="px-4 py-4">
-                <h3 className="text-sm font-bold text-gray-900 mb-3">Offer & Coupons</h3>
-                <div className="bg-white border border-gray-200 rounded-xl p-3 flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Tag className="w-4 h-4 text-gray-600" />
-                    <span className="text-sm font-semibold text-gray-900">MULTIKART10</span>
-                    <span className="px-2 py-0.5 bg-red-500 text-white text-[10px] font-bold rounded">
-                      Saved ₹20.00
-                    </span>
+              {/* Stepper - scrolls with content */}
+              <div className="px-4 pt-4 pb-3">
+                <div className="flex items-center justify-between">
+                  {/* Step 1: Cart */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-xs mt-1 text-green-600 font-semibold">Cart</span>
                   </div>
-                  <ChevronRight className="w-4 h-4 text-gray-400" />
+                  <div className="flex-1 h-0.5 -mt-5 bg-green-500" />
+                  
+                  {/* Step 2: Checkout */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500">
+                      <Check className="w-4 h-4 text-white" />
+                    </div>
+                    <span className="text-xs mt-1 text-green-600 font-semibold">Checkout</span>
+                  </div>
+                  <div className="flex-1 h-0.5 -mt-5 bg-green-500" />
+                  
+                  {/* Step 3: Payment */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500">
+                      <span className="text-xs font-bold text-white">3</span>
+                    </div>
+                    <span className="text-xs mt-1 text-green-600 font-semibold">Payment</span>
+                  </div>
+                  <div className="flex-1 h-0.5 -mt-5 bg-gray-200" />
+                  
+                  {/* Step 4: Confirm */}
+                  <div className="flex flex-col items-center flex-1">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200">
+                      <span className="text-xs font-bold text-gray-500">4</span>
+                    </div>
+                    <span className="text-xs mt-1 text-gray-400">Confirm</span>
+                  </div>
                 </div>
               </div>
 
               {/* Payment Method */}
-              <div className="px-4 py-4 border-t border-gray-100">
+              <div className="px-4 py-4">
                 <h3 className="text-sm font-bold text-gray-900 mb-4">Payment Method</h3>
                 <div className="space-y-3">
                   {/* Cash on Delivery */}
@@ -1064,10 +1161,6 @@ const MobileCheckout = () => {
                     <span className="text-xs text-gray-600">Sub Total (include vat and tax)</span>
                     <span className="text-sm font-semibold text-gray-900">{formatPrice(subtotal)}</span>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-gray-600">Used Coupons</span>
-                    <span className="text-sm font-semibold text-red-600">- ₹20.00</span>
-                  </div>
                   <Separator className="my-2" />
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-bold text-gray-900">Total (include vat and tax)</span>
@@ -1093,14 +1186,6 @@ const MobileCheckout = () => {
                   {items.length > 1 && (
                     <p className="text-xs text-gray-500">+ {items.length - 1} more item{items.length > 2 ? 's' : ''}</p>
                   )}
-                </div>
-              </div>
-
-              {/* Total at Bottom */}
-              <div className="px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-semibold text-gray-900">Total =</span>
-                  <span className="text-lg font-bold text-gray-900">{formatPrice(total)}</span>
                 </div>
               </div>
             </div>
@@ -1304,7 +1389,7 @@ const MobileCheckout = () => {
             <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex gap-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
               <Button
                 onClick={() => {
-                  navigate('/account/orders', { state: { orderId } });
+                  navigate(`/account/orders/${orderId}`);
                 }}
                 variant="outline"
                 className="flex-1 h-12 border-gray-300 text-gray-900 font-semibold text-sm rounded-lg"
@@ -1483,7 +1568,7 @@ const Checkout = () => {
   }
 
   // Calculate delivery charge (free for orders above ₹5000)
-  const deliveryCharge = subtotal >= 5000 ? 0 : 60;
+  const deliveryCharge = items.length === 0 ? 0 : (subtotal >= 5000 ? 0 : 60);
   const taxAmount = Math.round(subtotal * 0.03); // 3% tax
   const discount = 20; // Coupon discount
   const desktopTotal = subtotal + deliveryCharge + taxAmount - discount;
@@ -2245,7 +2330,6 @@ const Checkout = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <h2 className="text-xl font-bold text-gray-900">Payment Details</h2>
-                      <p className="text-sm text-gray-500">step 3 of 3</p>
                     </div>
                     <button
                       onClick={() => setShowPaymentDetails(false)}
@@ -2257,18 +2341,43 @@ const Checkout = () => {
                 </div>
 
                 <div className="px-6 py-6 space-y-6">
-                  {/* Offer & Coupons */}
+                  {/* Stepper - scrolls with content */}
                   <div>
-                    <h3 className="text-base font-bold text-gray-900 mb-3">Offer & Coupons</h3>
-                    <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center justify-between hover:shadow-md transition-shadow cursor-pointer">
-                      <div className="flex items-center gap-3">
-                        <Tag className="w-5 h-5 text-gray-600" />
-                        <span className="text-sm font-semibold text-gray-900">MULTIKART10</span>
-                        <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded">
-                          Saved ₹20.00
-                        </span>
+                    <div className="flex items-center justify-between">
+                      {/* Step 1: Cart */}
+                      <div className="flex flex-col items-center flex-1">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-xs mt-1 text-green-600 font-semibold">Cart</span>
                       </div>
-                      <ChevronRight className="w-5 h-5 text-gray-400" />
+                      <div className="flex-1 h-0.5 -mt-5 bg-green-500" />
+                      
+                      {/* Step 2: Checkout */}
+                      <div className="flex flex-col items-center flex-1">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500">
+                          <Check className="w-4 h-4 text-white" />
+                        </div>
+                        <span className="text-xs mt-1 text-green-600 font-semibold">Checkout</span>
+                      </div>
+                      <div className="flex-1 h-0.5 -mt-5 bg-green-500" />
+                      
+                      {/* Step 3: Payment */}
+                      <div className="flex flex-col items-center flex-1">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-green-500">
+                          <span className="text-xs font-bold text-white">3</span>
+                        </div>
+                        <span className="text-xs mt-1 text-green-600 font-semibold">Payment</span>
+                      </div>
+                      <div className="flex-1 h-0.5 -mt-5 bg-gray-200" />
+                      
+                      {/* Step 4: Confirm */}
+                      <div className="flex flex-col items-center flex-1">
+                        <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-200">
+                          <span className="text-xs font-bold text-gray-500">4</span>
+                        </div>
+                        <span className="text-xs mt-1 text-gray-400">Confirm</span>
+                      </div>
                     </div>
                   </div>
 
@@ -2357,10 +2466,6 @@ const Checkout = () => {
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-gray-600">Sub Total (include vat and tax)</span>
                         <span className="font-semibold text-gray-900">{formatPrice(subtotal)}</span>
-                      </div>
-                      <div className="flex items-center justify-between text-sm">
-                        <span className="text-gray-600">Used Coupons</span>
-                        <span className="font-semibold text-red-600">- ₹20.00</span>
                       </div>
                       <Separator className="my-3" />
                       <div className="flex items-center justify-between">

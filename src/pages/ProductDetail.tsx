@@ -1,11 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, Heart, Minus, Plus, ChevronRight, ShoppingBag, Truck, Shield, RotateCcw, Check, Loader2, X, ChevronLeft, ArrowLeft, Share2 } from "lucide-react";
+import { Star, Heart, Minus, Plus, ChevronRight, ShoppingBag, Truck, Shield, RotateCcw, Check, Loader2, X, ChevronLeft, ArrowLeft, Share2, PenLine, CheckCircle, Image as ImageIcon, ThumbsUp, ThumbsDown } from "lucide-react";
 import { getProduct, getActiveProducts } from "@/services/productService";
 import { UIProductDetail, adaptFirebaseToUIDetail, adaptFirebaseArrayToUI } from "@/lib/productAdapter";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
+import { getProductReviews, getProductReviewStats, hasUserPurchasedProduct, hasUserReviewedProduct, Review } from "@/services/reviewService";
 import logo from "@/assets/logo-new.png";
 import MobileHeader from "@/components/MobileHeader";
 import MobileSearchBar from "@/components/MobileSearchBar";
@@ -15,6 +17,7 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [quantity, setQuantity] = useState(1);
   const [isWishlisted, setIsWishlisted] = useState(false);
   const [addedToCart, setAddedToCart] = useState(false);
@@ -28,6 +31,29 @@ const ProductDetail = () => {
   const [showFullDescription, setShowFullDescription] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  // Review states
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewStats, setReviewStats] = useState<{ averageRating: number; totalReviews: number; ratingDistribution: Record<number, number> }>({ averageRating: 0, totalReviews: 0, ratingDistribution: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 } });
+  const [canWriteReview, setCanWriteReview] = useState(false);
+  const [hasReviewed, setHasReviewed] = useState(false);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [expandedReviews, setExpandedReviews] = useState<Set<string>>(new Set());
+  const [helpfulVotes, setHelpfulVotes] = useState<Record<string, { up: number; down: number; voted: 'up' | 'down' | null }>>({});
+
+  const handleHelpfulVote = (reviewId: string, type: 'up' | 'down') => {
+    setHelpfulVotes(prev => {
+      const current = prev[reviewId] || { up: 0, down: 0, voted: null };
+      if (current.voted) return prev; // already voted
+      return {
+        ...prev,
+        [reviewId]: {
+          up: type === 'up' ? current.up + 1 : current.up,
+          down: type === 'down' ? current.down + 1 : current.down,
+          voted: type,
+        },
+      };
+    });
+  };
 
   // Fetch product and related products
   useEffect(() => {
@@ -69,6 +95,36 @@ const ProductDetail = () => {
 
     fetchProductData();
   }, [productId]);
+
+  // Fetch reviews and check if user can review
+  useEffect(() => {
+    const fetchReviewData = async () => {
+      if (!productId) return;
+      
+      try {
+        setReviewsLoading(true);
+        const [fetchedReviews, stats] = await Promise.all([
+          getProductReviews(productId),
+          getProductReviewStats(productId),
+        ]);
+        
+        setReviews(fetchedReviews);
+        setReviewStats(stats);
+        
+        // Check if logged-in user can write a review
+        if (user?.uid) {
+          const purchased = await hasUserPurchasedProduct(user.uid, productId);
+          setCanWriteReview(purchased);
+        }
+      } catch (error) {
+        console.error('Error fetching reviews:', error);
+      } finally {
+        setReviewsLoading(false);
+      }
+    };
+    
+    fetchReviewData();
+  }, [productId, user]);
 
   // Scroll to top on mount
   useEffect(() => {
@@ -664,44 +720,119 @@ const ProductDetail = () => {
                 <div className="border-t border-border my-4" />
 
                 {/* Customer Reviews */}
-                <div className="mb-6 bg-gray-50 p-4 md:p-6 rounded-xl">
-                  <div className="flex items-start justify-between mb-3">
-                    <h3 className="text-base md:text-lg font-semibold text-gray-900">
-                      Customer Reviews
+                <div className="mb-6" id="reviews">
+                  {/* Header */}
+                  <div className="flex items-center justify-between mb-1">
+                    <h3 className="text-base md:text-lg font-bold text-gray-900">
+                      Customer Reviews ({reviewStats.totalReviews > 0 ? reviewStats.totalReviews : (product.reviews || 0)})
                     </h3>
-                    <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-semibold">
-                      {product.rating}/5
-                    </div>
                   </div>
-                  
-                  <div className="flex items-center gap-2 mb-2">
-                    {[...Array(5)].map((_, i) => {
-                      const rating = product.rating;
-                      const starValue = i + 1;
-                      const fillPercentage = Math.min(Math.max((rating - i) * 100, 0), 100);
-                      
-                      return (
-                        <div key={i} className="relative w-6 h-6 md:w-7 md:h-7">
-                          {/* Background empty star */}
-                          <Star className="w-full h-full fill-gray-300 text-gray-300 absolute inset-0" />
-                          
-                          {/* Filled star overlay */}
-                          {fillPercentage > 0 && (
-                            <div 
-                              className="overflow-hidden absolute inset-0" 
-                              style={{ width: `${fillPercentage}%` }}
-                            >
-                              <Star className="w-full h-full fill-[#FFB800] text-[#FFB800]" />
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                  
-                  <p className="text-xs md:text-sm text-gray-600">
-                    Based on {product.reviews || 45} Ratings & Reviews
+                  <p className="text-xs text-gray-500 mb-0.5">
+                    Reviews have been published* with verified customer's consent.
                   </p>
+                  <p className="text-xs text-gray-400 mb-4">*T&C Applied</p>
+
+                  {/* Write a Review Button */}
+                  {canWriteReview && (
+                    <button
+                      onClick={() => navigate('/write-review', {
+                        state: {
+                          productId: product.id,
+                          productName: product.title,
+                          productImage: product.image,
+                        }
+                      })}
+                      className="w-full py-2 bg-transparent border-2 border-[#D4AF37] text-[#D4AF37] rounded-full font-medium hover:bg-[#D4AF37]/10 transition-colors flex items-center justify-center gap-2 mb-4 text-sm"
+                    >
+                      <PenLine size={16} />
+                      Write a Review
+                    </button>
+                  )}
+
+                  {/* Individual Reviews */}
+                  {reviews.length > 0 ? (
+                    <div className="space-y-3">
+                      {reviews.slice(0, 5).map((review) => {
+                        const isExpanded = expandedReviews.has(review.id);
+                        const dateStr = review.createdAt?.toDate
+                          ? review.createdAt.toDate().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
+                          : '';
+                        const isLong = review.reviewText.length > 150;
+                        const votes = helpfulVotes[review.id] || { up: 0, down: 0, voted: null };
+                        return (
+                          <div key={review.id} className="border border-gray-400 rounded-xl py-4 px-4">
+                            {/* Rating pill + date */}
+                            <div className="flex items-center gap-2 mb-2">
+                              <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded flex items-center gap-0.5">
+                                {review.rating}★
+                              </span>
+                              <span className="text-xs text-gray-400">{dateStr}</span>
+                            </div>
+
+                            {/* Review text */}
+                            <p className={`text-sm text-gray-700 mb-1 ${!isExpanded && isLong ? 'line-clamp-3' : ''}`}>
+                              {review.reviewText}
+                            </p>
+                            {isLong && (
+                              <button
+                                onClick={() => setExpandedReviews(prev => {
+                                  const next = new Set(prev);
+                                  isExpanded ? next.delete(review.id) : next.add(review.id);
+                                  return next;
+                                })}
+                                className="text-xs text-blue-600 mb-2"
+                              >
+                                {isExpanded ? 'read less' : '...read more'}
+                              </button>
+                            )}
+
+                            {/* Review Images */}
+                            {review.images?.length > 0 && (
+                              <div className="flex gap-2 mb-3">
+                                {review.images.map((img, i) => (
+                                  <img key={i} src={img} alt={`Review ${i + 1}`} className="w-14 h-14 object-cover rounded-lg" />
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Footer: username + helpful */}
+                            <div className="flex items-center justify-between mt-2">
+                              <span className="text-xs text-green-600 flex items-center gap-1">
+                                <Check size={10} />{review.userName}
+                              </span>
+                              <span className="text-xs text-gray-400 flex items-center gap-3">
+                                Helpful?
+                                <button
+                                  onClick={() => handleHelpfulVote(review.id, 'up')}
+                                  disabled={!!votes.voted}
+                                  className={`flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded-md border ${
+                                    votes.voted === 'up'
+                                      ? 'border-yellow-400 text-yellow-500'
+                                      : 'border-transparent hover:text-gray-700'
+                                  }`}
+                                >
+                                  <ThumbsUp size={13} strokeWidth={1.8} /> {votes.up}
+                                </button>
+                                <button
+                                  onClick={() => handleHelpfulVote(review.id, 'down')}
+                                  disabled={!!votes.voted}
+                                  className={`flex items-center gap-1 transition-colors px-1.5 py-0.5 rounded-md border ${
+                                    votes.voted === 'down'
+                                      ? 'border-red-400 text-red-500'
+                                      : 'border-transparent hover:text-gray-700'
+                                  }`}
+                                >
+                                  <ThumbsDown size={13} strokeWidth={1.8} /> {votes.down}
+                                </button>
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-400 mt-4">No reviews yet. Be the first to review!</p>
+                  )}
                 </div>
 
                 {/* Category */}

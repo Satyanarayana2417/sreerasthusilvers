@@ -205,6 +205,18 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
     
+    // --- CUSTOMER REVIEWS ---
+    match /reviews/{reviewId} {
+      // Anyone can read approved reviews
+      allow read: if true;
+      // Authenticated users can create their own reviews
+      allow create: if isAuthenticated() && 
+        request.resource.data.userId == request.auth.uid;
+      // Only admin can update (approve/reject) or delete reviews
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+    
     // --- HOMEPAGE GALLERY ---
     match /gallery/{imageId} {
       allow read: if true;
@@ -244,6 +256,16 @@ service cloud.firestore {
           true;
       }
       
+      // Helper: Check if customer is cancelling their own order
+      function isValidCancellation() {
+        let currentStatus = resource.data.status;
+        let newStatus = request.resource.data.status;
+        // Customers can only cancel orders that are 'pending' or 'processing'
+        return newStatus == 'cancelled' && 
+               (currentStatus == 'pending' || currentStatus == 'processing') &&
+               request.resource.data.cancelledBy == 'user';
+      }
+      
       // READ: Admins see all; Customers see their orders; Delivery boys see assigned orders
       allow read: if isAuthenticated() && 
         (resource == null || isOrderOwner() || isAssignedDeliveryBoy() || isAdmin());
@@ -254,8 +276,10 @@ service cloud.firestore {
         
       // UPDATE: Complex rules for different roles
       // - Admin can update anything
+      // - Customers can cancel their own orders (pending/processing only)
       // - Delivery boys can only update their assigned orders with valid status transitions
       allow update: if isAdmin() || 
+        (isOrderOwner() && isValidCancellation()) ||
         (isAssignedDeliveryBoy() && isValidStatusTransition() && isValidOTPUpdate());
       
       // DELETE: Only admin can delete orders

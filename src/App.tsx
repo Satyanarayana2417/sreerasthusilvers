@@ -43,6 +43,7 @@ import ScrollToTop from "./components/ScrollToTop";
 import MobileCart from "./pages/MobileCart";
 import MobileOrders from "./pages/MobileOrders";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
+import CancelOrderPage from "./pages/CancelOrderPage";
 import ProfileEditPage from "./pages/ProfileEditPage";
 import MobileCategories from "./pages/MobileCategories";
 import MobileSearch from "./pages/MobileSearch";
@@ -150,6 +151,9 @@ import AdminGallery from "./pages/admin/AdminGallery";
 import AdminOrders from "./pages/AdminOrders";
 import AdminDeliveryBoys from "./pages/admin/AdminDeliveryBoys";
 import AdminGiftCards from "./pages/admin/AdminGiftCards";
+import AdminReviews from "./pages/admin/AdminReviews";
+import WriteReview from "./pages/WriteReview";
+import ThankYouReview from "./pages/ThankYouReview";
 
 // Delivery Partner Pages
 import DeliveryLogin from "./pages/delivery/DeliveryLogin";
@@ -293,6 +297,16 @@ const App = () => {
               <Route path="/gifts/return-gifts" element={<SilverReturnGifts />} />
               
               <Route path="/product/:productId" element={<ProductDetail />} />
+              <Route path="/write-review" element={
+                <ProtectedRoute requireEmailVerification={false}>
+                  <WriteReview />
+                </ProtectedRoute>
+              } />
+              <Route path="/thank-you-review" element={
+                <ProtectedRoute requireEmailVerification={false}>
+                  <ThankYouReview />
+                </ProtectedRoute>
+              } />
               <Route path="/wishlist" element={<Wishlist />} />
               <Route path="/checkout" element={<Checkout />} />
               <Route path="/profile" element={
@@ -303,6 +317,7 @@ const App = () => {
               <Route path="/account" element={<Account />} />
               <Route path="/account/orders" element={<MobileOrders />} />
               <Route path="/account/orders/:orderId" element={<OrderDetailsPage />} />
+              <Route path="/account/orders/:orderId/cancel" element={<CancelOrderPage />} />
               <Route path="/account/profile-edit" element={<ProfileEditPage />} />
               <Route path="/account/addresses" element={<SavedAddresses />} />
               <Route path="/buy-again" element={<BuyAgain />} />
@@ -369,6 +384,7 @@ const App = () => {
                 <Route path="testimonials" element={<AdminTestimonials />} />
                 <Route path="gallery" element={<AdminGallery />} />
                 <Route path="gift-cards" element={<AdminGiftCards />} />
+                <Route path="reviews" element={<AdminReviews />} />
               </Route>
 
               {/* Delivery Partner Routes */}

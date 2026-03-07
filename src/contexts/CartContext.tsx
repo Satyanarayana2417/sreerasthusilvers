@@ -219,6 +219,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       return removeFromCart(id);
     }
 
+    // Block onSnapshot from overwriting during this operation
+    pendingOpRef.current = true;
+
     // Optimistic local update
     setItems((prev) =>
       prev.map((item) => (item.id === id ? { ...item, quantity } : item))
@@ -242,6 +245,9 @@ export const CartProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
         console.error('Firebase sync failed for updateQuantity:', error);
       }
     }
+    
+    // Allow onSnapshot to work again after a small delay
+    setTimeout(() => { pendingOpRef.current = false; }, 500);
   };
 
   // ─── CLEAR CART ───
