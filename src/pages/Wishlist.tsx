@@ -14,12 +14,21 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Wishlist = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { wishlist, removeFromWishlist, isLoaded } = useWishlist();
   const [products, setProducts] = useState<UIProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [accountExpanded, setAccountExpanded] = useState(false);
+  const [accountExpanded, setAccountExpanded] = useState(() => {
+    // Initialize from sessionStorage to persist across back navigation
+    const saved = sessionStorage.getItem('accountDropdownExpanded');
+    return saved === 'true';
+  });
+
+  // Save dropdown state to sessionStorage whenever it changes
+  useEffect(() => {
+    sessionStorage.setItem('accountDropdownExpanded', String(accountExpanded));
+  }, [accountExpanded]);
 
   useEffect(() => {
     const loadWishlistProducts = async () => {
@@ -340,13 +349,20 @@ const Wishlist = () => {
                 {/* Quick tabs */}
                 <div className="flex items-center gap-2 px-5 py-3 border-b border-gray-100">
                   {[
-                    { label: "Orders", path: "/orders" },
-                    { label: "Buy Again", path: "/" },
+                    { label: "Orders", path: "/account/orders" },
+                    { label: "Buy Again", path: "/buy-again" },
                     { label: "Lists", path: "/wishlist" },
                   ].map((tab) => (
                     <button
                       key={tab.label}
-                      onClick={() => navigate(tab.path)}
+                      onClick={() => {
+                        // If clicking "Lists" while already on wishlist, just toggle the dropdown
+                        if (tab.path === "/wishlist") {
+                          setAccountExpanded(false);
+                        } else {
+                          navigate(tab.path);
+                        }
+                      }}
                       className="px-4 py-1.5 text-xs font-medium text-gray-700 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
                       style={{ fontFamily: "'Poppins', sans-serif" }}
                     >
@@ -358,11 +374,11 @@ const Wishlist = () => {
                 {/* Menu items */}
                 <div className="py-1">
                   {[
-                    { label: "Edit Profile", icon: SquarePen, path: "/profile" },
-                    { label: "Your addresses", icon: MapPin, path: "/addresses" },
-                    { label: "Login & security", icon: ShieldCheck, path: "/auth/login" },
-                    { label: "My Jewellery Journey", icon: CreditCard, path: "/orders" },
-                    { label: "Customer support", icon: MessageCircle, path: "/contact" },
+                    { label: "Edit Profile", icon: SquarePen, path: "/account/profile-edit" },
+                    { label: "Your addresses", icon: MapPin, path: "/account/addresses" },
+                    { label: "Login & security", icon: ShieldCheck, path: "/security" },
+                    { label: "My Jewellery Journey", icon: CreditCard, path: "/wallet" },
+                    { label: "Customer support", icon: MessageCircle, path: "/customer-support" },
                   ].map((item) => (
                     <button
                       key={item.label}
@@ -378,9 +394,10 @@ const Wishlist = () => {
                   {/* Log out */}
                   {user && (
                     <button
-                      onClick={() => {
-                        // Handle logout
-                        navigate('/auth/login');
+                      onClick={async () => {
+                        sessionStorage.removeItem('accountDropdownExpanded');
+                        await logout();
+                        navigate('/');
                       }}
                       className="w-full text-left px-5 py-3.5 text-sm flex items-center gap-3 text-[#832729] hover:bg-gray-50 transition-colors border-t border-gray-100"
                       style={{ fontFamily: "'Poppins', sans-serif" }}

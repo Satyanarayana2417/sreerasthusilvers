@@ -683,6 +683,13 @@ const AccountPage = () => {
     return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Redirect to wishlist on mobile (account section is available there)
+  React.useEffect(() => {
+    if (isMobile) {
+      navigate('/wishlist');
+    }
+  }, [isMobile, navigate]);
+
   const handleLogout = async () => {
     try {
       await logout();

@@ -163,19 +163,25 @@ const BestSellers = () => {
     handleDragEnd();
   };
 
-  // Auto-scroll functionality (desktop only)
+  // Auto-scroll functionality (disabled on mobile)
   useEffect(() => {
     const scrollContainer = scrollRef.current;
     if (!scrollContainer || products.length <= 3) return; // Don't auto-scroll if few products
 
-    // Check if desktop screen
-    const isDesktop = window.innerWidth >= 768;
-    if (!isDesktop) return; // Skip auto-scroll on mobile
+    // Disable auto-scroll on mobile/tablet (< 1024px)
+    const checkIsMobile = () => window.innerWidth < 1024;
+    if (checkIsMobile()) return;
 
     let animationId: number;
     const scrollSpeed = 1.5; // pixels per frame
 
     const scroll = () => {
+      // Double-check on each frame to ensure we're still on desktop
+      if (checkIsMobile()) {
+        cancelAnimationFrame(animationId);
+        return;
+      }
+
       if (!isPaused && scrollContainer) {
         scrollPositionRef.current += scrollSpeed;
         

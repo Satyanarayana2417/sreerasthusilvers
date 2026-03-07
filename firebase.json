@@ -19,5 +19,20 @@
         "destination": "/index.html"
       }
     ]
+  },
+  "emulators": {
+    "auth": {
+      "port": 8081
+    },
+    "firestore": {
+      "port": 8080
+    },
+    "storage": {
+      "port": 8083
+    },
+    "ui": {
+      "enabled": true,
+      "port": 8084
+    }
   }
 }

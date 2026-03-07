@@ -350,6 +350,17 @@ const ProductDetail = () => {
                     className="w-full h-full object-cover"
                   />
                   
+                  {/* Back Button */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(-1);
+                    }}
+                    className="absolute top-3 left-3 w-10 h-10 rounded-full bg-white text-gray-700 hover:bg-gray-50 flex items-center justify-center transition-all shadow-lg z-10"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                  </button>
+                  
                   {/* Wishlist & Share Icons */}
                   <div className="absolute top-3 right-3 flex flex-col gap-2 z-10">
                     <button

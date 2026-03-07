@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useRef, useEffect } from "react";
 import { 
   Gem, 
   Armchair, 
@@ -41,19 +42,19 @@ const categories = [
   { 
     name: "Fashion", 
     icon: Shirt, 
-    href: "#",
+    href: "/jewelry",
     image: "https://images.unsplash.com/photo-1445205170230-053b83016050?w=200&h=200&fit=crop",
   },
   { 
     name: "Home & Kitchen", 
     icon: ChefHat, 
-    href: "#",
+    href: "/home-decor",
     image: "https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop",
   },
   { 
     name: "Beauty & Toys", 
     icon: Sparkles, 
-    href: "#",
+    href: "/other-products/baby-items",
     image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&h=200&fit=crop",
   },
   { 
@@ -65,13 +66,13 @@ const categories = [
   { 
     name: "Silver Coins", 
     icon: Coins, 
-    href: "/products/silver-coins",
+    href: "/other-products/silver-coins",
     image: "https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop",
   },
   { 
     name: "Gift Articles", 
     icon: Gift, 
-    href: "/products/silver-gift-articles",
+    href: "/articles/gift-articles",
     image: "https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop",
   },
 ];
@@ -79,12 +80,42 @@ const categories = [
 const CategoryIconNav = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const mobileScrollRef = useRef<HTMLDivElement>(null);
+  const desktopScrollRef = useRef<HTMLDivElement>(null);
+
+  // Restore scroll position on mount
+  useEffect(() => {
+    const savedMobileScroll = sessionStorage.getItem('categoryMobileScrollPos');
+    const savedDesktopScroll = sessionStorage.getItem('categoryDesktopScrollPos');
+    
+    if (savedMobileScroll && mobileScrollRef.current) {
+      mobileScrollRef.current.scrollLeft = parseInt(savedMobileScroll);
+    }
+    if (savedDesktopScroll && desktopScrollRef.current) {
+      desktopScrollRef.current.scrollLeft = parseInt(savedDesktopScroll);
+    }
+  }, [location.pathname]);
+
+  // Save scroll position before navigation
+  const handleCategoryClick = (href: string) => {
+    if (href === "#") return;
+    
+    // Save current scroll positions
+    if (mobileScrollRef.current) {
+      sessionStorage.setItem('categoryMobileScrollPos', mobileScrollRef.current.scrollLeft.toString());
+    }
+    if (desktopScrollRef.current) {
+      sessionStorage.setItem('categoryDesktopScrollPos', desktopScrollRef.current.scrollLeft.toString());
+    }
+    
+    navigate(href);
+  };
 
   return (
     <>
       {/* ====== MOBILE: Circular image categories (Tanishq style) ====== */}
       <section className="lg:hidden bg-white pt-2 pb-4">
-        <div className="flex gap-5 overflow-x-auto scrollbar-hide px-4">
+        <div ref={mobileScrollRef} className="flex gap-5 overflow-x-auto scrollbar-hide px-4">
           {categories.map((category, index) => {
             const isActive = location.pathname === category.href;
             return (
@@ -93,7 +124,7 @@ const CategoryIconNav = () => {
                 href={category.href}
                 onClick={(e) => {
                   e.preventDefault();
-                  if (category.href !== "#") navigate(category.href);
+                  handleCategoryClick(category.href);
                 }}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
@@ -130,7 +161,7 @@ const CategoryIconNav = () => {
       {/* ====== DESKTOP: Icon + text horizontal nav (Tanishq style) ====== */}
       <nav className="hidden lg:block bg-white border-b border-gray-200">
         <div className="max-w-[1600px] mx-auto px-12 lg:px-16">
-          <div className="flex items-center justify-start gap-0 overflow-x-auto scrollbar-hide">
+          <div ref={desktopScrollRef} className="flex items-center justify-start gap-0 overflow-x-auto scrollbar-hide">
             {categories.map((category, index) => {
               const isActive = location.pathname === category.href;
               const Icon = category.icon;
@@ -141,7 +172,7 @@ const CategoryIconNav = () => {
                   href={category.href}
                   onClick={(e) => {
                     e.preventDefault();
-                    if (category.href !== "#") navigate(category.href);
+                    handleCategoryClick(category.href);
                   }}
                   initial={{ opacity: 0, y: -5 }}
                   animate={{ opacity: 1, y: 0 }}
