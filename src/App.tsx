@@ -161,266 +161,198 @@ import DeliveryDashboard from "./pages/delivery/DeliveryDashboard";
 import DeliveryOrderDetails from "./pages/delivery/DeliveryOrderDetails";
 import DeliveryMapPage from "./pages/delivery/DeliveryMapPage";
 
-const queryClient = new QueryClient();
-
-const App = () => {
-  // Check if the app has been loaded before in this session
-  const [isLoaded, setIsLoaded] = useState(() => {
-    return sessionStorage.getItem('appLoaded') === 'true';
-  });
+const AppContent = () => {
+  const [isLoaded, setIsLoaded] = useState(() => sessionStorage.getItem('appLoaded') === 'true');
 
   const handleLoadingComplete = () => {
     setIsLoaded(true);
     sessionStorage.setItem('appLoaded', 'true');
   };
 
+  if (!isLoaded) {
+    return <LoadingScreen onLoadingComplete={handleLoadingComplete} />;
+  }
+
+  return (
+    <>
+      <ShoppingCart />
+      <Routes>
+        {/* Public Routes */}
+        <Route path="/" element={<Index />} />
+        <Route path="/necklaces" element={<ShopNecklaces />} />
+        <Route path="/rings" element={<ShopRings />} />
+        <Route path="/bracelets" element={<ShopBracelets />} />
+        <Route path="/anklets" element={<ShopAnklets />} />
+        <Route path="/pendants" element={<ShopPendants />} />
+        <Route path="/earrings" element={<ShopEarrings />} />
+        <Route path="/product/:id" element={<ProductDetail />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/customer-support" element={<CustomerSupport />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-and-conditions" element={<TermsConditions />} />
+        <Route path="/shipping-policy" element={<ShippingPolicy />} />
+        <Route path="/cancellation-and-refund-policy" element={<CancellationRefundPolicy />} />
+        <Route path="/search" element={<SearchResults />} />
+
+        {/* Bracelet Categories */}
+        <Route path="/bracelets/diamond" element={<DiamondBracelets />} />
+        <Route path="/bracelets/gemstone" element={<GemstoneBracelets />} />
+        <Route path="/bracelets/pearl" element={<PearlBracelets />} />
+        <Route path="/bracelets/gold" element={<GoldBracelets />} />
+        <Route path="/bracelets/silver" element={<SilverBracelets />} />
+        <Route path="/bracelets/bangle" element={<BangleBracelets />} />
+
+        {/* Necklace Categories */}
+        <Route path="/necklaces/diamond" element={<DiamondNecklaces />} />
+        <Route path="/necklaces/gemstone" element={<GemstoneNecklaces />} />
+        <Route path="/necklaces/pearl" element={<PearlNecklaces />} />
+        <Route path="/necklaces/gold" element={<GoldNecklaces />} />
+        <Route path="/necklaces/silver" element={<SilverNecklaces />} />
+        <Route path="/necklaces/cross" element={<CrossNecklaces />} />
+
+        {/* Ring Categories */}
+        <Route path="/rings/diamond" element={<DiamondRings />} />
+        <Route path="/rings/gemstone" element={<GemstoneRings />} />
+        <Route path="/rings/wedding" element={<WeddingRings />} />
+        <Route path="/rings/engagement" element={<EngagementRings />} />
+        <Route path="/rings/gold" element={<GoldRings />} />
+        <Route path="/rings/fashion" element={<FashionRings />} />
+
+        {/* Jewelry Categories */}
+        <Route path="/jewelry" element={<JewelryCollections />} />
+        <Route path="/jewelry/mens" element={<MensJewelry />} />
+        <Route path="/jewelry/birthstone" element={<BirthstoneJewelry />} />
+        <Route path="/jewelry/pearl" element={<PearlJewelry />} />
+        <Route path="/jewelry/rose-gold" element={<RoseGoldJewelry />} />
+        <Route path="/jewelry/new-arrivals" element={<NewArrivals />} />
+        <Route path="/jewelry/sale" element={<JewelrySale />} />
+
+        {/* Furniture Pages */}
+        <Route path="/furniture" element={<FurnitureCollections />} />
+        <Route path="/furniture/silver-sofa-collection" element={<SilverSofaCollection />} />
+        <Route path="/furniture/royal-silver-chairs" element={<RoyalSilverChairs />} />
+        <Route path="/furniture/royal-silver-tables" element={<RoyalSilverTables />} />
+        <Route path="/furniture/antique-silver-decor" element={<AntiqueSilverDecor />} />
+        <Route path="/furniture/silver-swing-jhoola" element={<SilverSwingJhoola />} />
+        <Route path="/furniture/silver-cradles" element={<SilverCradles />} />
+        <Route path="/furniture/silver-thrones" element={<SilverThrones />} />
+
+        {/* Articles Pages */}
+        <Route path="/articles" element={<ArticlesCollections />} />
+        <Route path="/articles/silver-pooja-items" element={<SilverPoojaItems />} />
+        <Route path="/articles/gift-articles" element={<SilverGiftArticles />} />
+        <Route path="/articles/silver-lamps" element={<SilverLamps />} />
+        <Route path="/articles/silver-plates" element={<SilverPlates />} />
+        <Route path="/articles/silver-idols" element={<SilverIdols />} />
+        <Route path="/articles/silver-vessels" element={<SilverVessels />} />
+
+        {/* Other Products Pages */}
+        <Route path="/products" element={<OtherProductsCollections />} />
+        <Route path="/other-products/silver-coins" element={<SilverCoins />} />
+        <Route path="/other-products/silver-bars" element={<SilverBars />} />
+        <Route path="/other-products/silver-utensils" element={<SilverUtensils />} />
+        <Route path="/other-products/baby-items" element={<BabyItems />} />
+        <Route path="/other-products/antique-silver" element={<AntiqueSilver />} />
+        <Route path="/other-products/custom-orders" element={<CustomOrders />} />
+
+        {/* Home Decor Pages */}
+        <Route path="/home-decor" element={<HomeDecorCollections />} />
+        <Route path="/home-decor/silver-wall-decor" element={<SilverWallDecor />} />
+        <Route path="/home-decor/silver-photo-frames" element={<SilverPhotoFrames />} />
+        <Route path="/home-decor/silver-showpieces" element={<SilverShowpieces />} />
+        <Route path="/home-decor/silver-candle-stands" element={<SilverCandleStands />} />
+        <Route path="/home-decor/silver-flower-vases" element={<SilverFlowerVases />} />
+
+        {/* Gifts Pages */}
+        <Route path="/gifts" element={<GiftsCollections />} />
+        <Route path="/gifts/wedding" element={<SilverWeddingGifts />} />
+        <Route path="/gifts/birthday" element={<SilverBirthdayGifts />} />
+        <Route path="/gifts/festival" element={<SilverFestivalGifts />} />
+        <Route path="/gifts/corporate" element={<SilverCorporateGifts />} />
+        <Route path="/gifts/return" element={<SilverReturnGifts />} />
+
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
+
+        {/* Protected Routes */}
+        <Route element={<ProtectedRoute />}>
+          <Route path="/wishlist" element={<Wishlist />} />
+          <Route path="/checkout" element={<Checkout />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/account" element={<Account />} />
+          <Route path="/saved-addresses" element={<SavedAddresses />} />
+          <Route path="/buy-again" element={<BuyAgain />} />
+          <Route path="/mobile-cart" element={<MobileCart />} />
+          <Route path="/mobile-orders" element={<MobileOrders />} />
+          <Route path="/orders/:orderId" element={<OrderDetailsPage />} />
+          <Route path="/orders/:orderId/cancel" element={<CancelOrderPage />} />
+          <Route path="/profile/edit" element={<ProfileEditPage />} />
+          <Route path="/purchase-summary" element={<PurchaseSummary />} />
+          <Route path="/security" element={<SecurityPage />} />
+          <Route path="/reviews/new/:orderId/:productId" element={<WriteReview />} />
+          <Route path="/reviews/thank-you" element={<ThankYouReview />} />
+        </Route>
+
+        {/* Mobile Specific */}
+        <Route path="/mobile-categories" element={<MobileCategories />} />
+        <Route path="/mobile-search" element={<MobileSearch />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin/login" element={<AdminLogin />} />
+        <Route element={<AdminRoute />}>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<Navigate to="dashboard" replace />} />
+            <Route path="dashboard" element={<Dashboard />} />
+            <Route path="products" element={<Products />} />
+            <Route path="products/new" element={<ProductForm />} />
+            <Route path="products/edit/:id" element={<ProductForm />} />
+            <Route path="media" element={<Media />} />
+            <Route path="banners" element={<AdminBanners />} />
+            <Route path="showcases" element={<AdminShowcases />} />
+            <Route path="testimonials" element={<AdminTestimonials />} />
+            <Route path="gallery" element={<AdminGallery />} />
+            <Route path="orders" element={<AdminOrders />} />
+            <Route path="delivery-boys" element={<AdminDeliveryBoys />} />
+            <Route path="gift-cards" element={<AdminGiftCards />} />
+            <Route path="reviews" element={<AdminReviews />} />
+          </Route>
+        </Route>
+
+        {/* Delivery Partner Routes */}
+        <Route path="/delivery/login" element={<DeliveryLogin />} />
+        <Route element={<DeliveryRoute />}>
+          <Route path="/delivery/dashboard" element={<DeliveryDashboard />} />
+          <Route path="/delivery/orders/:orderId" element={<DeliveryOrderDetails />} />
+          <Route path="/delivery/map" element={<DeliveryMapPage />} />
+        </Route>
+
+        {/* Not Found Route */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </>
+  );
+};
+
+const queryClient = new QueryClient();
+
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <CartProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            {!isLoaded && <LoadingScreen onComplete={handleLoadingComplete} />}
-            <BrowserRouter>
+      <TooltipProvider>
+        <AuthProvider>
+          <CartProvider>
+            <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <ScrollToTop />
-              <ShoppingCart />
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<Index />} />
-              
-              {/* Mobile Cart Page */}
-              <Route path="/cart" element={<MobileCart />} />
-              
-              {/* Mobile Categories Page */}
-              <Route path="/categories" element={<MobileCategories />} />
-              
-              {/* Mobile Search Pages */}
-              <Route path="/search" element={<MobileSearch />} />
-              <Route path="/search-results" element={<SearchResults />} />
-              
-              {/* Jewelry Collections Main Page */}
-              <Route path="/jewelry" element={<JewelryCollections />} />
-              
-              {/* Furniture Collections Main Page */}
-              <Route path="/furniture" element={<FurnitureCollections />} />
-              
-              {/* Articles Collections Main Page */}
-              <Route path="/articles" element={<ArticlesCollections />} />
-              
-              {/* Other Products Collections Main Page */}
-              <Route path="/products" element={<OtherProductsCollections />} />
-              
-              {/* Jewellery Routes */}
-              <Route path="/shop/necklaces" element={<ShopNecklaces />} />
-              <Route path="/shop/rings" element={<ShopRings />} />
-              <Route path="/shop/bracelets" element={<ShopBracelets />} />
-              <Route path="/shop/anklets" element={<ShopAnklets />} />
-              <Route path="/shop/pendants" element={<ShopPendants />} />
-              <Route path="/shop/earrings" element={<ShopEarrings />} />
-              
-              {/* Bracelet Category Routes */}
-              <Route path="/categories/bracelets/diamond" element={<DiamondBracelets />} />
-              <Route path="/categories/bracelets/gemstone" element={<GemstoneBracelets />} />
-              <Route path="/categories/bracelets/pearl" element={<PearlBracelets />} />
-              <Route path="/categories/bracelets/gold" element={<GoldBracelets />} />
-              <Route path="/categories/bracelets/silver" element={<SilverBracelets />} />
-              <Route path="/categories/bracelets/bangle" element={<BangleBracelets />} />
-              
-              {/* Necklace Category Routes */}
-              <Route path="/categories/necklaces/diamond" element={<DiamondNecklaces />} />
-              <Route path="/categories/necklaces/gemstone" element={<GemstoneNecklaces />} />
-              <Route path="/categories/necklaces/pearl" element={<PearlNecklaces />} />
-              <Route path="/categories/necklaces/gold" element={<GoldNecklaces />} />
-              <Route path="/categories/necklaces/silver" element={<SilverNecklaces />} />
-              <Route path="/categories/necklaces/cross" element={<CrossNecklaces />} />
-              
-              {/* Ring Category Routes */}
-              <Route path="/categories/rings/diamond" element={<DiamondRings />} />
-              <Route path="/categories/rings/gemstone" element={<GemstoneRings />} />
-              <Route path="/categories/rings/wedding" element={<WeddingRings />} />
-              <Route path="/categories/rings/engagement" element={<EngagementRings />} />
-              <Route path="/categories/rings/gold" element={<GoldRings />} />
-              <Route path="/categories/rings/fashion" element={<FashionRings />} />
-              
-              {/* Jewelry Category Routes */}
-              <Route path="/categories/jewelry/mens" element={<MensJewelry />} />
-              <Route path="/categories/jewelry/birthstone" element={<BirthstoneJewelry />} />
-              <Route path="/categories/jewelry/pearl" element={<PearlJewelry />} />
-              <Route path="/categories/jewelry/rose-gold" element={<RoseGoldJewelry />} />
-              <Route path="/categories/jewelry/new-arrivals" element={<NewArrivals />} />
-              <Route path="/categories/jewelry/sale" element={<JewelrySale />} />
-              
-              {/* Furniture Routes */}
-              <Route path="/furniture/silver-sofa-collection" element={<SilverSofaCollection />} />
-              <Route path="/furniture/royal-silver-chairs" element={<RoyalSilverChairs />} />
-              <Route path="/furniture/royal-silver-tables" element={<RoyalSilverTables />} />
-              <Route path="/furniture/antique-silver-decor" element={<AntiqueSilverDecor />} />
-              <Route path="/furniture/silver-swing-jhoola" element={<SilverSwingJhoola />} />
-              <Route path="/furniture/silver-cradles" element={<SilverCradles />} />
-              <Route path="/furniture/silver-thrones" element={<SilverThrones />} />
-              
-              {/* Articles Routes */}
-              <Route path="/articles/pooja-items" element={<SilverPoojaItems />} />
-              <Route path="/articles/gift-articles" element={<SilverGiftArticles />} />
-              <Route path="/articles/silver-lamps" element={<SilverLamps />} />
-              <Route path="/articles/silver-plates" element={<SilverPlates />} />
-              <Route path="/articles/silver-idols" element={<SilverIdols />} />
-              <Route path="/articles/silver-vessels" element={<SilverVessels />} />
-              
-              {/* Other Products Routes */}
-              <Route path="/other-products/silver-coins" element={<SilverCoins />} />
-              <Route path="/other-products/silver-bars" element={<SilverBars />} />
-              <Route path="/other-products/silver-utensils" element={<SilverUtensils />} />
-              <Route path="/other-products/baby-items" element={<BabyItems />} />
-              <Route path="/other-products/antique-silver" element={<AntiqueSilver />} />
-              <Route path="/other-products/custom-orders" element={<CustomOrders />} />
-              
-              {/* Home Decor Collections Main Page */}
-              <Route path="/home-decor" element={<HomeDecorCollections />} />
-              
-              {/* Home Decor Routes */}
-              <Route path="/home-decor/wall-decor" element={<SilverWallDecor />} />
-              <Route path="/home-decor/photo-frames" element={<SilverPhotoFrames />} />
-              <Route path="/home-decor/showpieces" element={<SilverShowpieces />} />
-              <Route path="/home-decor/candle-stands" element={<SilverCandleStands />} />
-              <Route path="/home-decor/flower-vases" element={<SilverFlowerVases />} />
-              
-              {/* Gifts Collections Main Page */}
-              <Route path="/gifts" element={<GiftsCollections />} />
-              
-              {/* Gifts Routes */}
-              <Route path="/gifts/wedding-gifts" element={<SilverWeddingGifts />} />
-              <Route path="/gifts/birthday-gifts" element={<SilverBirthdayGifts />} />
-              <Route path="/gifts/festival-gifts" element={<SilverFestivalGifts />} />
-              <Route path="/gifts/corporate-gifts" element={<SilverCorporateGifts />} />
-              <Route path="/gifts/return-gifts" element={<SilverReturnGifts />} />
-              
-              <Route path="/product/:productId" element={<ProductDetail />} />
-              <Route path="/write-review" element={
-                <ProtectedRoute requireEmailVerification={false}>
-                  <WriteReview />
-                </ProtectedRoute>
-              } />
-              <Route path="/thank-you-review" element={
-                <ProtectedRoute requireEmailVerification={false}>
-                  <ThankYouReview />
-                </ProtectedRoute>
-              } />
-              <Route path="/wishlist" element={<Wishlist />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/profile" element={
-                <ProtectedRoute>
-                  <Profile />
-                </ProtectedRoute>
-              } />
-              <Route path="/account" element={<Account />} />
-              <Route path="/account/orders" element={<MobileOrders />} />
-              <Route path="/account/orders/:orderId" element={<OrderDetailsPage />} />
-              <Route path="/account/orders/:orderId/cancel" element={<CancelOrderPage />} />
-              <Route path="/account/profile-edit" element={<ProfileEditPage />} />
-              <Route path="/account/addresses" element={<SavedAddresses />} />
-              <Route path="/buy-again" element={<BuyAgain />} />
-              <Route path="/wallet" element={
-                <ProtectedRoute requireEmailVerification={false}>
-                  <PurchaseSummary />
-                </ProtectedRoute>
-              } />
-              <Route path="/purchase-summary" element={
-                <ProtectedRoute requireEmailVerification={false}>
-                  <PurchaseSummary />
-                </ProtectedRoute>
-              } />
-              <Route path="/security" element={
-                <ProtectedRoute requireEmailVerification={false}>
-                  <SecurityPage />
-                </ProtectedRoute>
-              } />
-              <Route path="/contact" element={<Contact />} />
-              <Route path="/about" element={<About />} />
-              <Route path="/customer-support" element={<CustomerSupport />} />
-              
-              {/* Policy Pages */}
-              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-              <Route path="/terms-conditions" element={<TermsConditions />} />
-              <Route path="/shipping-policy" element={<ShippingPolicy />} />
-              <Route path="/cancellation-refund-policy" element={<CancellationRefundPolicy />} />
-              
-              {/* Auth Routes - all point to Account page */}
-              <Route path="/login" element={<Account />} />
-              <Route path="/auth/login" element={<Account />} />
-              <Route path="/signup" element={<Signup />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/auth/signup" element={<Signup />} />
-              <Route path="/auth/verify-email" element={<VerifyEmail />} />
-              <Route path="/auth/forgot-password" element={<ForgotPassword />} />
-              <Route path="/auth/reset-password" element={<ResetPassword />} />
-              <Route path="/auth/action" element={<ResetPassword />} />
-              <Route path="/__/auth/action" element={<ResetPassword />} />
-
-              {/* Admin Login (separate from admin panel) */}
-              <Route path="/admin" element={<AdminLogin />} />
-
-              {/* Protected Admin Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <AdminRoute>
-                    <AdminLayout />
-                  </AdminRoute>
-                }
-              >
-                <Route path="dashboard" element={<Dashboard />} />
-                <Route path="products" element={<Products />} />
-                <Route path="products/new" element={<ProductForm />} />
-                <Route path="products/:productId" element={<ProductForm />} />
-                <Route path="orders" element={<AdminOrders />} />
-                <Route path="delivery-boys" element={<AdminDeliveryBoys />} />
-                <Route path="media" element={<Media />} />
-                <Route path="banners" element={<AdminBanners />} />
-                <Route path="showcases" element={<AdminShowcases />} />
-                <Route path="testimonials" element={<AdminTestimonials />} />
-                <Route path="gallery" element={<AdminGallery />} />
-                <Route path="gift-cards" element={<AdminGiftCards />} />
-                <Route path="reviews" element={<AdminReviews />} />
-              </Route>
-
-              {/* Delivery Partner Routes */}
-              <Route path="/delivery" element={<Navigate to="/account?tab=delivery" replace />} />
-              <Route
-                path="/delivery/dashboard"
-                element={
-                  <DeliveryRoute>
-                    <DeliveryDashboard />
-                  </DeliveryRoute>
-                }
-              />
-              <Route
-                path="/delivery/order/:orderId"
-                element={
-                  <DeliveryRoute>
-                    <DeliveryOrderDetails />
-                  </DeliveryRoute>
-                }
-              />
-              <Route
-                path="/delivery/map/:orderId"
-                element={
-                  <DeliveryRoute>
-                    <DeliveryMapPage />
-                  </DeliveryRoute>
-                }
-              />
-
-              {/* 404 Catch-all */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </CartProvider>
-      </AuthProvider>
+              <AppContent />
+            </BrowserRouter>
+          </CartProvider>
+        </AuthProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 };

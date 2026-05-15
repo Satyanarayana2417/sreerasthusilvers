@@ -96,7 +96,7 @@ const Settings = () => {
           <CardContent className="space-y-3 text-sm">
             <div className="flex justify-between py-2 border-b border-gray-200">
               <span className="text-gray-600">Cloud Name</span>
-              <span className="text-gray-900 font-mono">doxwyrp8n</span>
+              <span className="text-gray-900 font-mono">dzlssgfz9</span>
             </div>
             <div className="flex justify-between py-2 border-b border-gray-200">
               <span className="text-gray-600">Upload Preset</span>

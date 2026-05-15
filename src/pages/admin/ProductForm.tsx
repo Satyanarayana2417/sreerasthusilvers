@@ -65,8 +65,8 @@ const subcategoriesByCategory: Record<string, string[]> = {
 };
 
 const ProductForm = () => {
-  const { productId } = useParams();
-  const isEditing = !!productId;
+  const { id } = useParams();
+  const isEditing = !!id;
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();

@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import loadingImage from "@/assets/loading-screen.jpg";
+import { Progress } from "@/components/ui/progress";
 
 interface LoadingScreenProps {
-  onComplete?: () => void;
+  onLoadingComplete: () => void;
 }
 
-const LoadingScreen = ({ onComplete }: LoadingScreenProps) => {
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ onLoadingComplete }) => {
   const [isLoading, setIsLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
   const [startAnimation, setStartAnimation] = useState(false);
+  const [quote, setQuote] = useState({ text: "", author: "" });
 
   useEffect(() => {
     // Wait a moment before starting the door open animation
@@ -19,14 +22,14 @@ const LoadingScreen = ({ onComplete }: LoadingScreenProps) => {
     // Complete loading after animation
     const completeTimer = setTimeout(() => {
       setIsLoading(false);
-      onComplete?.();
+      onLoadingComplete();
     }, 2800);
 
     return () => {
       clearTimeout(timer);
       clearTimeout(completeTimer);
     };
-  }, [onComplete]);
+  }, [onLoadingComplete]);
 
   return (
     <AnimatePresence>

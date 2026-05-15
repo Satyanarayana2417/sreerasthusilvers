@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Loader2, Mail, RefreshCw, CheckCircle, X } from 'lucide-react';
 import { sendEmailVerification } from 'firebase/auth';
@@ -15,13 +15,11 @@ import {
 } from '@/components/ui/dialog';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
   redirectTo?: string;
   requireEmailVerification?: boolean;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
   redirectTo = '/login',
   requireEmailVerification = true
 }) => {
@@ -46,7 +44,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check for email verification when user is loaded
   useEffect(() => {
-    if (!loading && user && requireEmailVerification && !user.emailVerified) {
+    if (!loading && user && (!requireEmailVerification || user.emailVerified)) {
       setShowVerificationModal(true);
     }
   }, [loading, user, requireEmailVerification]);
@@ -267,7 +265,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     );
   }
 
-  return <>{children}</>;
+  return <Outlet />;
 };
 
 export default ProtectedRoute;

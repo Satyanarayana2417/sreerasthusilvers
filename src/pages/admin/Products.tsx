@@ -202,7 +202,7 @@ const Products = () => {
                   <tr 
                     key={product.id} 
                     className="hover:bg-gray-50 cursor-pointer"
-                    onClick={() => navigate(`/admin/products/${product.id}`)}
+                    onClick={() => navigate(`/admin/products/edit/${product.id}`)}
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
@@ -265,14 +265,12 @@ const Products = () => {
                           align="end"
                           className="bg-white border-gray-200"
                         >
-                          <DropdownMenuItem asChild>
-                            <Link
-                              to={`/admin/products/${product.id}`}
-                              className="text-gray-700 hover:text-gray-900 cursor-pointer"
-                            >
-                              <Edit className="h-4 w-4 mr-2" />
-                              Edit
-                            </Link>
+                          <DropdownMenuItem
+                            onClick={() => navigate(`/admin/products/edit/${product.id}`)}
+                            className="text-gray-700 hover:text-gray-900 cursor-pointer"
+                          >
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
                           </DropdownMenuItem>
                           <DropdownMenuItem
                             className="text-gray-700 hover:text-gray-900 cursor-pointer"
