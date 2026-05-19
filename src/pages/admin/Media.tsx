@@ -9,6 +9,7 @@ import {
   UploadProgress,
   CloudinaryUploadResult,
 } from '@/services/cloudinaryService';
+import { cloudinaryConfig } from '@/config/cloudinary';
 
 interface MediaItem {
   url: string;
@@ -247,11 +248,11 @@ const Media = () => {
         <CardContent className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-gray-600">Cloud Name:</span>
-            <span className="text-gray-900 font-mono">dzlssgfz9</span>
+            <span className="text-gray-900 font-mono">{cloudinaryConfig.cloudName}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-gray-600">Upload Preset:</span>
-            <span className="text-gray-900 font-mono">sreerasthusilvers</span>
+            <span className="text-gray-900 font-mono">{cloudinaryConfig.uploadPreset}</span>
           </div>
           <p className="text-gray-500 text-xs mt-4">
             All uploaded media is stored securely on Cloudinary CDN and optimized for fast

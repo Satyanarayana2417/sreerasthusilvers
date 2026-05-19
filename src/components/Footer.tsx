@@ -175,12 +175,12 @@ const Footer = () => {
           <p>
             Designed & Developed by{" "}
             <a 
-              href="https://www.thedreamteamservices.com/" 
+            
               target="_blank" 
               rel="noopener noreferrer"
               className="text-white hover:text-white/80 transition-colors font-medium whitespace-nowrap"
             >
-              DREAM TEAM SERVICES
+              SATYA
             </a>
           </p>
         </div>

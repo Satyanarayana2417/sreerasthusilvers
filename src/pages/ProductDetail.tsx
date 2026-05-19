@@ -13,7 +13,8 @@ import MobileHeader from "@/components/MobileHeader";
 import MobileSearchBar from "@/components/MobileSearchBar";
 
 const ProductDetail = () => {
-  const { productId } = useParams();
+  const { id, productId } = useParams();
+  const currentProductId = productId || id;
   const navigate = useNavigate();
   const { addToCart } = useCart();
   const { toast } = useToast();
@@ -58,7 +59,7 @@ const ProductDetail = () => {
   // Fetch product and related products
   useEffect(() => {
     const fetchProductData = async () => {
-      if (!productId) {
+      if (!currentProductId) {
         setNotFound(true);
         setLoading(false);
         return;
@@ -67,7 +68,7 @@ const ProductDetail = () => {
       try {
         setLoading(true);
         // Fetch the main product
-        const fbProduct = await getProduct(productId);
+        const fbProduct = await getProduct(currentProductId);
         
         if (!fbProduct) {
           setNotFound(true);
@@ -81,7 +82,7 @@ const ProductDetail = () => {
         // Fetch all active products for related products
         const allActiveProducts = await getActiveProducts();
         const related = allActiveProducts
-          .filter(p => p.id !== productId)
+          .filter(p => p.id !== currentProductId)
           .slice(0, 4)
           .map(adaptFirebaseToUIDetail);
         setRelatedProducts(related);
@@ -94,18 +95,18 @@ const ProductDetail = () => {
     };
 
     fetchProductData();
-  }, [productId]);
+  }, [currentProductId]);
 
   // Fetch reviews and check if user can review
   useEffect(() => {
     const fetchReviewData = async () => {
-      if (!productId) return;
+      if (!currentProductId) return;
       
       try {
         setReviewsLoading(true);
         const [fetchedReviews, stats] = await Promise.all([
-          getProductReviews(productId),
-          getProductReviewStats(productId),
+          getProductReviews(currentProductId),
+          getProductReviewStats(currentProductId),
         ]);
         
         setReviews(fetchedReviews);
@@ -113,7 +114,7 @@ const ProductDetail = () => {
         
         // Check if logged-in user can write a review
         if (user?.uid) {
-          const purchased = await hasUserPurchasedProduct(user.uid, productId);
+          const purchased = await hasUserPurchasedProduct(user.uid, currentProductId);
           setCanWriteReview(purchased);
         }
       } catch (error) {
@@ -124,12 +125,12 @@ const ProductDetail = () => {
     };
     
     fetchReviewData();
-  }, [productId, user]);
+  }, [currentProductId, user]);
 
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [productId]);
+  }, [currentProductId]);
 
   const incrementQuantity = () => setQuantity((prev) => prev + 1);
   const decrementQuantity = () => setQuantity((prev) => (prev > 1 ? prev - 1 : 1));
@@ -345,7 +346,7 @@ const ProductDetail = () => {
           <h1 className="text-2xl font-semibold mb-4">Product Not Found</h1>
           <p className="text-muted-foreground mb-6">The product you're looking for doesn't exist or has been removed.</p>
           <button
-            onClick={() => navigate("/shop/necklaces")}
+            onClick={() => navigate("/necklaces")}
             className="px-6 py-3 bg-primary text-primary-foreground rounded-full hover:bg-primary/90 transition-all"
           >
             Back to Shop
@@ -376,7 +377,7 @@ const ProductDetail = () => {
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <a href="/" className="hover:text-primary transition-colors">Home</a>
               <ChevronRight className="w-4 h-4" />
-              <a href="/shop/necklaces" className="hover:text-primary transition-colors">Shop</a>
+              <a href="/necklaces" className="hover:text-primary transition-colors">Shop</a>
               <ChevronRight className="w-4 h-4" />
               <span className="text-foreground">
                 {product.title.length > 20 ? product.title.slice(0, 20) + '...' : product.title}
@@ -839,7 +840,7 @@ const ProductDetail = () => {
                 <div className="text-sm">
                   <p>
                     <span className="text-muted-foreground">Category:</span>{" "}
-                    <a href="/shop/necklaces" className="text-primary hover:underline">
+                    <a href="/necklaces" className="text-primary hover:underline">
                       {product.category}
                     </a>
                   </p>

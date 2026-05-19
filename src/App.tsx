@@ -180,11 +180,17 @@ const AppContent = () => {
         {/* Public Routes */}
         <Route path="/" element={<Index />} />
         <Route path="/necklaces" element={<ShopNecklaces />} />
+        <Route path="/shop/necklaces" element={<ShopNecklaces />} />
         <Route path="/rings" element={<ShopRings />} />
+        <Route path="/shop/rings" element={<ShopRings />} />
         <Route path="/bracelets" element={<ShopBracelets />} />
+        <Route path="/shop/bracelets" element={<ShopBracelets />} />
         <Route path="/anklets" element={<ShopAnklets />} />
+        <Route path="/shop/anklets" element={<ShopAnklets />} />
         <Route path="/pendants" element={<ShopPendants />} />
+        <Route path="/shop/pendants" element={<ShopPendants />} />
         <Route path="/earrings" element={<ShopEarrings />} />
+        <Route path="/shop/earrings" element={<ShopEarrings />} />
         <Route path="/product/:id" element={<ProductDetail />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/about" element={<About />} />
@@ -194,6 +200,7 @@ const AppContent = () => {
         <Route path="/shipping-policy" element={<ShippingPolicy />} />
         <Route path="/cancellation-and-refund-policy" element={<CancellationRefundPolicy />} />
         <Route path="/search" element={<SearchResults />} />
+        <Route path="/search-results" element={<SearchResults />} />
 
         {/* Bracelet Categories */}
         <Route path="/bracelets/diamond" element={<DiamondBracelets />} />
@@ -285,12 +292,18 @@ const AppContent = () => {
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/account" element={<Account />} />
+          <Route path="/account/profile-edit" element={<ProfileEditPage />} />
+          <Route path="/account/addresses" element={<SavedAddresses />} />
+          <Route path="/orders" element={<MobileOrders />} />
+          <Route path="/account/orders" element={<Account />} />
           <Route path="/saved-addresses" element={<SavedAddresses />} />
           <Route path="/buy-again" element={<BuyAgain />} />
           <Route path="/mobile-cart" element={<MobileCart />} />
           <Route path="/mobile-orders" element={<MobileOrders />} />
           <Route path="/orders/:orderId" element={<OrderDetailsPage />} />
+          <Route path="/account/orders/:orderId" element={<OrderDetailsPage />} />
           <Route path="/orders/:orderId/cancel" element={<CancelOrderPage />} />
+          <Route path="/account/orders/:orderId/cancel" element={<CancelOrderPage />} />
           <Route path="/profile/edit" element={<ProfileEditPage />} />
           <Route path="/purchase-summary" element={<PurchaseSummary />} />
           <Route path="/security" element={<SecurityPage />} />
@@ -299,6 +312,7 @@ const AppContent = () => {
         </Route>
 
         {/* Mobile Specific */}
+        <Route path="/categories" element={<MobileCategories />} />
         <Route path="/mobile-categories" element={<MobileCategories />} />
         <Route path="/mobile-search" element={<MobileSearch />} />
 

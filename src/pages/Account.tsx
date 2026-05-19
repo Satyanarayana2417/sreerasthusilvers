@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/contexts/AuthContext';
-import { auth } from '@/config/firebase';
 import { Button } from '@/components/ui/button';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -116,16 +115,7 @@ const LoginForm = () => {
 
     try {
       const userProfile = await loginWithGoogle();
-      
-      // Check email verification for regular users
-      const currentUser = auth.currentUser;
-      if (currentUser && !currentUser.emailVerified && userProfile.role === 'user') {
-        sessionStorage.setItem('pendingVerificationEmail', currentUser.email || '');
-        navigate('/verify-email', { state: { email: currentUser.email }, replace: true });
-        // Don't reset loading - navigating away
-        return;
-      }
-      
+
       if (userProfile.role === 'admin') {
         navigate('/admin/dashboard');
         // Don't reset loading - navigating away
@@ -208,16 +198,7 @@ const LoginForm = () => {
           setEmailLoading(false);
           return;
         }
-        
-        // Check email verification for regular users
-        const currentUser = auth.currentUser;
-        if (currentUser && !currentUser.emailVerified && userProfile.role === 'user') {
-          sessionStorage.setItem('pendingVerificationEmail', email);
-          navigate('/verify-email', { state: { email }, replace: true });
-          // Don't reset loading - navigating away
-          return;
-        }
-        
+
         if (userProfile.role === 'admin') {
           navigate('/admin/dashboard');
           // Don't reset loading - navigating away
@@ -683,13 +664,6 @@ const AccountPage = () => {
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Redirect to wishlist on mobile (account section is available there)
-  React.useEffect(() => {
-    if (isMobile) {
-      navigate('/wishlist');
-    }
-  }, [isMobile, navigate]);
-
   const handleLogout = async () => {
     try {
       await logout();
@@ -980,7 +954,7 @@ const AccountPage = () => {
               {/* Quick Action Pills */}
               <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1 scrollbar-hide">
                 <button 
-                  onClick={() => navigate('/account/orders')}
+                  onClick={() => navigate('/orders')}
                   className="flex-shrink-0 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
                 >
                   Orders
@@ -1316,7 +1290,7 @@ const AccountPage = () => {
                           className="border border-gray-200 rounded-lg p-4 cursor-pointer hover:shadow-md transition-shadow bg-gray-50"
                           style={{ fontFamily: "'Poppins', sans-serif" }}
                           onClick={() => {
-                            navigate(`/account/orders/${order.id}`);
+                            navigate(`/orders/${order.id}`);
                           }}
                         >
                           {/* Order Items Display */}

@@ -109,14 +109,14 @@ const ProductForm = () => {
 
   // Fetch product if editing
   useEffect(() => {
-    if (isEditing && productId) {
+    if (isEditing && id) {
       fetchProductData();
     }
-  }, [productId]);
+  }, [id]);
 
   const fetchProductData = async () => {
     try {
-      const product = await getProduct(productId!);
+      const product = await getProduct(id!);
       if (product) {
         setFormData({
           name: product.name,
@@ -351,7 +351,7 @@ const ProductForm = () => {
       console.log('ProductForm: Saving product with data:', productData);
 
       if (isEditing) {
-        await updateProduct(productId!, productData);
+        await updateProduct(id!, productData);
         toast({
           title: 'Success',
           description: 'Product updated successfully',
@@ -404,594 +404,397 @@ const ProductForm = () => {
             {isEditing ? 'Edit Product' : 'Add New Product'}
           </h1>
           <p className="text-gray-600 mt-1">
-            {isEditing ? 'Update product details' : 'Add a new product to your catalog'}
+            {isEditing
+              ? 'Update details for your existing product'
+              : 'Add a new product to your catalog'}
           </p>
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Basic Info */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Basic Information</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <Label className="text-gray-700">Product Name *</Label>
-                <Input
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  placeholder="Enter product name"
-                  className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+      <form onSubmit={handleSubmit} className="space-y-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-2 space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Basic Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
                 <div>
-                  <Label className="text-gray-700">Category *</Label>
-                  <Select
-                    value={formData.category}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, category: value }))
-                    }
-                  >
-                    <SelectTrigger className="mt-2 bg-gray-100 border-gray-300 text-gray-900">
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Shop</div>
-                      {shopCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat} className="text-gray-900 pl-4">
-                          {cat}
-                        </SelectItem>
-                      ))}
-                      <div className="border-t border-gray-200 my-1"></div>
-                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wider">Categories</div>
-                      {specificCategories.map((cat) => (
-                        <SelectItem key={cat} value={cat} className="text-gray-900 pl-4">
-                          {cat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="name">Product Name *</Label>
+                  <Input
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    placeholder="Enter product name"
+                    required
+                  />
                 </div>
-
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="category">Category *</Label>
+                    <Select
+                      name="category"
+                      value={formData.category}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, category: value, subcategory: '' }))
+                      }
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {shopCategories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                        <hr className="my-2" />
+                        {specificCategories.map((cat) => (
+                          <SelectItem key={cat} value={cat}>
+                            {cat}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="subcategory">Subcategory</Label>
+                    <Select
+                      name="subcategory"
+                      value={formData.subcategory}
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, subcategory: value }))
+                      }
+                      disabled={!subcategoriesByCategory[formData.category]}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category first" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {(subcategoriesByCategory[formData.category] || []).map((sub) => (
+                          <SelectItem key={sub} value={sub}>
+                            {sub}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div>
-                  <Label className="text-gray-700">Subcategory</Label>
-                  <Select
-                    value={formData.subcategory}
-                    onValueChange={(value) =>
-                      setFormData((prev) => ({ ...prev, subcategory: value }))
-                    }
-                    disabled={!formData.category}
-                  >
-                    <SelectTrigger className="mt-2 bg-gray-100 border-gray-300 text-gray-900">
-                      <SelectValue placeholder={formData.category ? "Select subcategory" : "Select category first"} />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200">
-                      {formData.category && subcategoriesByCategory[formData.category]?.map((subcat) => (
-                        <SelectItem key={subcat} value={subcat} className="text-gray-900">
-                          {subcat}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="description">Description</Label>
+                  <Textarea
+                    id="description"
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    placeholder="Enter product description"
+                    rows={5}
+                  />
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div>
-                <Label className="text-gray-700">Description</Label>
-                <Textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleInputChange}
-                  placeholder="Enter product description"
-                  className="mt-2 bg-gray-100 border-gray-300 text-gray-900 min-h-[120px]"
-                />
-              </div>
-            </CardContent>
-          </Card>
+            <Card>
+              <CardHeader>
+                <CardTitle>Media</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Image Upload */}
+                <div>
+                  <Label>Images</Label>
+                  <div className="flex gap-2 mb-2">
+                    <Button
+                      type="button"
+                      variant={imageUploadMode === 'upload' ? 'secondary' : 'ghost'}
+                      onClick={() => setImageUploadMode('upload')}
+                    >
+                      Upload Files
+                    </Button>
+                    <Button
+                      type="button"
+                      variant={imageUploadMode === 'url' ? 'secondary' : 'ghost'}
+                      onClick={() => setImageUploadMode('url')}
+                    >
+                      Add from URL
+                    </Button>
+                  </div>
 
-          {/* Media */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Media</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {/* Image Upload */}
-              <div>
-                <Label className="text-gray-700">Product Images *</Label>
-                
-                {/* Upload Mode Tabs */}
-                <div className="flex gap-2 mt-2 mb-3">
-                  <button
-                    type="button"
-                    onClick={() => setImageUploadMode('upload')}
-                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      imageUploadMode === 'upload'
-                        ? 'bg-gray-100 text-gray-900'
-                        : 'bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    📤 Upload Files
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setImageUploadMode('url')}
-                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      imageUploadMode === 'url'
-                        ? 'bg-gray-100 text-gray-900'
-                        : 'bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    🔗 Paste URL
-                  </button>
-                </div>
-
-                {imageUploadMode === 'upload' ? (
-                  <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-amber-600 transition-colors">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                      {uploadingImages ? (
-                        <>
-                          <Loader2 className="h-8 w-8 animate-spin text-amber-600 mb-2" />
-                          <p className="text-sm text-gray-600">
-                            Uploading... {uploadProgress}%
-                          </p>
-                        </>
-                      ) : (
-                        <>
-                          <Upload className="h-8 w-8 text-gray-600 mb-2" />
-                          <p className="text-sm text-gray-600">
-                            Click to upload or drag and drop
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            PNG, JPG, WebP up to 10MB
-                          </p>
-                        </>
-                      )}
+                  {imageUploadMode === 'upload' ? (
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                      <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                      <p className="mt-2 text-sm text-gray-600">
+                        Drag & drop files here, or click to select files
+                      </p>
+                      <Input
+                        id="image-upload"
+                        type="file"
+                        multiple
+                        onChange={handleImageUpload}
+                        className="sr-only"
+                        accept="image/jpeg,image/png,image/webp"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => document.getElementById('image-upload')?.click()}
+                        disabled={uploadingImages}
+                      >
+                        {uploadingImages ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Uploading... ({uploadProgress}%)
+                          </>
+                        ) : (
+                          'Select Files'
+                        )}
+                      </Button>
                     </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      multiple
-                      onChange={handleImageUpload}
-                      disabled={uploadingImages}
-                    />
-                  </label>
-                ) : (
-                  <div className="space-y-2">
+                  ) : (
                     <div className="flex gap-2">
                       <Input
                         type="url"
                         value={imageUrlInput}
                         onChange={(e) => setImageUrlInput(e.target.value)}
                         placeholder="https://example.com/image.jpg"
-                        className="flex-1 bg-white border-gray-300"
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddImageUrl())}
                       />
-                      <Button
-                        type="button"
-                        onClick={handleAddImageUrl}
-                        className="bg-gray-900 hover:bg-gray-800 text-white"
-                      >
+                      <Button type="button" onClick={handleAddImageUrl}>
                         Add
                       </Button>
                     </div>
-                    <p className="text-xs text-gray-500">
-                      Supports all image formats: JPG, PNG, GIF, WebP, BMP, SVG, AVIF, HEIC, HEIF, TIFF
-                    </p>
-                  </div>
-                )}
+                  )}
 
-                {/* Image Preview */}
-                {images.length > 0 && (
-                  <div className="grid grid-cols-4 gap-4 mt-4">
-                    {images.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <div className="w-full h-24 bg-gray-200 rounded-lg overflow-hidden">
+                  {images.length > 0 && (
+                    <div className="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
+                      {images.map((url, index) => (
+                        <div key={index} className="relative group">
                           <img
                             src={url}
-                            alt={`Product ${index + 1}`}
-                            className={`w-full h-full object-cover ${
-                              thumbnail === url ? 'ring-2 ring-amber-500' : ''
+                            alt={`Product image ${index + 1}`}
+                            className={`w-full h-24 object-cover rounded-lg border-2 ${
+                              thumbnail === url ? 'border-amber-600' : 'border-transparent'
                             }`}
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent && !parent.querySelector('.error-text')) {
-                                const errorDiv = document.createElement('div');
-                                errorDiv.className = 'error-text flex items-center justify-center h-full text-xs text-gray-500';
-                                errorDiv.textContent = 'Failed to load';
-                                parent.appendChild(errorDiv);
-                              }
-                            }}
                           />
+                          <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-white"
+                              onClick={() => handleSetThumbnail(url)}
+                              title="Set as thumbnail"
+                            >
+                              <ImageIcon className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-white"
+                              onClick={() => handleRemoveImage(url)}
+                              title="Remove image"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleSetThumbnail(url)}
-                            className="p-1 bg-amber-600 rounded text-white text-xs"
-                            title="Set as thumbnail"
-                          >
-                            <ImageIcon className="h-4 w-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveImage(url)}
-                            className="p-1 bg-red-500 rounded text-white"
-                            title="Remove"
-                          >
-                            <X className="h-4 w-4" />
-                          </button>
-                        </div>
-                        {thumbnail === url && (
-                          <span className="absolute top-1 left-1 bg-amber-600 text-white text-xs px-1 rounded">
-                            Thumb
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Video Upload */}
-              <div>
-                <Label className="text-gray-700">Product Videos (Optional)</Label>
-                
-                {/* Upload Mode Tabs */}
-                <div className="flex gap-2 mt-2 mb-3">
-                  <button
-                    type="button"
-                    onClick={() => setVideoUploadMode('upload')}
-                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      videoUploadMode === 'upload'
-                        ? 'bg-gray-100 text-gray-900'
-                        : 'bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    📤 Upload Files
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setVideoUploadMode('url')}
-                    className={`flex-1 py-2 px-4 rounded-lg text-sm font-medium transition-colors ${
-                      videoUploadMode === 'url'
-                        ? 'bg-gray-100 text-gray-900'
-                        : 'bg-white text-gray-600 hover:bg-gray-50'
-                    }`}
-                  >
-                    🔗 Paste URL
-                  </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                {videoUploadMode === 'upload' ? (
-                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer hover:border-amber-600 transition-colors">
-                    <div className="text-center">
-                      <Video className="h-6 w-6 text-gray-600 mx-auto mb-1" />
-                      <p className="text-xs text-gray-500">Choose files</p>
-                    </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="video/*"
-                      multiple
+                {/* Video Upload */}
+                <div>
+                  <Label>Videos</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="url"
+                      value={videoUrlInput}
+                      onChange={(e) => setVideoUrlInput(e.target.value)}
+                      placeholder="https://youtube.com/watch?v=..."
                     />
-                  </label>
-                ) : (
-                  <div className="space-y-2">
-                    <div className="flex gap-2">
-                      <Input
-                        type="url"
-                        value={videoUrlInput}
-                        onChange={(e) => setVideoUrlInput(e.target.value)}
-                        placeholder="https://example.com/video.mp4"
-                        className="flex-1 bg-white border-gray-300"
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddVideoUrl())}
-                      />
-                      <Button
-                        type="button"
-                        onClick={handleAddVideoUrl}
-                        className="bg-gray-900 hover:bg-gray-800 text-white"
-                      >
-                        Add
-                      </Button>
-                    </div>
-                    <p className="text-xs text-gray-500">
-                      Supports all video formats: MP4, WebM, MOV, AVI, MKV, FLV, WMV, OGG
-                    </p>
+                    <Button type="button" onClick={handleAddVideoUrl}>
+                      Add
+                    </Button>
                   </div>
-                )}
-
-                {/* Video Preview */}
-                {videos.length > 0 && (
-                  <div className="grid grid-cols-3 gap-4 mt-4">
-                    {videos.map((url, index) => (
-                      <div key={index} className="relative group">
-                        <video
-                          src={url}
-                          className="w-full h-24 object-cover rounded-lg bg-gray-100"
-                        />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
-                          <button
+                  {videos.length > 0 && (
+                    <div className="mt-4 space-y-2">
+                      {videos.map((url, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Video className="h-4 w-4 text-gray-500" />
+                          <a href={url} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 truncate">
+                            {url}
+                          </a>
+                          <Button
                             type="button"
-                            onClick={() => setVideos((prev) => prev.filter((v) => v !== url))}
-                            className="p-1 bg-red-500 rounded text-white"
-                            title="Remove"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setVideos(prev => prev.filter(v => v !== url))}
                           >
                             <X className="h-4 w-4" />
-                          </button>
+                          </Button>
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
 
-              {/* Tags */}
-              <div>
-                <Label className="text-gray-700">Tags (optional)</Label>
-                <Input
-                  name="tags"
-                  value={formData.tags}
-                  onChange={handleInputChange}
-                  placeholder="new, featured, bestseller (comma-separated)"
-                  className="mt-2 bg-white border-gray-300 text-gray-900"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Pricing & Inventory */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Pricing & Inventory</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Pricing</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-gray-700">Price (₹) *</Label>
+                  <Label htmlFor="price">Price *</Label>
                   <Input
+                    id="price"
                     name="price"
                     type="number"
                     value={formData.price}
                     onChange={handleInputChange}
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                    placeholder="e.g., 199.99"
                     required
                   />
                 </div>
-
                 <div>
-                  <Label className="text-gray-700">Original Price (₹)</Label>
+                  <Label htmlFor="originalPrice">Original Price</Label>
                   <Input
+                    id="originalPrice"
                     name="originalPrice"
                     type="number"
                     value={formData.originalPrice}
                     onChange={handleInputChange}
-                    placeholder="0.00"
-                    min="0"
-                    step="0.01"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                    placeholder="e.g., 249.99"
                   />
                 </div>
-              </div>
+              </CardContent>
+            </Card>
 
-              <div>
-                <Label className="text-gray-700">Discount (%)</Label>
-                <Input
-                  name="discount"
-                  type="number"
-                  value={formData.discount}
-                  onChange={handleInputChange}
-                  placeholder="e.g., 20 for 20% off"
-                  min="0"
-                  max="100"
-                  step="1"
-                  className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
-                />
-                <p className="text-xs text-gray-500 mt-1">Optional: Add a discount percentage to display on product cards</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
+            <Card>
+              <CardHeader>
+                <CardTitle>Inventory & Specifications</CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-gray-700">Rating</Label>
+                  <Label htmlFor="stock">Stock</Label>
                   <Input
-                    name="rating"
-                    type="number"
-                    value={formData.rating}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 4.5"
-                    min="0"
-                    max="5"
-                    step="0.1"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Optional: Rating out of 5</p>
-                </div>
-
-                <div>
-                  <Label className="text-gray-700">Review Count</Label>
-                  <Input
-                    name="reviewCount"
-                    type="number"
-                    value={formData.reviewCount}
-                    onChange={handleInputChange}
-                    placeholder="e.g., 8"
-                    min="0"
-                    step="0.1"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
-                  />
-                  <p className="text-xs text-gray-500 mt-1">Optional: Number of reviews</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <Label className="text-gray-700">Stock</Label>
-                  <Input
+                    id="stock"
                     name="stock"
                     type="number"
                     value={formData.stock}
                     onChange={handleInputChange}
-                    placeholder="0"
-                    min="0"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                    placeholder="e.g., 100"
                   />
                 </div>
-
                 <div>
-                  <Label className="text-gray-700">Weight</Label>
+                  <Label htmlFor="weight">Weight</Label>
                   <Input
+                    id="weight"
                     name="weight"
                     value={formData.weight}
                     onChange={handleInputChange}
-                    placeholder="e.g., 10g"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                    placeholder="e.g., 250g"
                   />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Specifications */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Specifications</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <Label className="text-gray-700">Material</Label>
+                  <Label htmlFor="material">Material</Label>
                   <Input
+                    id="material"
                     name="material"
                     value={formData.material}
                     onChange={handleInputChange}
-                    placeholder="e.g., Silver"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                    placeholder="e.g., 925 Sterling Silver"
                   />
                 </div>
-
                 <div>
-                  <Label className="text-gray-700">Purity</Label>
+                  <Label htmlFor="purity">Purity</Label>
                   <Input
+                    id="purity"
                     name="purity"
                     value={formData.purity}
                     onChange={handleInputChange}
-                    placeholder="e.g., 925"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                    placeholder="e.g., 92.5%"
                   />
                 </div>
-
-                <div>
-                  <Label className="text-gray-700">Dimensions</Label>
+                <div className="sm:col-span-2">
+                  <Label htmlFor="dimensions">Dimensions</Label>
                   <Input
+                    id="dimensions"
                     name="dimensions"
                     value={formData.dimensions}
                     onChange={handleInputChange}
-                    placeholder="e.g., 5x3cm"
-                    className="mt-2 bg-gray-100 border-gray-300 text-gray-900"
+                    placeholder="e.g., 10cm x 5cm x 2cm"
                   />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Status */}
-          <Card className="bg-white border-gray-200">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Status</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label className="text-gray-700">Active</Label>
-                <Switch
-                  checked={formData.isActive}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, isActive: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label className="text-gray-700">Featured</Label>
-                <Switch
-                  checked={formData.isFeatured}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, isFeatured: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label className="text-gray-700">New Arrival</Label>
-                <Switch
-                  checked={formData.isNewArrival}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, isNewArrival: checked }))
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <Label className="text-gray-700">Best Seller</Label>
-                <Switch
-                  checked={formData.isBestSeller}
-                  onCheckedChange={(checked) =>
-                    setFormData((prev) => ({ ...prev, isBestSeller: checked }))
-                  }
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Actions */}
-        <div className="lg:col-span-3 -mt-6">
-          <div className="inline-block">
-            <Card className="bg-white border-gray-200">
-              <CardContent className="pt-6">
-                <div className="flex gap-3">
-                  <Button
-                    type="submit"
-                    className="bg-amber-600 hover:bg-amber-700 px-8"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        {isEditing ? 'Updating...' : 'Creating...'}
-                      </>
-                    ) : isEditing ? (
-                      'Update Product'
-                    ) : (
-                      'Create Product'
-                    )}
-                  </Button>
-
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50 px-8"
-                    onClick={() => navigate('/admin/products')}
-                  >
-                    Cancel
-                  </Button>
                 </div>
               </CardContent>
             </Card>
+          </div>
+
+          {/* Sidebar */}
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Status</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isActive">Active</Label>
+                  <Switch
+                    id="isActive"
+                    checked={formData.isActive}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isActive: checked }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isFeatured">Featured</Label>
+                  <Switch
+                    id="isFeatured"
+                    checked={formData.isFeatured}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isFeatured: checked }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isNewArrival">New Arrival</Label>
+                  <Switch
+                    id="isNewArrival"
+                    checked={formData.isNewArrival}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isNewArrival: checked }))
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="isBestSeller">Best Seller</Label>
+                  <Switch
+                    id="isBestSeller"
+                    checked={formData.isBestSeller}
+                    onCheckedChange={(checked) =>
+                      setFormData((prev) => ({ ...prev, isBestSeller: checked }))
+                    }
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            <Button
+              type="submit"
+              className="w-full bg-amber-600 hover:bg-amber-700"
+              disabled={loading}
+            >
+              {loading ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                isEditing ? 'Save Changes' : 'Create Product'
+              )}
+            </Button>
           </div>
         </div>
       </form>

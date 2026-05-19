@@ -43,23 +43,15 @@ const Login = () => {
 
   const from = (location.state as any)?.from?.pathname || '/';
 
-  // Redirect if already logged in AND email is verified
+  // Redirect if already logged in. Email verification is only prompted after signup.
   useEffect(() => {
     if (!authLoading && user && userProfile) {
-      // Only redirect if email is verified (or for delivery/admin which may not require it)
-      if (user.emailVerified || isDelivery || userProfile.role === 'admin') {
-        if (isDelivery) {
-          navigate('/delivery/dashboard', { replace: true });
-        } else if (userProfile.role === 'admin') {
-          navigate('/admin/dashboard', { replace: true });
-        } else {
-          navigate(from, { replace: true });
-        }
+      if (isDelivery) {
+        navigate('/delivery/dashboard', { replace: true });
+      } else if (userProfile.role === 'admin') {
+        navigate('/admin/dashboard', { replace: true });
       } else {
-        // User is logged in but email not verified - show verification modal
-        setVerificationEmail(user.email || '');
-        setShowVerificationModal(true);
-        startResendCountdown();
+        navigate(from, { replace: true });
       }
     }
   }, [user, userProfile, isDelivery, authLoading, navigate, from]);
@@ -189,7 +181,6 @@ const Login = () => {
 
     try {
       const userProfile = await login(email, password);
-      const currentUser = auth.currentUser;
       
       if (activeTab === 'delivery') {
         // Delivery login - check role
@@ -208,25 +199,6 @@ const Login = () => {
           setLoading(false);
           return;
         }
-        
-        // Check email verification status
-        if (currentUser && !currentUser.emailVerified) {
-          // Send verification email and show modal
-          try {
-            await sendEmailVerification(currentUser);
-            toast.info('A verification email has been sent to your inbox.');
-          } catch (err: any) {
-            console.error('Send verification error:', err);
-            // Continue showing modal even if email sending fails
-          }
-          
-          setVerificationEmail(email);
-          setShowVerificationModal(true);
-          startResendCountdown();
-          setLoading(false);
-          return;
-        }
-        
         // If admin, redirect to admin panel
         if (userProfile.role === 'admin') {
           navigate('/admin/dashboard');
@@ -261,25 +233,7 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const profile = await loginWithGoogle();
-      const currentUser = auth.currentUser;
-      
-      // Check email verification status for Google sign-in
-      if (currentUser && !currentUser.emailVerified) {
-        try {
-          await sendEmailVerification(currentUser);
-          toast.info('A verification email has been sent to your inbox.');
-        } catch (err: any) {
-          console.error('Send verification error:', err);
-        }
-        
-        setVerificationEmail(currentUser.email || '');
-        setShowVerificationModal(true);
-        startResendCountdown();
-        setLoading(false);
-        return;
-      }
-      
+      await loginWithGoogle();
       navigate(from, { replace: true });
     } catch (err: any) {
       console.error('Google sign-in error:', err);

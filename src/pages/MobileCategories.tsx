@@ -1,118 +1,141 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, ArrowLeft } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { motion } from 'framer-motion';
 import MobileBottomNav from '@/components/MobileBottomNav';
 import { getAllProducts, Product } from '@/services/productService';
 import logo from '@/assets/logo-new.png';
+import heroJewelry from '@/assets/hero-jewelry.jpg';
+import heroSilverJewelry from '@/assets/hero-silver-jewelry.png';
+import collectionBanner from '@/assets/collection-banner.jpg';
+import handmadeCrafting from '@/assets/handmade-crafting.jpg';
+import handmadeSection from '@/assets/handmade-section.jpg';
+import promoSection from '@/assets/promo-section.jpg';
+import shoppingBags from '@/assets/shopping-bags.png';
+import silversofa from '@/assets/silversofa.png';
+import promoNecklace from '@/assets/promo-necklace.jpg';
+import promoHeart from '@/assets/promo-heart.jpg';
+import ring1 from '@/assets/products/ring-1.jpg';
+import ring4 from '@/assets/products/ring-4.jpg';
+import necklace1 from '@/assets/products/necklace-1.jpg';
+import necklace2 from '@/assets/products/necklace-2.jpg';
+import earrings1 from '@/assets/products/earrings-1.jpg';
+import band1 from '@/assets/products/band-1.jpg';
+import set1 from '@/assets/products/set-1.jpg';
+import categoryUnique from '@/assets/categories/unique.jpg';
+import categoryTide from '@/assets/categories/tide.jpg';
+import categoryOrganic from '@/assets/categories/organic.jpg';
+import categoryIcons from '@/assets/categories/icons.jpg';
 
-// Define main categories with their subcategories
-const mainCategories = [
+type Subcategory = {
+  name: string;
+  image: string;
+  path: string;
+};
+
+type MainCategory = {
+  id: string;
+  name: string;
+  image: string;
+  subcategories: Subcategory[];
+};
+
+const mainCategories: MainCategory[] = [
   {
     id: 'jewelry',
     name: 'Jewelry',
-    icon: '💎',
-    image: 'https://images.unsplash.com/photo-1515562141207-7a88fb7ce338?w=100&h=100&fit=crop',
+    image: heroJewelry,
     subcategories: [
-      { name: 'Silver Rings', image: 'https://images.unsplash.com/photo-1605100804763-247f67b3557e?w=200&h=200&fit=crop', path: '/shop/rings' },
-      { name: 'Silver Chains', image: 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=200&h=200&fit=crop', path: '/shop/necklaces' },
-      { name: 'Silver Earrings', image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop', path: '/shop/earrings' },
-      { name: 'Silver Bangles', image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&h=200&fit=crop', path: '/shop/bracelets' },
-      { name: 'Silver Necklaces', image: 'https://images.unsplash.com/photo-1599643477877-530eb83abc8e?w=200&h=200&fit=crop', path: '/shop/necklaces' },
-      { name: 'Silver Pendants', image: 'https://images.unsplash.com/photo-1602173574767-37ac01994b2a?w=200&h=200&fit=crop', path: '/shop/pendants' },
-      { name: 'Silver Anklets', image: 'https://images.unsplash.com/photo-1573408301185-9146fe634ad0?w=200&h=200&fit=crop', path: '/shop/anklets' },
-      { name: 'Silver Bracelets', image: 'https://images.unsplash.com/photo-1611591437281-460bfbe1220a?w=200&h=200&fit=crop', path: '/shop/bracelets' },
-      { name: 'Temple Jewelry', image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=200&h=200&fit=crop', path: '/jewelry' },
-    ]
+      { name: 'Silver Rings', image: ring1, path: '/rings' },
+      { name: 'Silver Chains', image: necklace1, path: '/necklaces' },
+      { name: 'Silver Earrings', image: earrings1, path: '/earrings' },
+      { name: 'Silver Bangles', image: band1, path: '/bracelets' },
+      { name: 'Silver Necklaces', image: necklace2, path: '/necklaces' },
+      { name: 'Silver Pendants', image: promoNecklace, path: '/pendants' },
+      { name: 'Silver Anklets', image: promoHeart, path: '/anklets' },
+      { name: 'Silver Bracelets', image: ring4, path: '/bracelets' },
+      { name: 'Temple Jewelry', image: set1, path: '/jewelry' },
+    ],
   },
   {
     id: 'furniture',
     name: 'Furniture',
-    icon: '🪑',
-    image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=100&h=100&fit=crop',
+    image: silversofa,
     subcategories: [
-      { name: 'Silver Chairs', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture/royal-silver-chairs' },
-      { name: 'Silver Tables', image: 'https://images.unsplash.com/photo-1499933374294-4584851497cc?w=200&h=200&fit=crop', path: '/furniture/royal-silver-tables' },
-      { name: 'Silver Swings', image: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&h=200&fit=crop', path: '/furniture/silver-swing-jhoola' },
-      { name: 'Silver Cradles', image: 'https://images.unsplash.com/photo-1544457070-4cd773b4d71e?w=200&h=200&fit=crop', path: '/furniture/silver-cradles' },
-      { name: 'Silver Thrones', image: 'https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=200&h=200&fit=crop', path: '/furniture/silver-thrones' },
-      { name: 'Decorative Items', image: 'https://images.unsplash.com/photo-1499933374294-4584851497cc?w=200&h=200&fit=crop', path: '/furniture/antique-silver-decor' },
-    ]
+      { name: 'Silver Chairs', image: silversofa, path: '/furniture/royal-silver-chairs' },
+      { name: 'Silver Tables', image: collectionBanner, path: '/furniture/royal-silver-tables' },
+      { name: 'Silver Swings', image: handmadeSection, path: '/furniture/silver-swing-jhoola' },
+      { name: 'Silver Cradles', image: handmadeCrafting, path: '/furniture/silver-cradles' },
+      { name: 'Silver Thrones', image: promoSection, path: '/furniture/silver-thrones' },
+      { name: 'Decorative Items', image: categoryUnique, path: '/furniture/antique-silver-decor' },
+    ],
   },
   {
     id: 'articles',
     name: 'Articles',
-    icon: '🏺',
-    image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=100&h=100&fit=crop',
+    image: categoryIcons,
     subcategories: [
-      { name: 'Pooja Items', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/articles/pooja-items' },
-      { name: 'Gift Articles', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/articles/gift-articles' },
-      { name: 'Silver Lamps', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', path: '/articles/silver-lamps' },
-      { name: 'Silver Plates', image: 'https://images.unsplash.com/photo-1532635241-17e820acc59f?w=200&h=200&fit=crop', path: '/articles/silver-plates' },
-      { name: 'Silver Idols', image: 'https://images.unsplash.com/photo-1513885535751-8b9238bd345a?w=200&h=200&fit=crop', path: '/articles/silver-idols' },
-      { name: 'Silver Vessels', image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop', path: '/articles/silver-vessels' },
-    ]
+      { name: 'Pooja Items', image: categoryIcons, path: '/articles/silver-pooja-items' },
+      { name: 'Gift Articles', image: shoppingBags, path: '/articles/gift-articles' },
+      { name: 'Silver Lamps', image: categoryTide, path: '/articles/silver-lamps' },
+      { name: 'Silver Plates', image: categoryOrganic, path: '/articles/silver-plates' },
+      { name: 'Silver Idols', image: handmadeCrafting, path: '/articles/silver-idols' },
+      { name: 'Silver Vessels', image: collectionBanner, path: '/articles/silver-vessels' },
+    ],
   },
   {
     id: 'other',
     name: 'Other Products',
-    icon: '✨',
-    image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=100&h=100&fit=crop',
+    image: heroSilverJewelry,
     subcategories: [
-      { name: 'Silver Coins', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/other-products/silver-coins' },
-      { name: 'Silver Bars', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/other-products/silver-bars' },
-      { name: 'Silver Utensils', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/other-products/silver-utensils' },
-      { name: 'Baby Items', image: 'https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=200&h=200&fit=crop', path: '/other-products/baby-items' },
-      { name: 'Antique Silver', image: 'https://images.unsplash.com/photo-1610375461246-83df859d849d?w=200&h=200&fit=crop', path: '/other-products/antique-silver' },
-      { name: 'Custom Orders', image: 'https://images.unsplash.com/photo-1584990347449-a2d4c2c044b9?w=200&h=200&fit=crop', path: '/other-products/custom-orders' },
-    ]
+      { name: 'Silver Coins', image: heroSilverJewelry, path: '/other-products/silver-coins' },
+      { name: 'Silver Bars', image: heroSilverJewelry, path: '/other-products/silver-bars' },
+      { name: 'Silver Utensils', image: categoryOrganic, path: '/other-products/silver-utensils' },
+      { name: 'Baby Items', image: categoryTide, path: '/other-products/baby-items' },
+      { name: 'Antique Silver', image: categoryUnique, path: '/other-products/antique-silver' },
+      { name: 'Custom Orders', image: handmadeCrafting, path: '/other-products/custom-orders' },
+    ],
   },
   {
     id: 'decor',
     name: 'Home Decor',
-    icon: '🏠',
-    image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=100&h=100&fit=crop',
+    image: collectionBanner,
     subcategories: [
-      { name: 'Wall Decor', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/wall-decor' },
-      { name: 'Photo Frames', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/photo-frames' },
-      { name: 'Showpieces', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/showpieces' },
-      { name: 'Candle Stands', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/candle-stands' },
-      { name: 'Flower Vases', image: 'https://images.unsplash.com/photo-1556911220-bff31c812dba?w=200&h=200&fit=crop', path: '/home-decor/flower-vases' },
-    ]
+      { name: 'Wall Decor', image: collectionBanner, path: '/home-decor/silver-wall-decor' },
+      { name: 'Photo Frames', image: promoSection, path: '/home-decor/silver-photo-frames' },
+      { name: 'Showpieces', image: handmadeSection, path: '/home-decor/silver-showpieces' },
+      { name: 'Candle Stands', image: categoryIcons, path: '/home-decor/silver-candle-stands' },
+      { name: 'Flower Vases', image: categoryOrganic, path: '/home-decor/silver-flower-vases' },
+    ],
   },
   {
     id: 'gifts',
     name: 'Gifts',
-    icon: '🎁',
-    image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=100&h=100&fit=crop',
+    image: shoppingBags,
     subcategories: [
-      { name: 'Wedding Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/wedding-gifts' },
-      { name: 'Birthday Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/birthday-gifts' },
-      { name: 'Festival Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/festival-gifts' },
-      { name: 'Corporate Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/corporate-gifts' },
-      { name: 'Return Gifts', image: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=200&h=200&fit=crop', path: '/gifts/return-gifts' },
-    ]
+      { name: 'Wedding Gifts', image: shoppingBags, path: '/gifts/wedding' },
+      { name: 'Birthday Gifts', image: promoHeart, path: '/gifts/birthday' },
+      { name: 'Festival Gifts', image: set1, path: '/gifts/festival' },
+      { name: 'Corporate Gifts', image: handmadeCrafting, path: '/gifts/corporate' },
+      { name: 'Return Gifts', image: collectionBanner, path: '/gifts/return' },
+    ],
   },
 ];
 
+const normalize = (value: string) => value.toLowerCase().replace(/^silver\s+/, '');
+
 const MobileCategories = () => {
   const navigate = useNavigate();
-  const [selectedCategory, setSelectedCategory] = useState(() => {
+  const [selectedCategory, setSelectedCategory] = useState<MainCategory>(() => {
     const savedId = sessionStorage.getItem('selectedCategoryId');
-    if (savedId) {
-      const found = mainCategories.find(c => c.id === savedId);
-      if (found) return found;
-    }
-    return mainCategories[0];
+    return mainCategories.find((category) => category.id === savedId) || mainCategories[0];
   });
   const [products, setProducts] = useState<Product[]>([]);
 
-  // Persist selected category so back navigation restores it
   useEffect(() => {
     sessionStorage.setItem('selectedCategoryId', selectedCategory.id);
   }, [selectedCategory]);
 
-  // Load products to show actual product images if available
   useEffect(() => {
     const loadProducts = async () => {
       try {
@@ -122,41 +145,43 @@ const MobileCategories = () => {
         console.error('Error loading products:', error);
       }
     };
+
     loadProducts();
   }, []);
 
-  // Get product image for subcategory if available
-  const getSubcategoryImage = (subcategoryName: string, defaultImage: string) => {
-    const product = products.find(p => 
-      p.name?.toLowerCase().includes(subcategoryName.toLowerCase().replace('silver ', '')) ||
-      p.subcategory?.toLowerCase().includes(subcategoryName.toLowerCase().replace('silver ', ''))
-    );
-    return product?.media?.thumbnail || product?.media?.images?.[0] || defaultImage;
+  const getSubcategoryImage = (subcategory: Subcategory) => {
+    const subcategoryName = normalize(subcategory.name);
+    const product = products.find((item) => {
+      const productName = normalize(item.name || '');
+      const productSubcategory = normalize(item.subcategory || '');
+
+      return productName.includes(subcategoryName) || productSubcategory.includes(subcategoryName);
+    });
+
+    return product?.media?.thumbnail || product?.media?.images?.[0] || subcategory.image;
   };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20" style={{ fontFamily: "'Poppins', sans-serif" }}>
-      {/* Header */}
       <div className="sticky top-0 bg-white z-40 px-4 py-3 flex items-center justify-between border-b border-gray-100">
         <div className="flex items-center gap-3">
-          <button 
+          <button
             onClick={() => navigate('/')}
             className="p-1"
+            aria-label="Back to home"
           >
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
-          <h1 className="text-lg font-semibold text-gray-900" style={{ fontFamily: "'Poppins', sans-serif" }}>Top Categories</h1>
+          <h1 className="text-lg font-semibold text-gray-900">Top Categories</h1>
         </div>
-        <img 
-          src={logo} 
-          alt="Sreerasthu Silvers" 
+        <img
+          src={logo}
+          alt="Sreerasthu Silvers"
           className="h-6 w-auto"
         />
       </div>
 
-      {/* Main Content */}
       <div className="flex">
-        {/* Left Sidebar - Categories */}
         <div className="w-20 bg-white border-r border-gray-100 min-h-[calc(100vh-120px)]">
           {mainCategories.map((category) => (
             <button
@@ -168,34 +193,34 @@ const MobileCategories = () => {
                   : 'hover:bg-gray-50'
               }`}
             >
-              <div className={`w-12 h-12 rounded-full overflow-hidden border-2 ${
+              <div className={`w-12 h-12 rounded-full overflow-hidden border-2 bg-gray-100 ${
                 selectedCategory.id === category.id
                   ? 'border-red-500'
                   : 'border-gray-200'
               }`}>
-                <img 
-                  src={category.image} 
+                <img
+                  src={category.image}
                   alt={category.name}
                   className="w-full h-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.src = heroJewelry;
+                  }}
                 />
               </div>
               <span className={`text-[10px] text-center leading-tight font-medium whitespace-nowrap overflow-hidden text-ellipsis max-w-full ${
                 selectedCategory.id === category.id
                   ? 'text-red-600'
                   : 'text-gray-600'
-              }`} style={{ fontFamily: "'Poppins', sans-serif" }}>
-                {category.name.length > 10 ? category.name.slice(0, 10) + '...' : category.name}
+              }`}>
+                {category.name.length > 10 ? `${category.name.slice(0, 10)}...` : category.name}
               </span>
             </button>
           ))}
         </div>
 
-        {/* Right Content - Subcategories */}
         <div className="flex-1 p-4">
-          {/* Category Title */}
-          <h2 className="text-lg font-semibold text-gray-900 mb-4" style={{ fontFamily: "'Poppins', sans-serif" }}>{selectedCategory.name}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">{selectedCategory.name}</h2>
 
-          {/* Subcategory Grid */}
           <div className="grid grid-cols-3 gap-3">
             {selectedCategory.subcategories.map((subcategory, index) => (
               <motion.button
@@ -208,13 +233,16 @@ const MobileCategories = () => {
               >
                 <div className="w-full aspect-[4/5] rounded-xl overflow-hidden bg-gray-100 mb-2 shadow-sm">
                   <img
-                    src={getSubcategoryImage(subcategory.name, subcategory.image)}
+                    src={getSubcategoryImage(subcategory)}
                     alt={subcategory.name}
                     className="w-full h-full object-cover"
+                    onError={(event) => {
+                      event.currentTarget.src = subcategory.image;
+                    }}
                   />
                 </div>
-                <span className="text-xs text-gray-700 text-center font-medium truncate w-full" style={{ fontFamily: "'Poppins', sans-serif" }}>
-                  {subcategory.name.length > 12 ? subcategory.name.slice(0, 12) + '...' : subcategory.name}
+                <span className="text-xs text-gray-700 text-center font-medium truncate w-full">
+                  {subcategory.name.length > 12 ? `${subcategory.name.slice(0, 12)}...` : subcategory.name}
                 </span>
               </motion.button>
             ))}

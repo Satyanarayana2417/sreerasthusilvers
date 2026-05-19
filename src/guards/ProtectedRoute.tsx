@@ -21,7 +21,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   redirectTo = '/login',
-  requireEmailVerification = true
+  requireEmailVerification = false
 }) => {
   const { user, userProfile, logout, loading } = useAuth();
   const location = useLocation();
@@ -31,7 +31,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   const [resendCountdown, setResendCountdown] = useState(0);
   const [resendLoading, setResendLoading] = useState(false);
   const [verifyLoading, setVerifyLoading] = useState(false);
-  const countdownRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownRef = useRef<number | null>(null);
 
   // Cleanup countdown timer
   useEffect(() => {
@@ -44,7 +44,7 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Check for email verification when user is loaded
   useEffect(() => {
-    if (!loading && user && (!requireEmailVerification || user.emailVerified)) {
+    if (!loading && user && requireEmailVerification && !user.emailVerified) {
       setShowVerificationModal(true);
     }
   }, [loading, user, requireEmailVerification]);

@@ -45,7 +45,7 @@ const MobileSearchBar = () => {
 
     recognition.onresult = (event: any) => {
       const transcript = event.results[0][0].transcript;
-      navigate(`/search?q=${encodeURIComponent(transcript)}`);
+      navigate(`/search-results?q=${encodeURIComponent(transcript)}`);
     };
 
     recognition.onerror = (event: any) => {
@@ -104,7 +104,7 @@ const MobileSearchBar = () => {
         
         {/* Search Icon */}
         <button 
-          onClick={() => navigate("/search")}
+          onClick={() => navigate("/mobile-search")}
           className="pl-4 pr-2 flex items-center h-full flex-1"
         >
           <Search className="w-[22px] h-[22px]" strokeWidth={1} style={{ color: '#832729' }} />

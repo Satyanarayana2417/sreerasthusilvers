@@ -1,6 +1,17 @@
 import { motion } from "framer-motion";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useRef, useEffect } from "react";
+import heroJewelry from "@/assets/hero-jewelry.jpg";
+import heroSilverJewelry from "@/assets/hero-silver-jewelry.png";
+import collectionBanner from "@/assets/collection-banner.jpg";
+import handmadeCrafting from "@/assets/handmade-crafting.jpg";
+import promoSection from "@/assets/promo-section.jpg";
+import shoppingBags from "@/assets/shopping-bags.png";
+import silversofa from "@/assets/silversofa.png";
+import promoHeart from "@/assets/promo-heart.jpg";
+import ring1 from "@/assets/products/ring-1.jpg";
+import categoryOrganic from "@/assets/categories/organic.jpg";
+import categoryIcons from "@/assets/categories/icons.jpg";
 import { 
   Gem, 
   Armchair, 
@@ -19,61 +30,61 @@ const categories = [
     name: "Jewelry", 
     icon: Gem, 
     href: "/jewelry",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/jewelry-cat_zy0v5w.avif",
+    image: heroJewelry,
   },
   { 
     name: "Furniture", 
     icon: Armchair, 
     href: "/furniture",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/furniture-cat_vpeqov.avif",
+    image: silversofa,
   },
   { 
     name: "Articles", 
     icon: BookOpen, 
     href: "/articles",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/articles-cat_o0v0j5.avif",
+    image: categoryIcons,
   },
   { 
     name: "Other Products", 
     icon: Package, 
     href: "/products",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/others-cat_k0gq8g.avif",
+    image: heroSilverJewelry,
   },
   { 
     name: "Fashion", 
     icon: Shirt, 
     href: "/jewelry",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/fashion-cat_b38e2v.avif",
+    image: promoHeart,
   },
   { 
     name: "Home & Kitchen", 
     icon: ChefHat, 
     href: "/home-decor",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/kitchen-cat_s8z5b6.avif",
+    image: categoryOrganic,
   },
   { 
     name: "Beauty & Toys", 
     icon: Sparkles, 
     href: "/other-products/baby-items",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/baby-cat_qdyxae.avif",
+    image: handmadeCrafting,
   },
   { 
     name: "Silver Chairs", 
     icon: Crown, 
     href: "/furniture/royal-silver-chairs",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/furniture-cat_vpeqov.avif",
+    image: silversofa,
   },
   { 
     name: "Silver Coins", 
     icon: Coins, 
     href: "/other-products/silver-coins",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/coins-cat_f8kjso.avif",
+    image: ring1,
   },
   { 
     name: "Gift Articles", 
     icon: Gift, 
     href: "/articles/gift-articles",
-    image: "https://res.cloudinary.com/dzlssgfz9/image/upload/v1717931958/sreerasthu/gifts-cat_i8zc3w.avif",
+    image: shoppingBags,
   },
 ];
 
@@ -143,6 +154,9 @@ const CategoryIconNav = () => {
                       alt={category.name}
                       className="w-full h-full object-cover rounded-full"
                       loading="lazy"
+                      onError={(event) => {
+                        event.currentTarget.src = collectionBanner;
+                      }}
                     />
                   </div>
                 </div>

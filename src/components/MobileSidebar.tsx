@@ -16,7 +16,7 @@ const MobileSidebar = ({ isOpen, onClose }: MobileSidebarProps) => {
   const menuItems = [
     { name: "Home", icon: House, href: "/" },
     { name: "Categories", icon: LayoutGrid, href: "/categories" },
-    { name: "My Orders", icon: ShoppingCart, href: "/account/orders" },
+    { name: "My Orders", icon: ShoppingCart, href: "/orders" },
     { name: "Wishlist", icon: Heart, href: "/wishlist" },
     { name: "Settings", icon: Settings, href: "/account" },
   ];

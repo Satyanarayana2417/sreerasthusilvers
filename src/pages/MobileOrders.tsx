@@ -192,7 +192,7 @@ const MobileOrders = () => {
               key={order.id} 
               className="border border-gray-200 rounded-lg p-3 cursor-pointer hover:shadow-md transition-shadow bg-white"
               onClick={() => {
-                navigate(`/account/orders/${order.id}`);
+                navigate(`/orders/${order.id}`);
               }}
             >
               {/* Order Items Display */}

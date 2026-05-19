@@ -226,7 +226,7 @@ const MobileSearch = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white lg:hidden">
+    <div className="min-h-screen bg-white">
       {/* Search Bar Header */}
       <div className="sticky top-0 z-50 bg-white shadow-sm px-3 py-2.5 flex items-center gap-2">
         <button onClick={() => navigate(-1)} className="p-2 -ml-1 rounded-full hover:bg-gray-100 transition-colors">

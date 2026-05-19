@@ -104,11 +104,13 @@ const SearchResults = () => {
             <ArrowLeft className="w-5 h-5 text-gray-700" />
           </button>
           <button
-            onClick={() => navigate("/search")}
+            onClick={() => navigate("/mobile-search")}
             className="flex-1 flex items-center gap-2 bg-gray-50 rounded-lg border border-gray-200 px-3 py-2.5"
           >
             <Search className="w-4 h-4 text-gray-400" />
-            <span className="text-sm text-gray-700 truncate">{query}</span>
+            <span className={`text-sm truncate ${query ? "text-gray-700" : "text-gray-400"}`}>
+              {query || "Search products"}
+            </span>
           </button>
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -210,7 +212,7 @@ const SearchResults = () => {
             We couldn't find any products matching "{query}". Try a different search term.
           </p>
           <button
-            onClick={() => navigate("/search")}
+            onClick={() => navigate("/mobile-search")}
             className="px-6 py-2.5 bg-primary text-white text-sm font-medium rounded-full hover:bg-primary/90 transition-colors"
           >
             Search Again
